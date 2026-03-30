@@ -3,18 +3,22 @@ const API_BASE_URL =
   "https://mindvault.ikigai-dynamics.com/api";
 
 export interface Source {
-  video_title: string;
-  video_url: string;
-  start_time: number;
-  end_time: number;
+  title: string;
+  timestamp: string | null;
+  url: string | null;
+  snippet: string;
   text: string;
-  relevance_score: number;
+  video_id: string;
+}
+
+export interface HistoryMessage {
+  role: "user" | "assistant";
+  content: string;
 }
 
 export interface QueryResponse {
   answer: string;
   sources: Source[];
-  query: string;
 }
 
 export interface Collection {
@@ -22,60 +26,30 @@ export interface Collection {
   display_name: string;
   description: string;
   video_count: number;
-  chunk_count: number;
-  category: string;
-  playlists: string[];
-}
-
-export interface TranscriptChunk {
-  text: string;
-  text_raw: string;
-  start_time: number;
-  end_time: number;
-  chunk_index: number;
-}
-
-export interface ConversationMessage {
-  role: "user" | "assistant";
-  content: string;
+  point_count: number;
+  logo: string | null;
+  visible_on_homepage: boolean;
 }
 
 export async function fetchCollections(): Promise<Collection[]> {
-  const res = await fetch(`${API_BASE_URL}/collections`);
+  const res = await fetch(`${API_BASE_URL}/collections`, {
+    next: { revalidate: 300 },
+  });
   if (!res.ok) throw new Error("Failed to fetch collections");
   return res.json();
 }
 
 export async function queryCollection(
   collectionName: string,
-  query: string,
-  conversationHistory: ConversationMessage[] = []
+  question: string,
+  history: HistoryMessage[] = []
 ): Promise<QueryResponse> {
   const res = await fetch(`${API_BASE_URL}/query/${collectionName}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, conversation_history: conversationHistory }),
+    body: JSON.stringify({ question, history }),
   });
   if (!res.ok) throw new Error("Failed to query collection");
-  return res.json();
-}
-
-export async function fetchTranscript(
-  videoId: string
-): Promise<TranscriptChunk[]> {
-  const res = await fetch(`${API_BASE_URL}/transcript/${videoId}`);
-  if (!res.ok) throw new Error("Failed to fetch transcript");
-  return res.json();
-}
-
-export async function searchCollection(
-  collectionName: string,
-  query: string
-): Promise<TranscriptChunk[]> {
-  const res = await fetch(
-    `${API_BASE_URL}/search/${collectionName}?q=${encodeURIComponent(query)}`
-  );
-  if (!res.ok) throw new Error("Failed to search collection");
   return res.json();
 }
 
@@ -93,12 +67,4 @@ export function formatTimestamp(seconds: number): string {
     return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   }
   return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
-export function youtubeTimestampUrl(videoUrl: string, startTime: number): string {
-  const seconds = Math.floor(startTime);
-  if (videoUrl.includes("?")) {
-    return `${videoUrl}&t=${seconds}`;
-  }
-  return `${videoUrl}?t=${seconds}`;
 }

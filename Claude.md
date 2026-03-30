@@ -204,3 +204,37 @@ NEXT_PUBLIC_API_URL=https://mindvault.ikigai-dynamics.com/api
 # App
 NEXT_PUBLIC_APP_URL=https://tubevault.ikigai-dynamics.com
 ```
+
+## Sister Projects (READ-ONLY reference)
+These projects are on the same machine. Read files from them for 
+design reference and data, but NEVER modify them.
+
+- **MindVaultAPI (frontend + API):** C:\Users\USER\Desktop\IkigAI\MindVaultAPI
+  - Static frontend: MindVaultAPI/static/ (HTML, CSS, JS — copy design patterns from here)
+  - Channel thumbnails: MindVaultAPI/static/images/channels/
+  - API endpoints: MindVaultAPI/main.py (see route definitions)
+  - Query engine: MindVaultAPI/query_engine.py (response format reference)
+
+- **MindVault (admin/ingestion):** C:\Users\USER\Desktop\IkigAI\MindVault
+  - Channel data JSONs: MindVault/data/channels/{channel_name}/
+  - Comprehensive dumps: MindVault/data/channels/{name}/{name}_*.json
+  - Channel metadata, video lists, descriptions are in these JSONs
+  - Config: MindVault/config/settings.py
+
+## How to use sister projects
+- For design: Read MindVaultAPI/static/*.html and extract CSS patterns, 
+  color values, component structures. Adapt to React/Tailwind.
+- For channel data: Read the comprehensive JSON dumps to get channel 
+  descriptions, video counts, playlist names, thumbnail URLs.
+- For API integration: Read MindVaultAPI/main.py to understand exact 
+  request/response formats.
+- For thumbnails: Copy channel thumbnail images from 
+  MindVaultAPI/static/images/channels/ to TubeVault/public/channels/
+```
+
+Dann in jedem Prompt einfach referenzieren:
+```
+Read CLAUDE.md. For this task, also read the MindVaultAPI static 
+frontend files (see Sister Projects in CLAUDE.md) to match the 
+existing design language. Pull real channel data from the 
+comprehensive JSON dumps in MindVault/data/channels/.

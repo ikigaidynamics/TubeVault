@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   title: "TubeVault — AI-Powered YouTube Search",
   description:
     "Search YouTube channels by meaning. Ask questions, get answers from creator videos with exact timestamps.",
+  icons: {
+    icon: "/TubeVault_Symbol.png",
+    apple: "/TubeVault_Symbol.png",
+  },
 };
 
 export default function RootLayout({

@@ -61,6 +61,15 @@ const config: Config = {
       fontFamily: {
         sans: ["Inter", "sans-serif"],
       },
+      keyframes: {
+        typingPulse: {
+          "0%, 100%": { transform: "scale(1)", opacity: "0.4" },
+          "30%": { transform: "scale(1.15)", opacity: "0.8" },
+        },
+      },
+      animation: {
+        typingPulse: "typingPulse 1.2s ease-in-out infinite",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],
