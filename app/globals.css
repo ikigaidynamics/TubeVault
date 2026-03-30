@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 11.4%;
+    --foreground: 0 0% 97.6%;
+
+    --card: 0 0% 16.5%;
+    --card-foreground: 0 0% 97.6%;
+
+    --popover: 0 0% 16.5%;
+    --popover-foreground: 0 0% 97.6%;
+
+    --primary: 104 38% 49%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 16.5%;
+    --secondary-foreground: 0 0% 97.6%;
+
+    --muted: 0 0% 16.5%;
+    --muted-foreground: 0 0% 62%;
+
+    --accent: 0 0% 16.5%;
+    --accent-foreground: 0 0% 97.6%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 97.6%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 104 38% 49%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-dark-bg text-cream;
+    font-family: "Inter", sans-serif;
+  }
+}
+
+/* Hero gradient mesh */
+.hero-gradient {
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(101, 174, 76, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 20% 20%, rgba(101, 174, 76, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 30% at 80% 10%, rgba(101, 174, 76, 0.03) 0%, transparent 50%);
+}
+
+/* Subtle grid pattern */
+.grid-pattern {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* Glow pulse for CTA */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(101, 174, 76, 0.15), 0 0 60px rgba(101, 174, 76, 0.05);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(101, 174, 76, 0.25), 0 0 80px rgba(101, 174, 76, 0.1);
+  }
+}
+
+.glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Step connector line */
+.step-connector {
+  background: linear-gradient(90deg, transparent, rgba(101, 174, 76, 0.3), transparent);
+}
