@@ -136,7 +136,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex h-screen bg-[#151515]">
+    <div className="flex h-screen bg-[#0A0A0B]">
       {/* Sidebar */}
       <ChannelSidebar
         collections={collections}
@@ -149,7 +149,7 @@ export default function DashboardPage() {
       {/* Main chat area */}
       <div className="flex flex-1 flex-col">
         {/* Creator bar */}
-        <header className="flex items-center gap-2.5 border-b border-white/[0.06] bg-[#151515] px-6 py-3 pl-14 md:pl-6">
+        <header className="flex items-center gap-2.5 border-b border-white/[0.06] bg-[#0A0A0B] px-6 py-3 pl-14 md:pl-6">
           {selectedCollection ? (
             <>
               {(() => {
@@ -283,7 +283,7 @@ export default function DashboardPage() {
                         setInput(suggestion);
                         inputRef.current?.focus();
                       }}
-                      className="w-full rounded-xl border border-white/[0.08] bg-dark-surface px-3.5 py-2.5 text-left text-[13px] leading-relaxed text-gray-text/70 transition-all duration-200 hover:translate-x-1 hover:border-primary/30 hover:bg-[#242527] hover:text-cream hover:shadow-[0_0_20px_rgba(61,122,53,0.08)]"
+                      className="w-full rounded-xl border border-[#2E2F31] bg-[#1C1D1F] px-3.5 py-2.5 text-left text-[13px] leading-relaxed text-gray-text/70 transition-all duration-200 hover:translate-x-1 hover:border-primary/30 hover:bg-[#242527] hover:border-[#2E2F31] hover:text-cream hover:shadow-[0_0_20px_rgba(61,122,53,0.08)]"
                     >
                       {suggestion}
                     </button>
@@ -292,7 +292,7 @@ export default function DashboardPage() {
                     onClick={() => {
                       /* future: link to channel browse */
                     }}
-                    className="mt-1 w-full rounded-xl border border-white/[0.08] bg-dark-surface px-3.5 py-2.5 text-center text-[12px] font-medium text-gray-text/50 transition-all duration-200 hover:translate-x-1 hover:border-primary/30 hover:text-cream"
+                    className="mt-1 w-full rounded-xl border border-[#2E2F31] bg-[#1C1D1F] px-3.5 py-2.5 text-center text-[12px] font-medium text-gray-text/50 transition-all duration-200 hover:translate-x-1 hover:border-primary/30 hover:text-cream"
                   >
                     Browse channel database
                   </button>
@@ -325,10 +325,10 @@ export default function DashboardPage() {
         )}
 
         {/* Input area */}
-        <div className="border-t border-white/[0.06] px-6 py-4 md:px-12 lg:px-16">
+        <div className="border-t border-[#1E1F21] bg-[#0A0A0B] px-6 py-4 md:px-12 lg:px-16">
           <div className="mx-auto max-w-3xl">
             <div
-              className={`flex items-end gap-2 rounded-2xl border bg-[#1d1d1d] px-4 py-1.5 transition-all ${
+              className={`flex items-end gap-2 rounded-2xl border bg-[#141416] px-4 py-1.5 transition-all ${
                 input
                   ? "border-primary/40 shadow-[0_0_0_3px_rgba(61,122,53,0.12)]"
                   : "border-white/[0.08]"

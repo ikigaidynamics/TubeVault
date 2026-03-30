@@ -49,8 +49,8 @@ export function ChatMessage({ role, content, sources, userAvatar }: ChatMessageP
         <div
           className={`rounded-xl px-4 py-3 text-[14px] leading-[1.65] ${
             role === "user"
-              ? "rounded-br-sm bg-primary font-medium text-white"
-              : "border border-white/[0.06] bg-[#1d1d1d] text-cream/90"
+              ? "rounded-br-sm bg-[#3D7A35] font-medium text-white"
+              : "border border-[#1E1F21] bg-[#141416] text-cream/90"
           }`}
         >
           {role === "assistant" ? (

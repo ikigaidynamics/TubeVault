@@ -30,7 +30,7 @@ export function ChannelSidebar({
   );
 
   const sidebar = (
-    <div className="flex h-full flex-col bg-dark-darker">
+    <div className="flex h-full flex-col bg-[#0A0A0B]">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
         <span className="text-sm font-semibold text-cream">Channels</span>
@@ -142,7 +142,7 @@ export function ChannelSidebar({
       {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed left-3 top-3 z-50 rounded-lg border border-white/[0.08] bg-dark-darker p-2 text-gray-text transition-colors hover:text-cream md:hidden"
+        className="fixed left-3 top-3 z-50 rounded-lg border border-white/[0.08] bg-[#0A0A0B] p-2 text-gray-text transition-colors hover:text-cream md:hidden"
       >
         <Menu className="h-5 w-5" />
       </button>

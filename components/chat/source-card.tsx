@@ -16,8 +16,8 @@ export function SourceCard({ source, index }: SourceCardProps) {
     <div
       className={`cursor-pointer rounded-lg border transition-all duration-200 ${
         expanded
-          ? "border-white/[0.1] bg-[#1d1d1d]"
-          : "border-white/[0.05] bg-[#1d1d1d] hover:border-white/[0.1] hover:bg-dark-surface"
+          ? "border-white/[0.1] bg-[#111213]"
+          : "border-white/[0.05] bg-[#111213] hover:border-white/[0.1] hover:bg-[#1C1D1F]"
       }`}
       onClick={() => setExpanded(!expanded)}
     >

@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   description:
     "Search YouTube channels by meaning. Ask questions, get answers from creator videos with exact timestamps.",
   icons: {
-    icon: "/TubeVault_Symbol.png",
-    apple: "/TubeVault_Symbol.png",
+    icon: "/TubeVault_Logo_round.png",
+    apple: "/TubeVault_Logo_round.png",
   },
 };
 
