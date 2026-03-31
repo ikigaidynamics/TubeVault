@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -9,6 +11,9 @@ import { queryCollection, type Collection, type HistoryMessage, type Source } fr
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { TypingIndicator } from "@/components/chat/typing-indicator";
+import { UpgradeModal } from "@/components/chat/upgrade-modal";
+import { ChannelPickerModal } from "@/components/chat/channel-picker-modal";
+import { TIER_LIMITS, type SubscriptionTier } from "@/lib/tiers";
 
 interface Message {
   role: "user" | "assistant";
@@ -19,6 +24,14 @@ interface Message {
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://mindvault.ikigai-dynamics.com/api";
+
+/** Return top N collections by video_count as default picks */
+function getDefaults(collections: Collection[], n: number): string[] {
+  return [...collections]
+    .sort((a, b) => (b.video_count || 0) - (a.video_count || 0))
+    .slice(0, n)
+    .map((c) => c.name);
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -34,7 +47,28 @@ export default function DashboardPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Get user info
+  // Tier state
+  const [tier, setTier] = useState<SubscriptionTier>("free");
+  const [questionsRemaining, setQuestionsRemaining] = useState<number | null>(null);
+  const [questionLimit, setQuestionLimit] = useState<number | null>(null);
+  const [upgradeModal, setUpgradeModal] = useState<{
+    open: boolean;
+    title?: string;
+    message?: string;
+  }>({ open: false });
+  const [searchAllActive, setSearchAllActive] = useState(false);
+
+  // Channel selection state
+  const [pickedChannels, setPickedChannels] = useState<string[]>([]);
+  const [lockedUntil, setLockedUntil] = useState<string | null>(null);
+  const [canChange, setCanChange] = useState(true);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [channelDataLoaded, setChannelDataLoaded] = useState(false);
+
+  const hasUnlimitedChannels = TIER_LIMITS[tier].maxChannels === Infinity;
+  const maxChannels = TIER_LIMITS[tier].maxChannels;
+
+  // Get user info + tier
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -43,6 +77,17 @@ export default function DashboardPage() {
         setUserAvatar(user.user_metadata?.avatar_url || null);
       }
     });
+
+    fetch("/api/questions/check")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.tier) setTier(data.tier);
+        if (data.remaining !== undefined && data.remaining >= 0) {
+          setQuestionsRemaining(data.remaining);
+          setQuestionLimit(data.limit);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Fetch collections
@@ -62,12 +107,37 @@ export default function DashboardPage() {
     load();
   }, []);
 
-  // Auto-scroll to bottom
+  // Fetch channel selection (after tier is known)
+  useEffect(() => {
+    fetch("/api/channels/select")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.tier) setTier(data.tier);
+        if (data.selectedChannels) setPickedChannels(data.selectedChannels);
+        if (data.lockedUntil) setLockedUntil(data.lockedUntil);
+        if (data.canChange !== undefined) setCanChange(data.canChange);
+        setChannelDataLoaded(true);
+      })
+      .catch(() => setChannelDataLoaded(true));
+  }, []);
+
+  // Auto-open picker for Free/Starter users who haven't selected yet
+  useEffect(() => {
+    if (
+      channelDataLoaded &&
+      !collectionsLoading &&
+      collections.length > 0 &&
+      !hasUnlimitedChannels &&
+      pickedChannels.length === 0
+    ) {
+      setPickerOpen(true);
+    }
+  }, [channelDataLoaded, collectionsLoading, collections.length, hasUnlimitedChannels, pickedChannels.length]);
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // Build conversation history for API
   const getHistory = useCallback((): HistoryMessage[] => {
     return messages.slice(-10).map((m) => ({
       role: m.role,
@@ -75,32 +145,70 @@ export default function DashboardPage() {
     }));
   }, [messages]);
 
+  async function handleConfirmChannels(channels: string[]) {
+    try {
+      const res = await fetch("/api/channels/select", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channels }),
+      });
+      const data = await res.json();
+      if (data.selectedChannels) setPickedChannels(data.selectedChannels);
+      if (data.lockedUntil) setLockedUntil(data.lockedUntil);
+      if (data.canChange !== undefined) setCanChange(data.canChange);
+    } catch {
+      // keep current state
+    }
+    setPickerOpen(false);
+  }
+
   async function handleSend() {
-    if (!input.trim() || !selectedChannel || loading) return;
+    if (!input.trim() || (!selectedChannel && !searchAllActive) || loading) return;
+
+    if (questionsRemaining !== null && questionsRemaining <= 0) {
+      setUpgradeModal({
+        open: true,
+        title: "Daily Limit Reached",
+        message: "You've used all 5 free questions today. Upgrade to Starter for unlimited questions.",
+      });
+      return;
+    }
 
     const question = input.trim();
     setInput("");
     setError(null);
-
-    // Add user message
     setMessages((prev) => [...prev, { role: "user", content: question }]);
     setLoading(true);
 
     try {
+      if (questionLimit !== null && questionLimit > 0) {
+        const incRes = await fetch("/api/questions/increment", { method: "POST" });
+        if (incRes.status === 429) {
+          setMessages((prev) => prev.slice(0, -1));
+          setInput(question);
+          setQuestionsRemaining(0);
+          setUpgradeModal({
+            open: true,
+            title: "Daily Limit Reached",
+            message: "You've used all 5 free questions today. Upgrade to Starter for unlimited questions.",
+          });
+          setLoading(false);
+          return;
+        }
+        const incData = await incRes.json();
+        if (incData.remaining !== undefined) setQuestionsRemaining(incData.remaining);
+      }
+
+      const channelName = searchAllActive ? "_all" : selectedChannel!;
       const history = getHistory();
-      const data = await queryCollection(selectedChannel, question, history);
+      const data = await queryCollection(channelName, question, history);
 
       setMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          content: data.answer,
-          sources: data.sources,
-        },
+        { role: "assistant", content: data.answer, sources: data.sources },
       ]);
     } catch {
       setError("Failed to get a response. Please try again.");
-      // Remove the user message on error so they can retry
       setMessages((prev) => prev.slice(0, -1));
       setInput(question);
     } finally {
@@ -124,6 +232,7 @@ export default function DashboardPage() {
   }
 
   function handleSelectChannel(name: string) {
+    setSearchAllActive(false);
     if (name !== selectedChannel) {
       setSelectedChannel(name);
       setMessages([]);
@@ -131,12 +240,44 @@ export default function DashboardPage() {
     }
   }
 
-  const selectedCollection = collections.find(
-    (c) => c.name === selectedChannel
-  );
+  function handleSearchAll() {
+    setSearchAllActive(true);
+    setSelectedChannel(null);
+    setMessages([]);
+    setError(null);
+  }
+
+  const selectedCollection = collections.find((c) => c.name === selectedChannel);
+  const hasActiveChat = selectedChannel || searchAllActive;
+  const chatLabel = searchAllActive
+    ? "all channels"
+    : selectedCollection?.display_name || selectedChannel;
 
   return (
     <div className="flex h-screen bg-[#0A0A0B]">
+      {/* Upgrade modal */}
+      <UpgradeModal
+        open={upgradeModal.open}
+        onClose={() => setUpgradeModal({ open: false })}
+        title={upgradeModal.title}
+        message={upgradeModal.message}
+      />
+
+      {/* Channel picker modal */}
+      <ChannelPickerModal
+        open={pickerOpen}
+        collections={collections}
+        maxChannels={maxChannels === Infinity ? collections.length : maxChannels}
+        defaults={
+          pickedChannels.length > 0
+            ? pickedChannels
+            : getDefaults(collections, maxChannels === Infinity ? collections.length : maxChannels)
+        }
+        onConfirm={handleConfirmChannels}
+        onClose={() => setPickerOpen(false)}
+        canClose={pickedChannels.length > 0}
+      />
+
       {/* Sidebar */}
       <ChannelSidebar
         collections={collections}
@@ -144,13 +285,35 @@ export default function DashboardPage() {
         onSelectChannel={handleSelectChannel}
         userEmail={userEmail}
         onLogout={handleLogout}
+        tier={tier}
+        pickedChannels={pickedChannels}
+        lockedUntil={lockedUntil}
+        canChange={canChange}
+        onChangeChannels={() => setPickerOpen(true)}
+        onSearchAll={handleSearchAll}
+        searchAllActive={searchAllActive}
       />
 
       {/* Main chat area */}
       <div className="flex flex-1 flex-col">
         {/* Creator bar */}
         <header className="flex items-center gap-2.5 border-b border-white/[0.06] bg-[#0A0A0B] px-6 py-3 pl-14 md:pl-6">
-          {selectedCollection ? (
+          {searchAllActive ? (
+            <>
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+                </svg>
+              </div>
+              <div className="flex flex-col gap-px">
+                <p className="text-[13px] font-medium text-cream/90">Cross-Channel Search</p>
+                <p className="text-[11px] text-gray-text/40">
+                  Search across all {collections.length} channels
+                </p>
+              </div>
+              <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_rgba(61,122,53,0.5)]" />
+            </>
+          ) : selectedCollection ? (
             <>
               {(() => {
                 const logoUrl = selectedCollection.logo
@@ -197,8 +360,7 @@ export default function DashboardPage() {
 
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto px-6 py-6 md:px-12 lg:px-16">
-          {!selectedChannel ? (
-            /* ── No channel selected: TubeVault welcome ── */
+          {!hasActiveChat ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
               <div className="relative flex flex-col items-center">
                 <Image
@@ -219,12 +381,16 @@ export default function DashboardPage() {
               </p>
             </div>
           ) : messages.length === 0 && !loading ? (
-            /* ── Channel selected, no messages: MindVault-style welcome ── */
             <div className="flex h-full animate-[fadeUp_0.6s_ease-out] items-center justify-center px-2">
               <div className="flex w-full max-w-[900px] flex-col items-center gap-8 md:flex-row md:items-start md:gap-0">
-                {/* Left: Creator info (61.8%) */}
                 <div className="flex flex-[0_0_61.8%] flex-col gap-4 text-center md:pr-12 md:text-left">
-                  {(() => {
+                  {searchAllActive ? (
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 md:mx-0">
+                      <svg className="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+                      </svg>
+                    </div>
+                  ) : (() => {
                     const logoUrl = selectedCollection?.logo
                       ? selectedCollection.logo.startsWith("/")
                         ? `https://mindvault.ikigai-dynamics.com${selectedCollection.logo}`
@@ -250,52 +416,52 @@ export default function DashboardPage() {
                     );
                   })()}
                   <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-gray-text/40">
-                    Creator Intelligence Platform
+                    {searchAllActive ? "Cross-Channel Intelligence" : "Creator Intelligence Platform"}
                   </p>
                   <h2 className="text-2xl font-normal leading-tight text-cream/90 md:text-[2rem]">
-                    Explore the knowledge
-                    <br />
-                    of{" "}
-                    <span className="text-cream">
-                      {selectedCollection?.display_name}
-                    </span>
+                    {searchAllActive ? (
+                      <>Search across<br />all <span className="text-cream">{collections.length} channels</span></>
+                    ) : (
+                      <>
+                        Explore the knowledge<br />of{" "}
+                        <span className="text-cream">{selectedCollection?.display_name}</span>
+                      </>
+                    )}
                   </h2>
                   <p className="text-[14px] leading-relaxed text-gray-text/60">
-                    Get source-based answers from{" "}
-                    {selectedCollection?.video_count || "all"} indexed videos.
-                    Every statement linked to the original source.
+                    {searchAllActive
+                      ? "Ask a question and get answers from all indexed creators. Every statement linked to the original source."
+                      : `Get source-based answers from ${selectedCollection?.video_count || "all"} indexed videos. Every statement linked to the original source.`}
                   </p>
                 </div>
 
-                {/* Right: Suggestions (38.2%) */}
                 <div className="flex w-full flex-[0_0_38.2%] flex-col gap-3 md:w-auto">
                   <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-gray-text/40 md:pl-0.5">
                     Try asking
                   </p>
-                  {[
-                    `What are the main topics ${selectedCollection?.display_name} covers?`,
-                    `What's the most interesting insight from recent videos?`,
-                    `Summarize the key health recommendations`,
-                  ].map((suggestion) => (
+                  {(searchAllActive
+                    ? [
+                        "What do experts say about intermittent fasting?",
+                        "Compare different views on ancient civilizations",
+                        "What are the most recommended supplements?",
+                      ]
+                    : [
+                        `What are the main topics ${selectedCollection?.display_name} covers?`,
+                        `What's the most interesting insight from recent videos?`,
+                        `Summarize the key health recommendations`,
+                      ]
+                  ).map((suggestion) => (
                     <button
                       key={suggestion}
                       onClick={() => {
                         setInput(suggestion);
                         inputRef.current?.focus();
                       }}
-                      className="w-full rounded-xl border border-[#2E2F31] bg-[#1C1D1F] px-3.5 py-2.5 text-left text-[13px] leading-relaxed text-gray-text/70 transition-all duration-200 hover:translate-x-1 hover:border-primary/30 hover:bg-[#242527] hover:border-[#2E2F31] hover:text-cream hover:shadow-[0_0_20px_rgba(61,122,53,0.08)]"
+                      className="w-full rounded-xl border border-[#2E2F31] bg-[#1C1D1F] px-3.5 py-2.5 text-left text-[13px] leading-relaxed text-gray-text/70 transition-all duration-200 hover:translate-x-1 hover:border-primary/30 hover:bg-[#242527] hover:text-cream hover:shadow-[0_0_20px_rgba(61,122,53,0.08)]"
                     >
                       {suggestion}
                     </button>
                   ))}
-                  <button
-                    onClick={() => {
-                      /* future: link to channel browse */
-                    }}
-                    className="mt-1 w-full rounded-xl border border-[#2E2F31] bg-[#1C1D1F] px-3.5 py-2.5 text-center text-[12px] font-medium text-gray-text/50 transition-all duration-200 hover:translate-x-1 hover:border-primary/30 hover:text-cream"
-                  >
-                    Browse channel database
-                  </button>
                 </div>
               </div>
             </div>
@@ -316,7 +482,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Error banner */}
+        {/* Error */}
         {error && (
           <div className="mx-6 mb-2 flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-2.5 text-sm text-red-400 md:mx-12 lg:mx-16">
             <AlertCircle className="h-4 w-4 shrink-0" />
@@ -324,9 +490,18 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Input area */}
+        {/* Input */}
         <div className="border-t border-[#1E1F21] bg-[#0A0A0B] px-6 py-4 md:px-12 lg:px-16">
           <div className="mx-auto max-w-3xl">
+            {questionsRemaining !== null && questionLimit !== null && questionLimit > 0 && (
+              <div className="mb-2 flex items-center justify-center">
+                <span className={`text-[11px] font-medium ${
+                  questionsRemaining <= 1 ? "text-red-400/80" : "text-gray-text/50"
+                }`}>
+                  {questionsRemaining} of {questionLimit} questions remaining today
+                </span>
+              </div>
+            )}
             <div
               className={`flex items-end gap-2 rounded-2xl border bg-[#141416] px-4 py-1.5 transition-all ${
                 input
@@ -339,32 +514,29 @@ export default function DashboardPage() {
                 value={input}
                 onChange={(e) => {
                   setInput(e.target.value);
-                  // Auto-resize
                   e.target.style.height = "auto";
-                  e.target.style.height =
-                    Math.min(e.target.scrollHeight, 120) + "px";
+                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
                 }}
                 onKeyDown={handleKeyDown}
                 placeholder={
-                  selectedChannel
-                    ? `Ask a question about ${selectedCollection?.display_name || selectedChannel}...`
+                  hasActiveChat
+                    ? `Ask a question about ${chatLabel}...`
                     : "Select a channel first..."
                 }
-                disabled={!selectedChannel || loading}
+                disabled={!hasActiveChat || loading}
                 rows={1}
                 className="max-h-[120px] min-h-[22px] flex-1 resize-none bg-transparent py-2.5 text-[14px] leading-[1.5] text-cream placeholder:text-gray-text/40 focus:outline-none disabled:opacity-40"
               />
               <button
                 onClick={handleSend}
-                disabled={!input.trim() || !selectedChannel || loading}
+                disabled={!input.trim() || !hasActiveChat || loading}
                 className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary text-cream transition-all hover:scale-[1.04] hover:bg-primary-hover disabled:opacity-30 disabled:hover:scale-100"
               >
                 <Send className="h-[18px] w-[18px]" />
               </button>
             </div>
             <p className="mt-2 text-center text-[10px] text-gray-text/30">
-              Answers are AI-generated from video transcripts. Always verify
-              with the source.
+              Answers are AI-generated from video transcripts. Always verify with the source.
             </p>
           </div>
         </div>

@@ -1,8 +1,19 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase-middleware";
 
 export async function middleware(request: NextRequest) {
-  return await updateSession(request);
+  const response = await updateSession(request);
+
+  // Ensure authenticated pages are never cached by browser or CDN
+  if (request.nextUrl.pathname.startsWith("/dashboard")) {
+    response.headers.set(
+      "Cache-Control",
+      "private, no-cache, no-store, must-revalidate"
+    );
+    response.headers.set("Vary", "Cookie");
+  }
+
+  return response;
 }
 
 export const config = {

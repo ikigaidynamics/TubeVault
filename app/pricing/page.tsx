@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check, Sparkles, ChevronDown, Zap, Loader2 } from "lucide-react";
+import { Check, ChevronDown, Zap, Loader2, Crown, Mail } from "lucide-react";
+import { Navbar } from "@/components/shared/navbar";
 import type { PriceKey } from "@/lib/stripe";
 
 interface Tier {
@@ -42,7 +43,7 @@ const tiers: Tier[] = [
     yearlyPrice: 90,
     description: "For curious minds who want more",
     features: [
-      "10 channels accessible",
+      "5 channels accessible",
       "Unlimited questions",
       "Chat search",
       "Email support",
@@ -58,12 +59,11 @@ const tiers: Tier[] = [
     yearlyPrice: 190,
     description: "Full access for power users",
     features: [
-      "30 channels accessible",
+      "All channels accessible",
       "Unlimited questions",
       "Chat search",
       "Full transcript access",
       "Translation to 100+ languages",
-      "Priority support",
     ],
     cta: "Go Pro",
     highlighted: true,
@@ -256,42 +256,7 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-dark-bg">
-      <nav className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#1d1d1d]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
-          <Link href="/" className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-gray-text">
-              AI-powered semantic search for YouTube
-            </span>
-          </Link>
-          <div className="hidden items-center gap-6 md:flex">
-            <Link
-              href="/channels"
-              className="text-sm text-gray-text transition-colors hover:text-cream"
-            >
-              Channels
-            </Link>
-            <Link
-              href="/login"
-              className="text-sm text-gray-text transition-colors hover:text-cream"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
-            >
-              Get Started
-            </Link>
-          </div>
-          <Link
-            href="/signup"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover md:hidden"
-          >
-            Get Started
-          </Link>
-        </div>
-      </nav>
+      <Navbar />
 
       <section className="px-6 pt-20 pb-4 text-center">
         <div className="mx-auto max-w-2xl">
@@ -342,6 +307,37 @@ export default function PricingPage() {
           {tiers.map((tier) => (
             <PricingCard key={tier.slug} tier={tier} yearly={yearly} />
           ))}
+        </div>
+      </section>
+
+      {/* Creator tier */}
+      <section className="px-6 pb-12">
+        <div className="mx-auto max-w-6xl">
+          <div className="rounded-2xl border border-primary/20 bg-primary/[0.03] p-8 md:p-10">
+            <div className="flex flex-col items-center gap-6 md:flex-row md:items-start">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                <Crown className="h-7 w-7 text-primary" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-xl font-bold text-cream">
+                  Are you a creator?
+                </h3>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-gray-text">
+                  Get your channel on TubeVault and let your audience search your
+                  entire video library by meaning. Creator accounts include full
+                  platform access plus transcript editing for your own channels and
+                  analytics (coming soon).
+                </p>
+                <a
+                  href="mailto:creators@ikigai-dynamics.com?subject=TubeVault Creator Account"
+                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+                >
+                  <Mail className="h-4 w-4" />
+                  Contact us
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

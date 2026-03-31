@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Alice } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
+});
+
+const alice = Alice({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-alice",
 });
 
 export const metadata: Metadata = {
@@ -24,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} antialiased`}>{children}</body>
+      <body className={`${inter.className} ${alice.variable} antialiased`}>{children}</body>
     </html>
   );
 }

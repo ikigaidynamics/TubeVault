@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, ArrowRight, Sparkles, Play } from "lucide-react";
+import { Search, ArrowRight, Play } from "lucide-react";
+import { createClient } from "@/lib/supabase";
+import { Navbar } from "@/components/shared/navbar";
 import {
   CHANNELS,
   CATEGORIES,
@@ -52,52 +54,32 @@ function ChannelAvatar({
 export default function ChannelsPage() {
   const [activeCategory, setActiveCategory] = useState<Category>("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [loggedIn, setLoggedIn] = useState(false);
 
-  const filtered = getChannelsByCategory(activeCategory).filter(
-    (c) =>
-      c.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setLoggedIn(!!user);
+    });
+  }, []);
+
+  // Sort A-Z within each category filter
+  const filtered = getChannelsByCategory(activeCategory)
+    .filter(
+      (c) =>
+        c.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.description.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => a.displayName.localeCompare(b.displayName));
+
+  function channelLink(slug: string) {
+    if (loggedIn) return `/dashboard?channel=${slug}`;
+    return `/login?redirect=/dashboard?channel=${slug}`;
+  }
 
   return (
     <div className="min-h-screen bg-dark-bg">
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#1d1d1d]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
-          <Link href="/" className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-gray-text">
-              AI-powered semantic search for YouTube
-            </span>
-          </Link>
-          <div className="hidden items-center gap-6 md:flex">
-            <Link
-              href="/pricing"
-              className="text-sm text-gray-text transition-colors hover:text-cream"
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/login"
-              className="text-sm text-gray-text transition-colors hover:text-cream"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
-            >
-              Get Started
-            </Link>
-          </div>
-          <Link
-            href="/signup"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover md:hidden"
-          >
-            Get Started
-          </Link>
-        </div>
-      </nav>
+      <Navbar />
 
       <div className="mx-auto max-w-7xl px-6 py-12">
         {/* Header */}
@@ -155,12 +137,12 @@ export default function ChannelsPage() {
           })}
         </div>
 
-        {/* Channel grid */}
+        {/* Channel grid — A-Z sorted */}
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((channel) => (
             <Link
               key={channel.slug}
-              href={`/login?redirect=/dashboard?channel=${channel.slug}`}
+              href={channelLink(channel.slug)}
               className="group relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 transition-all duration-300 hover:border-primary/20 hover:bg-white/[0.04]"
             >
               <div className="flex gap-4">
@@ -199,6 +181,34 @@ export default function ChannelsPage() {
           </div>
         )}
 
+        {/* Guide section */}
+        <div className="mt-20">
+          <h2 className="text-2xl font-bold text-cream">How TubeVault Works</h2>
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-lg font-bold text-primary">1</div>
+              <h3 className="mt-4 text-base font-semibold text-cream">Pick your channels</h3>
+              <p className="mt-2 text-sm leading-relaxed text-gray-text/70">
+                Choose from {CHANNELS.length} indexed YouTube channels. Free users can add up to 3 channels to their sidebar.
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-lg font-bold text-primary">2</div>
+              <h3 className="mt-4 text-base font-semibold text-cream">Ask anything</h3>
+              <p className="mt-2 text-sm leading-relaxed text-gray-text/70">
+                Type a natural question. Our AI searches through thousands of hours of video transcripts by meaning, not just keywords.
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-lg font-bold text-primary">3</div>
+              <h3 className="mt-4 text-base font-semibold text-cream">Get timestamped answers</h3>
+              <p className="mt-2 text-sm leading-relaxed text-gray-text/70">
+                Every answer includes clickable timestamps that jump directly to the source video. Verify every claim in seconds.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* CTA */}
         <div className="mt-16 rounded-xl border border-white/[0.06] bg-white/[0.02] p-8 text-center">
           <h2 className="text-xl font-semibold text-cream">
@@ -208,10 +218,10 @@ export default function ChannelsPage() {
             Free plan includes 3 channels and 5 questions per day.
           </p>
           <Link
-            href="/signup"
+            href={loggedIn ? "/dashboard" : "/signup"}
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
           >
-            Start searching — it&apos;s free
+            {loggedIn ? "Go to Dashboard" : "Start searching — it\u0027s free"}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

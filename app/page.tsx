@@ -7,12 +7,12 @@ import {
   Layers,
   MessageCircleQuestion,
   Timer,
-  Sparkles,
   ExternalLink,
 } from "lucide-react";
 import { HeroDemo } from "@/components/landing/hero-demo";
 import { ChannelGrid } from "@/components/landing/channel-grid";
 import { AnimateOnScroll } from "@/components/landing/animate-on-scroll";
+import { Navbar } from "@/components/shared/navbar";
 
 const STEPS = [
   {
@@ -42,49 +42,9 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-dark-bg">
       {/* ── Navigation ── */}
-      <nav className="fixed top-0 z-50 w-full border-b border-white/[0.06] bg-[#1d1d1d]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
-          <Link href="/" className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-gray-text">
-              AI-powered semantic search for YouTube
-            </span>
-          </Link>
-          <div className="hidden items-center gap-6 md:flex">
-            <Link
-              href="/channels"
-              className="text-sm text-gray-text transition-colors hover:text-cream"
-            >
-              Channels
-            </Link>
-            <Link
-              href="/pricing"
-              className="text-sm text-gray-text transition-colors hover:text-cream"
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/login"
-              className="text-sm text-gray-text transition-colors hover:text-cream"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
-            >
-              Get Started
-            </Link>
-          </div>
-          {/* Mobile: just CTA */}
-          <Link
-            href="/signup"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover md:hidden"
-          >
-            Get Started
-          </Link>
-        </div>
-      </nav>
+      <div className="fixed top-0 z-50 w-full">
+        <Navbar />
+      </div>
 
       {/* ── Hero ── */}
       <section className="hero-gradient grid-pattern relative overflow-hidden pt-20 pb-8 md:pt-28 md:pb-16">
@@ -132,7 +92,7 @@ export default function Home() {
             <AnimateOnScroll delay={400}>
               <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
                 <Link
-                  href="/signup"
+                  href="/try"
                   className="glow-pulse inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover sm:w-auto"
                 >
                   Start searching — it&apos;s free
@@ -364,8 +324,14 @@ export default function Home() {
               &copy; {new Date().getFullYear()} IkigAI Dynamics. All rights
               reserved.
             </p>
-            <div className="flex items-center gap-1.5">
-              <div className="h-4 w-4 rounded bg-primary/80" />
+            <div className="flex items-center gap-2">
+              <Image
+                src="/ikigai-logo.png"
+                alt="IkigAI Dynamics"
+                width={20}
+                height={20}
+                className="h-5 w-5 rounded"
+              />
               <span className="text-xs font-medium text-gray-text/40">
                 IkigAI Dynamics
               </span>

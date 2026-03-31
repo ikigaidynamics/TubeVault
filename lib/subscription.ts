@@ -1,77 +1,24 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
-export type SubscriptionTier = "free" | "starter" | "pro" | "premium";
+// Import for local use
+import { TIER_LIMITS as _TIER_LIMITS, type SubscriptionTier as _SubscriptionTier } from "./tiers";
 
-export interface TierLimits {
-  maxChannels: number;
-  maxQuestionsPerDay: number;
-  hasTranscripts: boolean;
-  hasTranslation: boolean;
-  hasCrossChannelSearch: boolean;
-  hasPrioritySupport: boolean;
-}
-
-export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
-  free: {
-    maxChannels: 3,
-    maxQuestionsPerDay: 5,
-    hasTranscripts: false,
-    hasTranslation: false,
-    hasCrossChannelSearch: false,
-    hasPrioritySupport: false,
-  },
-  starter: {
-    maxChannels: 10,
-    maxQuestionsPerDay: Infinity,
-    hasTranscripts: false,
-    hasTranslation: false,
-    hasCrossChannelSearch: false,
-    hasPrioritySupport: false,
-  },
-  pro: {
-    maxChannels: 30,
-    maxQuestionsPerDay: Infinity,
-    hasTranscripts: true,
-    hasTranslation: true,
-    hasCrossChannelSearch: false,
-    hasPrioritySupport: true,
-  },
-  premium: {
-    maxChannels: Infinity,
-    maxQuestionsPerDay: Infinity,
-    hasTranscripts: true,
-    hasTranslation: true,
-    hasCrossChannelSearch: true,
-    hasPrioritySupport: true,
-  },
-};
-
-export function getTierLimits(tier: SubscriptionTier): TierLimits {
-  return TIER_LIMITS[tier];
-}
-
-export function canAccessChannel(
-  tier: SubscriptionTier,
-  channelIndex: number
-): boolean {
-  return channelIndex < TIER_LIMITS[tier].maxChannels;
-}
-
-export function canAskQuestion(
-  tier: SubscriptionTier,
-  questionsToday: number
-): boolean {
-  return questionsToday < TIER_LIMITS[tier].maxQuestionsPerDay;
-}
+// Re-export shared types/constants for server consumers
+export type { SubscriptionTier, TierLimits } from "./tiers";
+export { TIER_LIMITS, getTierLimits, canAccessChannel, canAskQuestion } from "./tiers";
 
 export interface Subscription {
   user_id: string;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
-  tier: SubscriptionTier;
+  tier: import("./tiers").SubscriptionTier;
   status: string;
   current_period_end: string | null;
+  creator_channels: string[];
+  selected_channels: string[];
+  channels_locked_until: string | null;
 }
 
 /**
@@ -113,6 +60,9 @@ export async function getUserSubscription(): Promise<Subscription> {
       tier: "free",
       status: "inactive",
       current_period_end: null,
+      creator_channels: [],
+      selected_channels: [],
+      channels_locked_until: null,
     };
   }
 
@@ -131,10 +81,80 @@ export async function getUserSubscription(): Promise<Subscription> {
       tier: "free",
       status: "inactive",
       current_period_end: null,
+      creator_channels: [],
+      selected_channels: [],
+      channels_locked_until: null,
     };
   }
 
-  return data as Subscription;
+  return {
+    ...data,
+    creator_channels: data.creator_channels || [],
+    selected_channels: data.selected_channels || [],
+    channels_locked_until: data.channels_locked_until || null,
+  } as Subscription;
+}
+
+// ── Channel selection helpers (server-side, uses service role) ──
+
+function getAdminClient() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
+export async function getUserSelectedChannels(
+  userId: string
+): Promise<{ selected: string[]; lockedUntil: string | null; canChange: boolean }> {
+  const admin = getAdminClient();
+  const { data } = await admin
+    .from("subscriptions")
+    .select("selected_channels, channels_locked_until")
+    .eq("user_id", userId)
+    .single();
+
+  const selected: string[] = data?.selected_channels || [];
+  const lockedUntil: string | null = data?.channels_locked_until || null;
+  const canChange = !lockedUntil || new Date(lockedUntil) < new Date();
+
+  return { selected, lockedUntil, canChange };
+}
+
+export async function updateSelectedChannels(
+  userId: string,
+  channels: string[],
+  tier: _SubscriptionTier
+): Promise<{ selected: string[]; lockedUntil: string }> {
+  const limit = _TIER_LIMITS[tier].maxChannels;
+
+  if (limit !== Infinity && channels.length > limit) {
+    throw new Error(`Tier ${tier} allows max ${limit} channels`);
+  }
+
+  const lockedUntil = new Date(
+    Date.now() + 30 * 24 * 60 * 60 * 1000
+  ).toISOString();
+
+  const admin = getAdminClient();
+  await admin
+    .from("subscriptions")
+    .update({
+      selected_channels: channels,
+      channels_locked_until: lockedUntil,
+    })
+    .eq("user_id", userId);
+
+  return { selected: channels, lockedUntil };
+}
+
+export function isChannelAccessibleForUser(
+  tier: _SubscriptionTier,
+  channelSlug: string,
+  selectedChannels: string[]
+): boolean {
+  if (_TIER_LIMITS[tier].maxChannels === Infinity) return true;
+  return selectedChannels.includes(channelSlug);
 }
 
 /**
@@ -144,8 +164,7 @@ export async function getOrCreateStripeCustomer(
   userId: string,
   email: string
 ): Promise<string> {
-  const { createClient } = await import("@supabase/supabase-js");
-  const supabaseAdmin = createClient(
+  const supabaseAdmin = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
