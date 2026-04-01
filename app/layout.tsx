@@ -31,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} ${alice.variable} antialiased`}>{children}</body>
+      <body className={`${inter.className} ${alice.variable} antialiased`} suppressHydrationWarning>{children}</body>
     </html>
   );
 }

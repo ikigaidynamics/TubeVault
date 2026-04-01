@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -41,21 +39,18 @@ const STEPS = [
 export default function Home() {
   return (
     <div className="min-h-screen bg-dark-bg">
-      {/* ── Navigation ── */}
+      {/* Navigation */}
       <div className="fixed top-0 z-50 w-full">
         <Navbar />
       </div>
 
-      {/* ── Hero ── */}
+      {/* Hero */}
       <section className="hero-gradient grid-pattern relative overflow-hidden pt-20 pb-8 md:pt-28 md:pb-16">
-        {/* Decorative orb behind hero center */}
         <div className="pointer-events-none absolute left-1/2 top-[20%] h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-primary/[0.04] blur-[140px]" />
 
         <div className="relative mx-auto max-w-7xl px-6">
-          {/* Logo + Headline side by side, centered as a unit */}
           <AnimateOnScroll delay={150}>
             <div className="flex flex-col items-center gap-6 md:flex-row md:justify-center md:gap-12 lg:gap-16">
-              {/* Logo */}
               <div className="shrink-0">
                 <Image
                   src="/TubeVault_Logo_noBG.png"
@@ -66,8 +61,6 @@ export default function Home() {
                   className="w-44 sm:w-52 md:w-60 lg:w-72 xl:w-80"
                 />
               </div>
-
-              {/* Headline */}
               <h1 className="text-center text-4xl font-bold leading-[1.08] tracking-tight text-cream sm:text-5xl md:text-left md:text-6xl lg:text-7xl">
                 Every answer.
                 <br />
@@ -80,7 +73,6 @@ export default function Home() {
             </div>
           </AnimateOnScroll>
 
-          {/* Subheadline + CTAs — centered below */}
           <div className="mx-auto mt-10 max-w-2xl text-center">
             <AnimateOnScroll delay={300}>
               <p className="text-base leading-relaxed text-gray-text md:text-lg">
@@ -108,7 +100,6 @@ export default function Home() {
             </AnimateOnScroll>
           </div>
 
-          {/* Demo */}
           <AnimateOnScroll delay={500}>
             <div className="mt-16 md:mt-20">
               <HeroDemo />
@@ -117,7 +108,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── How It Works ── */}
+      {/* How It Works */}
       <section className="relative border-t border-white/[0.06] px-6 py-24 md:py-32">
         <div className="mx-auto max-w-5xl">
           <AnimateOnScroll>
@@ -132,13 +123,10 @@ export default function Home() {
           </AnimateOnScroll>
 
           <div className="relative mt-16 grid gap-8 md:grid-cols-3 md:gap-6">
-            {/* Connector lines (desktop) */}
             <div className="step-connector pointer-events-none absolute left-[20%] right-[20%] top-12 hidden h-px md:block" />
-
             {STEPS.map((step, i) => (
               <AnimateOnScroll key={step.number} delay={i * 150}>
                 <div className="group relative text-center">
-                  {/* Number circle */}
                   <div className="relative mx-auto mb-6 flex h-24 w-24 items-center justify-center">
                     <div className="absolute inset-0 rounded-2xl bg-primary/[0.06] transition-colors duration-300 group-hover:bg-primary/[0.12]" />
                     <div className="relative flex flex-col items-center">
@@ -148,12 +136,8 @@ export default function Home() {
                       </span>
                     </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-cream">
-                    {step.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-text">
-                    {step.description}
-                  </p>
+                  <h3 className="text-lg font-semibold text-cream">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-text">{step.description}</p>
                 </div>
               </AnimateOnScroll>
             ))}
@@ -161,7 +145,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Featured Channels ── */}
+      {/* Featured Channels */}
       <section className="border-t border-white/[0.06] px-6 py-24 md:py-32">
         <div className="mx-auto max-w-6xl">
           <AnimateOnScroll>
@@ -206,7 +190,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CTA Banner ── */}
+      {/* CTA Banner */}
       <section className="border-t border-white/[0.06] px-6 py-24 md:py-32">
         <AnimateOnScroll>
           <div className="mx-auto max-w-3xl text-center">
@@ -220,7 +204,7 @@ export default function Home() {
             </p>
             <div className="mt-8">
               <Link
-                href="/signup"
+                href="/try"
                 className="glow-pulse inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-4 font-semibold text-white transition-colors hover:bg-primary-hover"
               >
                 Start searching — it&apos;s free
@@ -231,11 +215,10 @@ export default function Home() {
         </AnimateOnScroll>
       </section>
 
-      {/* ── Footer ── */}
+      {/* Footer */}
       <footer className="border-t border-white/[0.06] px-6 py-12">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-10 md:grid-cols-4">
-            {/* Brand */}
             <div className="md:col-span-2">
               <Image
                 src="/TubeVault_Logo_noBG.png"
@@ -252,90 +235,40 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Product links */}
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-text/50">
                 Product
               </h4>
               <ul className="mt-4 space-y-2.5">
-                <li>
-                  <Link
-                    href="/channels"
-                    className="text-sm text-gray-text transition-colors hover:text-cream"
-                  >
-                    Channels
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/pricing"
-                    className="text-sm text-gray-text transition-colors hover:text-cream"
-                  >
-                    Pricing
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/login"
-                    className="text-sm text-gray-text transition-colors hover:text-cream"
-                  >
-                    Login
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/signup"
-                    className="text-sm text-gray-text transition-colors hover:text-cream"
-                  >
-                    Sign up
-                  </Link>
-                </li>
+                <li><Link href="/channels" className="text-sm text-gray-text transition-colors hover:text-cream">Channels</Link></li>
+                <li><Link href="/pricing" className="text-sm text-gray-text transition-colors hover:text-cream">Pricing</Link></li>
+                <li><Link href="/login" className="text-sm text-gray-text transition-colors hover:text-cream">Login</Link></li>
+                <li><Link href="/signup" className="text-sm text-gray-text transition-colors hover:text-cream">Sign up</Link></li>
               </ul>
             </div>
 
-            {/* Legal links */}
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-text/50">
                 Legal
               </h4>
               <ul className="mt-4 space-y-2.5">
-                <li>
-                  <Link
-                    href="/impressum"
-                    className="text-sm text-gray-text transition-colors hover:text-cream"
-                  >
-                    Impressum
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/datenschutz"
-                    className="text-sm text-gray-text transition-colors hover:text-cream"
-                  >
-                    Datenschutz
-                  </Link>
-                </li>
+                <li><Link href="/impressum" className="text-sm text-gray-text transition-colors hover:text-cream">Impressum</Link></li>
+                <li><Link href="/datenschutz" className="text-sm text-gray-text transition-colors hover:text-cream">Datenschutz</Link></li>
               </ul>
             </div>
           </div>
 
           <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/[0.06] pt-8 sm:flex-row">
             <p className="text-xs text-gray-text/40">
-              &copy; {new Date().getFullYear()} IkigAI Dynamics. All rights
-              reserved.
+              &copy; 2026 IkigAI Dynamics. All rights reserved.
             </p>
-            <div className="flex items-center gap-2">
-              <Image
-                src="/ikigai-logo.png"
-                alt="IkigAI Dynamics"
-                width={20}
-                height={20}
-                className="h-5 w-5 rounded"
-              />
-              <span className="text-xs font-medium text-gray-text/40">
-                IkigAI Dynamics
-              </span>
-            </div>
+            <Image
+              src="/IkigAI_Logo_No_Background.png"
+              alt="IkigAI Dynamics"
+              width={120}
+              height={40}
+              className="h-8 w-auto opacity-40"
+            />
           </div>
         </div>
       </footer>

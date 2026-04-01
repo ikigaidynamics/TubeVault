@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { LogOut, Menu, X, Globe, Crown, Settings, RefreshCw, Lock } from "lucide-react";
+import { LogOut, Menu, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight } from "lucide-react";
 import type { Collection } from "@/lib/api";
 import type { SubscriptionTier } from "@/lib/tiers";
 import { TIER_LIMITS } from "@/lib/tiers";
@@ -22,6 +22,8 @@ interface ChannelSidebarProps {
   onChangeChannels?: () => void;
   onSearchAll?: () => void;
   searchAllActive?: boolean;
+  questionsRemaining?: number | null;
+  questionLimit?: number | null;
 }
 
 function ChannelAvatar({ col }: { col: Collection }) {
@@ -70,6 +72,8 @@ export function ChannelSidebar({
   onChangeChannels,
   onSearchAll,
   searchAllActive,
+  questionsRemaining,
+  questionLimit,
 }: ChannelSidebarProps) {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -78,18 +82,19 @@ export function ChannelSidebar({
   const canCrossSearch = limits.hasCrossChannelSearch;
   const hasUnlimitedChannels = limits.maxChannels === Infinity;
 
-  // Channels to show in the sidebar
   const sidebarChannels = hasUnlimitedChannels
     ? collections
     : collections.filter((c) => pickedChannels.includes(c.name));
 
   const lockDays = lockedUntil ? daysUntil(lockedUntil) : 0;
+  const hasQuestionLimit = questionLimit !== null && questionLimit !== undefined && questionLimit > 0;
+  const qRemaining = questionsRemaining ?? 0;
 
   const sidebar = (
     <div className="relative flex h-full flex-col bg-[#0A0A0B]">
       {/* Logo */}
       <div className="border-b border-white/[0.06] px-4 py-2.5">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
           <Image
             src="/TubeVault_Logo_round.png"
             alt="TubeVault"
@@ -121,13 +126,13 @@ export function ChannelSidebar({
         </button>
       </div>
 
-      {/* Lock timer or change button (limited tiers only) */}
+      {/* Lock timer or change button */}
       {!hasUnlimitedChannels && pickedChannels.length > 0 && (
         <div className="px-4 pb-2">
           {canChange ? (
             <button
               onClick={onChangeChannels}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/20 py-1.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary/10"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/20 py-1.5 text-[11px] font-medium text-primary transition-all duration-200 hover:bg-primary/10 hover:border-primary/30"
             >
               <RefreshCw className="h-3 w-3" />
               Change channels
@@ -135,7 +140,7 @@ export function ChannelSidebar({
           ) : (
             <div className="flex items-center justify-center gap-1.5 rounded-lg bg-white/[0.03] py-1.5 text-[10px] text-gray-text/40">
               <Lock className="h-3 w-3" />
-              Selection resets in {lockDays} day{lockDays !== 1 ? "s" : ""}
+              Resets in {lockDays}d
             </div>
           )}
         </div>
@@ -152,38 +157,39 @@ export function ChannelSidebar({
               router.push("/pricing");
             }
           }}
-          className={`mb-0.5 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
+          className={`mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-all duration-200 ${
             searchAllActive
               ? "bg-primary/10 text-cream"
               : "text-gray-text hover:bg-white/[0.04] hover:text-cream"
           }`}
         >
-          <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-            searchAllActive ? "bg-primary/20" : "bg-primary/10"
+          <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${
+            searchAllActive ? "bg-primary/20" : "bg-primary/[0.08]"
           }`}>
-            <Globe className="h-4 w-4 text-primary" />
+            <Globe className="h-3.5 w-3.5 text-primary" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium">Search All</p>
-            <p className="text-[10px] text-gray-text/50">Cross-channel</p>
+            <p className="truncate text-[12px] font-medium">Search All</p>
           </div>
           {!canCrossSearch && (
-            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold text-primary">
-              Premium
+            <span className="shrink-0 rounded-full border border-primary/20 px-1.5 py-px text-[8px] font-medium text-primary/60">
+              PRO
             </span>
           )}
           {searchAllActive && (
             <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
           )}
         </button>
-        <div className="mx-3 border-b border-white/[0.04]" />
       </div>
 
+      {/* Divider */}
+      <div className="mx-4 border-b border-white/[0.05]" />
+
       {/* Channel list */}
-      <div className="flex-1 overflow-y-auto px-2 py-1">
+      <div className="flex-1 overflow-y-auto px-2 pt-2 pb-1">
         {sidebarChannels.length === 0 && !hasUnlimitedChannels ? (
-          <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
-            <p className="text-[12px] text-gray-text/50">
+          <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
+            <p className="text-[11px] text-gray-text/40">
               No channels selected yet.
             </p>
           </div>
@@ -197,25 +203,25 @@ export function ChannelSidebar({
                   onSelectChannel(col.name);
                   setMobileOpen(false);
                 }}
-                className={`group mb-0.5 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
+                className={`group mb-0.5 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-all duration-150 ${
                   active
-                    ? "bg-primary/10 text-cream"
+                    ? "bg-primary/[0.08] text-cream shadow-[inset_0_0_0_1px_rgba(101,174,76,0.15)]"
                     : "text-gray-text hover:bg-white/[0.04] hover:text-cream"
                 }`}
               >
                 <ChannelAvatar col={col} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium">
+                  <p className="truncate text-[12px] font-medium">
                     {col.display_name}
                   </p>
-                  <p className="text-[10px] text-gray-text/50">
+                  <p className="text-[10px] text-gray-text/40">
                     {col.video_count
                       ? `${col.video_count.toLocaleString()} videos`
                       : `${col.point_count.toLocaleString()} chunks`}
                   </p>
                 </div>
                 {active && (
-                  <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                  <ChevronRight className="h-3 w-3 shrink-0 text-primary/50" />
                 )}
               </button>
             );
@@ -223,45 +229,68 @@ export function ChannelSidebar({
         )}
       </div>
 
-      {/* User */}
-      <div className="border-t border-white/[0.06] px-3 py-3">
+      {/* Question counter (free tier) */}
+      {hasQuestionLimit && (
+        <div className="px-4 pb-1">
+          <div className="flex items-center gap-2">
+            <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+              <div
+                className="h-full rounded-full bg-primary/60 transition-all duration-500"
+                style={{ width: `${(qRemaining / (questionLimit ?? 1)) * 100}%` }}
+              />
+            </div>
+            <span className={`text-[9px] font-medium tabular-nums ${
+              qRemaining <= 1 ? "text-red-400/70" : "text-gray-text/40"
+            }`}>
+              {qRemaining}/{questionLimit}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* User section */}
+      <div className="border-t border-white/[0.06] px-3 py-2.5">
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard/settings"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-dark-surface text-[10px] font-bold text-gray-text transition-colors hover:bg-white/[0.08]"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/[0.05] text-[10px] font-bold text-gray-text/70 transition-colors hover:bg-white/[0.1]"
             title="Account settings"
           >
             {userEmail[0]?.toUpperCase() || "?"}
           </Link>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[11px] text-gray-text">{userEmail}</p>
+            <p className="truncate text-[11px] leading-tight text-gray-text/70">
+              {userEmail}
+            </p>
             <div className="flex items-center gap-1">
               {tier === "creator" && <Crown className="h-2.5 w-2.5 text-primary" />}
-              <p className="text-[9px] font-medium uppercase tracking-wider text-primary/70">
+              <span className="text-[9px] font-medium uppercase tracking-wider text-primary/60">
                 {tier}
-              </p>
+              </span>
             </div>
           </div>
-          <Link
-            href="/dashboard/settings"
-            className="shrink-0 text-gray-text/40 transition-colors hover:text-cream"
-            title="Settings"
-          >
-            <Settings className="h-3.5 w-3.5" />
-          </Link>
-          <Link
-            href="/pricing"
-            className="shrink-0 rounded-md border border-primary/20 px-2 py-0.5 text-[9px] font-medium text-primary transition-colors hover:bg-primary/10"
-          >
-            {tier === "free" ? "Upgrade" : "Plans"}
-          </Link>
-          <button
-            onClick={onLogout}
-            className="shrink-0 text-gray-text/50 transition-colors hover:text-red-400"
-            title="Sign out"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-          </button>
+          <div className="flex shrink-0 items-center gap-1">
+            <Link
+              href="/dashboard/settings"
+              className="rounded-md p-1 text-gray-text/30 transition-colors hover:bg-white/[0.06] hover:text-cream"
+              title="Settings"
+            >
+              <Settings className="h-3.5 w-3.5" />
+            </Link>
+            <Link
+              href="/pricing"
+              className="rounded-md border border-primary/15 px-2 py-0.5 text-[9px] font-medium text-primary/70 transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
+            >
+              {tier === "free" ? "Upgrade" : "Plans"}
+            </Link>
+            <button
+              onClick={onLogout}
+              className="rounded-md p-1 text-gray-text/30 transition-colors hover:bg-white/[0.06] hover:text-red-400"
+              title="Sign out"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

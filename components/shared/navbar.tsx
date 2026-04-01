@@ -9,10 +9,14 @@ export function Navbar() {
   const [loggedIn, setLoggedIn] = useState(false);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setLoggedIn(!!user);
-    });
+    try {
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        setLoggedIn(!!user);
+      }).catch(() => {});
+    } catch {
+      // Supabase not configured — stay logged out
+    }
   }, []);
 
   return (

@@ -17,6 +17,23 @@ export async function updateSession(request: NextRequest) {
             request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({ request });
+
+          // Clean up stale auth-token chunks not in the fresh set
+          const freshNames = new Set(cookiesToSet.map(({ name }) => name));
+          for (const cookie of request.cookies.getAll()) {
+            if (
+              cookie.name.startsWith("sb-") &&
+              cookie.name.includes("auth-token") &&
+              !cookie.name.includes("code-verifier") &&
+              !freshNames.has(cookie.name)
+            ) {
+              supabaseResponse.cookies.set(cookie.name, "", {
+                maxAge: 0,
+                path: "/",
+              });
+            }
+          }
+
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           );
@@ -31,7 +48,6 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Protected routes — redirect to login if not authenticated
   if (pathname.startsWith("/dashboard") && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -39,7 +55,6 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Auth pages — redirect to dashboard if already logged in
   if ((pathname === "/login" || pathname === "/signup") && user) {
     const redirect = request.nextUrl.searchParams.get("redirect");
     const url = request.nextUrl.clone();

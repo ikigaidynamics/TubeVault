@@ -5,7 +5,8 @@ export const dynamic = "force-dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Send, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { Send, AlertCircle, MessageSquare, Sparkles, Globe } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { queryCollection, type Collection, type HistoryMessage, type Source } from "@/lib/api";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
@@ -25,7 +26,6 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://mindvault.ikigai-dynamics.com/api";
 
-/** Return top N collections by video_count as default picks */
 function getDefaults(collections: Collection[], n: number): string[] {
   return [...collections]
     .sort((a, b) => (b.video_count || 0) - (a.video_count || 0))
@@ -47,18 +47,12 @@ export default function DashboardPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Tier state
   const [tier, setTier] = useState<SubscriptionTier>("free");
   const [questionsRemaining, setQuestionsRemaining] = useState<number | null>(null);
   const [questionLimit, setQuestionLimit] = useState<number | null>(null);
-  const [upgradeModal, setUpgradeModal] = useState<{
-    open: boolean;
-    title?: string;
-    message?: string;
-  }>({ open: false });
+  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; title?: string; message?: string }>({ open: false });
   const [searchAllActive, setSearchAllActive] = useState(false);
 
-  // Channel selection state
   const [pickedChannels, setPickedChannels] = useState<string[]>([]);
   const [lockedUntil, setLockedUntil] = useState<string | null>(null);
   const [canChange, setCanChange] = useState(true);
@@ -68,14 +62,15 @@ export default function DashboardPage() {
   const hasUnlimitedChannels = TIER_LIMITS[tier].maxChannels === Infinity;
   const maxChannels = TIER_LIMITS[tier].maxChannels;
 
-  // Get user info + tier
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setUserEmail(user.email || "");
-        setUserAvatar(user.user_metadata?.avatar_url || null);
+      if (!user) {
+        router.push("/login");
+        return;
       }
+      setUserEmail(user.email || "");
+      setUserAvatar(user.user_metadata?.avatar_url || null);
     });
 
     fetch("/api/questions/check")
@@ -90,14 +85,12 @@ export default function DashboardPage() {
       .catch(() => {});
   }, []);
 
-  // Fetch collections
   useEffect(() => {
     async function load() {
       try {
         const res = await fetch(`${API_BASE_URL}/collections`);
         if (!res.ok) throw new Error("Failed to fetch");
-        const data: Collection[] = await res.json();
-        setCollections(data);
+        setCollections(await res.json());
       } catch {
         setError("Failed to load channels. Please refresh.");
       } finally {
@@ -107,7 +100,6 @@ export default function DashboardPage() {
     load();
   }, []);
 
-  // Fetch channel selection (after tier is known)
   useEffect(() => {
     fetch("/api/channels/select")
       .then((r) => r.json())
@@ -121,15 +113,9 @@ export default function DashboardPage() {
       .catch(() => setChannelDataLoaded(true));
   }, []);
 
-  // Auto-open picker for Free/Starter users who haven't selected yet
+  // Auto-open picker on first visit
   useEffect(() => {
-    if (
-      channelDataLoaded &&
-      !collectionsLoading &&
-      collections.length > 0 &&
-      !hasUnlimitedChannels &&
-      pickedChannels.length === 0
-    ) {
+    if (channelDataLoaded && !collectionsLoading && collections.length > 0 && !hasUnlimitedChannels && pickedChannels.length === 0) {
       setPickerOpen(true);
     }
   }, [channelDataLoaded, collectionsLoading, collections.length, hasUnlimitedChannels, pickedChannels.length]);
@@ -139,10 +125,7 @@ export default function DashboardPage() {
   }, [messages, loading]);
 
   const getHistory = useCallback((): HistoryMessage[] => {
-    return messages.slice(-10).map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
+    return messages.slice(-10).map((m) => ({ role: m.role, content: m.content }));
   }, [messages]);
 
   async function handleConfirmChannels(channels: string[]) {
@@ -156,9 +139,7 @@ export default function DashboardPage() {
       if (data.selectedChannels) setPickedChannels(data.selectedChannels);
       if (data.lockedUntil) setLockedUntil(data.lockedUntil);
       if (data.canChange !== undefined) setCanChange(data.canChange);
-    } catch {
-      // keep current state
-    }
+    } catch { /* keep current */ }
     setPickerOpen(false);
   }
 
@@ -166,11 +147,7 @@ export default function DashboardPage() {
     if (!input.trim() || (!selectedChannel && !searchAllActive) || loading) return;
 
     if (questionsRemaining !== null && questionsRemaining <= 0) {
-      setUpgradeModal({
-        open: true,
-        title: "Daily Limit Reached",
-        message: "You've used all 5 free questions today. Upgrade to Starter for unlimited questions.",
-      });
+      setUpgradeModal({ open: true, title: "Daily Limit Reached", message: "You've used all 5 free questions today. Upgrade to Starter for unlimited questions." });
       return;
     }
 
@@ -187,11 +164,7 @@ export default function DashboardPage() {
           setMessages((prev) => prev.slice(0, -1));
           setInput(question);
           setQuestionsRemaining(0);
-          setUpgradeModal({
-            open: true,
-            title: "Daily Limit Reached",
-            message: "You've used all 5 free questions today. Upgrade to Starter for unlimited questions.",
-          });
+          setUpgradeModal({ open: true, title: "Daily Limit Reached", message: "You've used all 5 free questions today. Upgrade to Starter for unlimited questions." });
           setLoading(false);
           return;
         }
@@ -200,13 +173,9 @@ export default function DashboardPage() {
       }
 
       const channelName = searchAllActive ? "_all" : selectedChannel!;
-      const history = getHistory();
-      const data = await queryCollection(channelName, question, history);
+      const data = await queryCollection(channelName, question, getHistory());
 
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.answer, sources: data.sources },
-      ]);
+      setMessages((prev) => [...prev, { role: "assistant", content: data.answer, sources: data.sources }]);
     } catch {
       setError("Failed to get a response. Please try again.");
       setMessages((prev) => prev.slice(0, -1));
@@ -218,10 +187,7 @@ export default function DashboardPage() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
   }
 
   async function handleLogout() {
@@ -233,52 +199,31 @@ export default function DashboardPage() {
 
   function handleSelectChannel(name: string) {
     setSearchAllActive(false);
-    if (name !== selectedChannel) {
-      setSelectedChannel(name);
-      setMessages([]);
-      setError(null);
-    }
+    if (name !== selectedChannel) { setSelectedChannel(name); setMessages([]); setError(null); }
   }
 
   function handleSearchAll() {
-    setSearchAllActive(true);
-    setSelectedChannel(null);
-    setMessages([]);
-    setError(null);
+    setSearchAllActive(true); setSelectedChannel(null); setMessages([]); setError(null);
   }
 
   const selectedCollection = collections.find((c) => c.name === selectedChannel);
   const hasActiveChat = selectedChannel || searchAllActive;
-  const chatLabel = searchAllActive
-    ? "all channels"
-    : selectedCollection?.display_name || selectedChannel;
+  const chatLabel = searchAllActive ? "all channels" : selectedCollection?.display_name || selectedChannel;
 
   return (
     <div className="flex h-screen bg-[#0A0A0B]">
-      {/* Upgrade modal */}
-      <UpgradeModal
-        open={upgradeModal.open}
-        onClose={() => setUpgradeModal({ open: false })}
-        title={upgradeModal.title}
-        message={upgradeModal.message}
-      />
+      <UpgradeModal open={upgradeModal.open} onClose={() => setUpgradeModal({ open: false })} title={upgradeModal.title} message={upgradeModal.message} />
 
-      {/* Channel picker modal */}
       <ChannelPickerModal
         open={pickerOpen}
         collections={collections}
         maxChannels={maxChannels === Infinity ? collections.length : maxChannels}
-        defaults={
-          pickedChannels.length > 0
-            ? pickedChannels
-            : getDefaults(collections, maxChannels === Infinity ? collections.length : maxChannels)
-        }
+        defaults={pickedChannels.length > 0 ? pickedChannels : getDefaults(collections, maxChannels === Infinity ? collections.length : maxChannels)}
         onConfirm={handleConfirmChannels}
         onClose={() => setPickerOpen(false)}
         canClose={pickedChannels.length > 0}
       />
 
-      {/* Sidebar */}
       <ChannelSidebar
         collections={collections}
         selectedChannel={selectedChannel}
@@ -292,103 +237,114 @@ export default function DashboardPage() {
         onChangeChannels={() => setPickerOpen(true)}
         onSearchAll={handleSearchAll}
         searchAllActive={searchAllActive}
+        questionsRemaining={questionsRemaining}
+        questionLimit={questionLimit}
       />
 
-      {/* Main chat area */}
+      {/* Main area */}
       <div className="flex flex-1 flex-col">
-        {/* Creator bar */}
-        <header className="flex items-center gap-2.5 border-b border-white/[0.06] bg-[#0A0A0B] px-6 py-3 pl-14 md:pl-6">
-          {searchAllActive ? (
+        {/* Top bar — breadcrumb */}
+        <header className="flex items-center gap-2 border-b border-white/[0.06] bg-[#0A0A0B]/95 px-6 py-2.5 pl-14 backdrop-blur-sm md:pl-6">
+          <Link href="/" className="text-[12px] text-gray-text/40 transition-colors hover:text-cream">
+            TubeVault
+          </Link>
+          {hasActiveChat && (
             <>
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-                </svg>
-              </div>
-              <div className="flex flex-col gap-px">
-                <p className="text-[13px] font-medium text-cream/90">Cross-Channel Search</p>
-                <p className="text-[11px] text-gray-text/40">
-                  Search across all {collections.length} channels
-                </p>
-              </div>
-              <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_rgba(61,122,53,0.5)]" />
+              <span className="text-[10px] text-gray-text/20">/</span>
+              <span className="text-[12px] font-medium text-cream/80">
+                {searchAllActive ? "Cross-Channel" : selectedCollection?.display_name || "..."}
+              </span>
             </>
-          ) : selectedCollection ? (
-            <>
-              {(() => {
-                const logoUrl = selectedCollection.logo
-                  ? selectedCollection.logo.startsWith("/")
-                    ? `https://mindvault.ikigai-dynamics.com${selectedCollection.logo}`
-                    : selectedCollection.logo
-                  : null;
-                const initials = selectedCollection.display_name
-                  .split(" ")
-                  .map((w) => w[0])
-                  .join("")
-                  .slice(0, 2);
-                return logoUrl ? (
-                  <Image
-                    src={logoUrl}
-                    alt={selectedCollection.display_name}
-                    width={28}
-                    height={28}
-                    className="h-7 w-7 shrink-0 rounded-full object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2E2F31] to-[#424F4A] text-[10px] font-semibold text-gray-text">
-                    {initials}
-                  </div>
-                );
-              })()}
-              <div className="flex flex-col gap-px">
-                <p className="text-[13px] font-medium text-cream/90">
-                  {selectedCollection.display_name}
-                </p>
-                <p className="text-[11px] text-gray-text/40">
-                  {selectedCollection.video_count
-                    ? `${selectedCollection.video_count} episodes indexed`
-                    : `${selectedCollection.point_count} chunks indexed`}
-                </p>
-              </div>
-              <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_rgba(61,122,53,0.5)]" />
-            </>
-          ) : (
-            <p className="text-[13px] text-gray-text/50">Select a channel to start</p>
+          )}
+          {selectedCollection && (
+            <span className="ml-1 text-[10px] text-gray-text/30">
+              {selectedCollection.video_count ? `${selectedCollection.video_count} videos` : ""}
+            </span>
+          )}
+          {hasActiveChat && (
+            <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_rgba(101,174,76,0.4)]" />
           )}
         </header>
 
         {/* Messages area */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 md:px-12 lg:px-16">
+        <div className="flex-1 overflow-y-auto">
           {!hasActiveChat ? (
-            <div className="flex h-full flex-col items-center justify-center text-center">
-              <div className="relative flex flex-col items-center">
+            /* ── Welcome screen with gradient bg ── */
+            <div className="relative flex h-full flex-col items-center justify-center px-6 text-center">
+              {/* Subtle radial gradient */}
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_40%,rgba(101,174,76,0.04)_0%,transparent_70%)]" />
+
+              <div className="relative animate-[fadeUp_0.6s_ease-out]">
                 <Image
                   src="/TubeVault_Logo_noBG.png"
                   alt="TubeVault"
-                  width={160}
-                  height={160}
-                  className="-mb-6"
+                  width={80}
+                  height={80}
+                  className="mx-auto mb-3"
                 />
-                <h2 className="relative z-10 text-xl font-semibold text-cream">
-                  Welcome to TubeVault
+                <h2 className="text-lg font-semibold text-cream">
+                  What would you like to know?
                 </h2>
+                <p className="mt-1.5 max-w-xs text-[13px] text-gray-text/50">
+                  {collectionsLoading
+                    ? "Loading channels..."
+                    : "Pick a channel from the sidebar or explore one of these:"}
+                </p>
+
+                {/* Suggestion cards */}
+                {!collectionsLoading && (
+                  <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                    {[
+                      {
+                        icon: <MessageSquare className="h-4 w-4" />,
+                        title: "Pick a channel",
+                        desc: "Choose from your sidebar",
+                        action: () => {},
+                      },
+                      {
+                        icon: <Sparkles className="h-4 w-4" />,
+                        title: "Ask about health",
+                        desc: "Try cold exposure, fasting...",
+                        action: () => {
+                          const first = pickedChannels[0] || collections[0]?.name;
+                          if (first) {
+                            handleSelectChannel(first);
+                            setInput("What are the benefits of cold exposure?");
+                            setTimeout(() => inputRef.current?.focus(), 100);
+                          }
+                        },
+                      },
+                      {
+                        icon: <Globe className="h-4 w-4" />,
+                        title: "Search all channels",
+                        desc: "Premium cross-channel",
+                        action: () => router.push("/pricing"),
+                      },
+                    ].map((card) => (
+                      <button
+                        key={card.title}
+                        onClick={card.action}
+                        className="group flex w-full flex-col items-center gap-2 rounded-xl border border-[#2E2F31] bg-[#141416] px-5 py-4 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_8px_32px_rgba(101,174,76,0.06)] sm:w-44"
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/[0.08] text-primary transition-colors group-hover:bg-primary/15">
+                          {card.icon}
+                        </div>
+                        <p className="text-[12px] font-medium text-cream/80">{card.title}</p>
+                        <p className="text-[10px] text-gray-text/40">{card.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <p className="mt-2 max-w-sm text-sm text-gray-text">
-                {collectionsLoading
-                  ? "Loading channels..."
-                  : "Select a channel from the sidebar to start asking questions."}
-              </p>
             </div>
           ) : messages.length === 0 && !loading ? (
-            <div className="flex h-full animate-[fadeUp_0.6s_ease-out] items-center justify-center px-2">
-              <div className="flex w-full max-w-[900px] flex-col items-center gap-8 md:flex-row md:items-start md:gap-0">
+            /* ── Channel welcome ── */
+            <div className="flex h-full animate-[fadeUp_0.5s_ease-out] items-center justify-center px-6 md:px-12">
+              <div className="flex w-full max-w-[860px] flex-col items-center gap-8 md:flex-row md:items-start md:gap-0">
                 <div className="flex flex-[0_0_61.8%] flex-col gap-4 text-center md:pr-12 md:text-left">
                   {searchAllActive ? (
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 md:mx-0">
-                      <svg className="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-                      </svg>
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 md:mx-0">
+                      <Globe className="h-6 w-6 text-primary" />
                     </div>
                   ) : (() => {
                     const logoUrl = selectedCollection?.logo
@@ -397,84 +353,56 @@ export default function DashboardPage() {
                         : selectedCollection.logo
                       : null;
                     return logoUrl ? (
-                      <Image
-                        src={logoUrl}
-                        alt={selectedCollection?.display_name || ""}
-                        width={56}
-                        height={56}
-                        className="mx-auto h-14 w-14 rounded-2xl object-cover md:mx-0"
-                        unoptimized
-                      />
+                      <Image src={logoUrl} alt={selectedCollection?.display_name || ""} width={48} height={48} className="mx-auto h-12 w-12 rounded-xl object-cover md:mx-0" unoptimized />
                     ) : (
-                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2E2F31] to-[#424F4A] text-lg font-bold text-gray-text md:mx-0">
-                        {selectedCollection?.display_name
-                          .split(" ")
-                          .map((w) => w[0])
-                          .join("")
-                          .slice(0, 2)}
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#2E2F31] to-[#424F4A] text-base font-bold text-gray-text md:mx-0">
+                        {selectedCollection?.display_name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
                       </div>
                     );
                   })()}
-                  <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-gray-text/40">
-                    {searchAllActive ? "Cross-Channel Intelligence" : "Creator Intelligence Platform"}
+                  <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-gray-text/35">
+                    {searchAllActive ? "Cross-Channel Intelligence" : "Creator Intelligence"}
                   </p>
-                  <h2 className="text-2xl font-normal leading-tight text-cream/90 md:text-[2rem]">
+                  <h2 className="text-[1.6rem] font-normal leading-tight text-cream/90">
                     {searchAllActive ? (
-                      <>Search across<br />all <span className="text-cream">{collections.length} channels</span></>
+                      <>Search across all <span className="text-cream">{collections.length} channels</span></>
                     ) : (
-                      <>
-                        Explore the knowledge<br />of{" "}
-                        <span className="text-cream">{selectedCollection?.display_name}</span>
-                      </>
+                      <>Explore <span className="text-cream">{selectedCollection?.display_name}</span></>
                     )}
                   </h2>
-                  <p className="text-[14px] leading-relaxed text-gray-text/60">
+                  <p className="text-[13px] leading-relaxed text-gray-text/50">
                     {searchAllActive
-                      ? "Ask a question and get answers from all indexed creators. Every statement linked to the original source."
-                      : `Get source-based answers from ${selectedCollection?.video_count || "all"} indexed videos. Every statement linked to the original source.`}
+                      ? "Get answers from all creators with source links."
+                      : `${selectedCollection?.video_count || "All"} videos indexed. Every answer linked to the source.`}
                   </p>
                 </div>
 
-                <div className="flex w-full flex-[0_0_38.2%] flex-col gap-3 md:w-auto">
-                  <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-gray-text/40 md:pl-0.5">
+                <div className="flex w-full flex-[0_0_38.2%] flex-col gap-2.5 md:w-auto">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-gray-text/35">
                     Try asking
                   </p>
                   {(searchAllActive
-                    ? [
-                        "What do experts say about intermittent fasting?",
-                        "Compare different views on ancient civilizations",
-                        "What are the most recommended supplements?",
-                      ]
-                    : [
-                        `What are the main topics ${selectedCollection?.display_name} covers?`,
-                        `What's the most interesting insight from recent videos?`,
-                        `Summarize the key health recommendations`,
-                      ]
-                  ).map((suggestion) => (
+                    ? ["What do experts say about intermittent fasting?", "Compare views on ancient civilizations", "Most recommended supplements?"]
+                    : [`Main topics ${selectedCollection?.display_name} covers?`, "Most surprising insight from recent videos?", "Key health recommendations?"]
+                  ).map((s) => (
                     <button
-                      key={suggestion}
-                      onClick={() => {
-                        setInput(suggestion);
-                        inputRef.current?.focus();
-                      }}
-                      className="w-full rounded-xl border border-[#2E2F31] bg-[#1C1D1F] px-3.5 py-2.5 text-left text-[13px] leading-relaxed text-gray-text/70 transition-all duration-200 hover:translate-x-1 hover:border-primary/30 hover:bg-[#242527] hover:text-cream hover:shadow-[0_0_20px_rgba(61,122,53,0.08)]"
+                      key={s}
+                      onClick={() => { setInput(s); inputRef.current?.focus(); }}
+                      className="w-full rounded-xl border border-[#2E2F31] bg-[#141416] px-3.5 py-2.5 text-left text-[12px] leading-relaxed text-gray-text/60 transition-all duration-200 hover:translate-x-1 hover:border-primary/20 hover:text-cream/80 hover:shadow-[0_4px_20px_rgba(101,174,76,0.06)]"
                     >
-                      {suggestion}
+                      {s}
                     </button>
                   ))}
                 </div>
               </div>
             </div>
           ) : (
-            <div className="mx-auto max-w-3xl space-y-6">
+            /* ── Messages ── */
+            <div className="mx-auto max-w-3xl space-y-5 px-6 py-6 md:px-12">
               {messages.map((msg, i) => (
-                <ChatMessage
-                  key={i}
-                  role={msg.role}
-                  content={msg.content}
-                  sources={msg.sources}
-                  userAvatar={userAvatar}
-                />
+                <div key={i} className="animate-[fadeUp_0.3s_ease-out]">
+                  <ChatMessage role={msg.role} content={msg.content} sources={msg.sources} userAvatar={userAvatar} />
+                </div>
               ))}
               {loading && <TypingIndicator />}
               <div ref={chatEndRef} />
@@ -484,29 +412,20 @@ export default function DashboardPage() {
 
         {/* Error */}
         {error && (
-          <div className="mx-6 mb-2 flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-2.5 text-sm text-red-400 md:mx-12 lg:mx-16">
+          <div className="mx-6 mb-2 flex items-center gap-2 rounded-xl bg-red-500/[0.08] px-4 py-2.5 text-[13px] text-red-400/80 md:mx-12">
             <AlertCircle className="h-4 w-4 shrink-0" />
             {error}
           </div>
         )}
 
         {/* Input */}
-        <div className="border-t border-[#1E1F21] bg-[#0A0A0B] px-6 py-4 md:px-12 lg:px-16">
+        <div className="border-t border-[#1E1F21] bg-[#0A0A0B] px-6 py-4 md:px-10 lg:px-14">
           <div className="mx-auto max-w-3xl">
-            {questionsRemaining !== null && questionLimit !== null && questionLimit > 0 && (
-              <div className="mb-2 flex items-center justify-center">
-                <span className={`text-[11px] font-medium ${
-                  questionsRemaining <= 1 ? "text-red-400/80" : "text-gray-text/50"
-                }`}>
-                  {questionsRemaining} of {questionLimit} questions remaining today
-                </span>
-              </div>
-            )}
             <div
-              className={`flex items-end gap-2 rounded-2xl border bg-[#141416] px-4 py-1.5 transition-all ${
+              className={`flex items-end gap-3 rounded-2xl border bg-[#141416] px-5 py-2 transition-all duration-200 ${
                 input
-                  ? "border-primary/40 shadow-[0_0_0_3px_rgba(61,122,53,0.12)]"
-                  : "border-white/[0.08]"
+                  ? "border-primary/30 shadow-[0_0_0_3px_rgba(101,174,76,0.08),0_0_20px_rgba(101,174,76,0.04)]"
+                  : "border-white/[0.07] hover:border-white/[0.12]"
               }`}
             >
               <textarea
@@ -518,25 +437,21 @@ export default function DashboardPage() {
                   e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={
-                  hasActiveChat
-                    ? `Ask a question about ${chatLabel}...`
-                    : "Select a channel first..."
-                }
+                placeholder={hasActiveChat ? `Ask about ${chatLabel}...` : "Select a channel first..."}
                 disabled={!hasActiveChat || loading}
                 rows={1}
-                className="max-h-[120px] min-h-[22px] flex-1 resize-none bg-transparent py-2.5 text-[14px] leading-[1.5] text-cream placeholder:text-gray-text/40 focus:outline-none disabled:opacity-40"
+                className="max-h-[120px] min-h-[24px] flex-1 resize-none bg-transparent py-2.5 text-[14px] leading-[1.6] text-cream placeholder:text-gray-text/35 focus:outline-none disabled:opacity-30"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || !hasActiveChat || loading}
-                className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary text-cream transition-all hover:scale-[1.04] hover:bg-primary-hover disabled:opacity-30 disabled:hover:scale-100"
+                className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-all duration-150 hover:scale-105 hover:bg-primary-hover hover:shadow-[0_0_12px_rgba(101,174,76,0.3)] disabled:opacity-20 disabled:hover:scale-100 disabled:hover:shadow-none"
               >
-                <Send className="h-[18px] w-[18px]" />
+                <Send className="h-4 w-4" />
               </button>
             </div>
-            <p className="mt-2 text-center text-[10px] text-gray-text/30">
-              Answers are AI-generated from video transcripts. Always verify with the source.
+            <p className="mt-2 text-center text-[10px] text-gray-text/25">
+              AI-generated from video transcripts. Verify with the source.
             </p>
           </div>
         </div>
