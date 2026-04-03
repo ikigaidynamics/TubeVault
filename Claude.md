@@ -177,7 +177,7 @@ Use that for the UI. Do NOT hardcode display names — fetch from API.
 
 ## Deployment
 - Server: Hetzner CPX32 (46.225.139.82)
-- URL: tubevault.ikigai-dynamics.com
+- URL: tubevault.io
 - Reverse proxy: Caddy (auto HTTPS via Let's Encrypt)
 - Port: 3001 (Next.js)
 - Process manager: PM2
@@ -202,7 +202,7 @@ STRIPE_PRICE_PREMIUM=
 NEXT_PUBLIC_API_URL=https://mindvault.ikigai-dynamics.com/api
 
 # App
-NEXT_PUBLIC_APP_URL=https://tubevault.ikigai-dynamics.com
+NEXT_PUBLIC_APP_URL=https://tubevault.io
 ```
 
 ## Sister Projects (READ-ONLY reference)

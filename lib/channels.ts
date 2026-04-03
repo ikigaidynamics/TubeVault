@@ -38,7 +38,7 @@ export const CHANNELS: Channel[] = [
       "American medical doctor exploring carnivore nutrition and optimal human diet.",
     videoCount: 1485,
     category: "Health & Nutrition",
-    avatar: "",
+    avatar: "/channels/anthony_chaffee_md_avatar.jpg",
     color: "#06B6D4",
   },
   {
@@ -46,7 +46,7 @@ export const CHANNELS: Channel[] = [
     displayName: "Dr Brad Stanfield",
     description:
       "Primary care physician sharing the latest research and clinical guidelines on longevity.",
-    videoCount: 880,
+    videoCount: 422,
     category: "Health & Nutrition",
     avatar: "/channels/dr_brad_stanfield_avatar.jpg",
     color: "#10B981",
@@ -56,7 +56,7 @@ export const CHANNELS: Channel[] = [
     displayName: "Dr. William Li",
     description:
       "World-renowned physician and scientist on nutrition, angiogenesis, and disease prevention.",
-    videoCount: 62,
+    videoCount: 997,
     category: "Health & Nutrition",
     avatar: "/channels/dr_william_li_avatar.jpg",
     color: "#EF4444",
@@ -66,7 +66,7 @@ export const CHANNELS: Channel[] = [
     displayName: "FoundMyFitness",
     description:
       "Dr. Rhonda Patrick on health science, fitness protocols, and longevity research.",
-    videoCount: 192,
+    videoCount: 186,
     category: "Health & Nutrition",
     avatar: "/channels/foundmyfitness_avatar.jpg",
     color: "#E8573A",
@@ -88,7 +88,7 @@ export const CHANNELS: Channel[] = [
       "MD from Harvard & PhD from Oxford. Metabolic health enthusiast — stay curious.",
     videoCount: 509,
     category: "Health & Nutrition",
-    avatar: "",
+    avatar: "/channels/nick_norwitz_md_phd_avatar.jpg",
     color: "#F97316",
   },
   {
@@ -108,7 +108,7 @@ export const CHANNELS: Channel[] = [
       "Dr. Liu on immune health, front-line medical insights, and wellness strategies.",
     videoCount: 314,
     category: "Health & Nutrition",
-    avatar: "",
+    avatar: "/channels/healthy_immune_doc_avatar.jpg",
     color: "#14B8A6",
   },
   {
@@ -118,7 +118,7 @@ export const CHANNELS: Channel[] = [
       "Board-certified cardiovascular surgeon on optimizing life for a better, longer health span.",
     videoCount: 454,
     category: "Health & Nutrition",
-    avatar: "",
+    avatar: "/channels/jeremy_london_md_avatar.jpg",
     color: "#EC4899",
   },
   {
@@ -128,7 +128,7 @@ export const CHANNELS: Channel[] = [
       "Health podcast focused on metabolic health, hosted by Rina Ahluwalia.",
     videoCount: 135,
     category: "Health & Nutrition",
-    avatar: "",
+    avatar: "/channels/the_primal_podcast_avatar.jpg",
     color: "#84CC16",
   },
   {
@@ -148,7 +148,7 @@ export const CHANNELS: Channel[] = [
       "Harvard & Stanford-trained gastroenterologist making gut health easy to understand.",
     videoCount: 22,
     category: "Health & Nutrition",
-    avatar: "",
+    avatar: "/channels/doctor_sethi_avatar.jpg",
     color: "#A3E635",
   },
 
@@ -158,7 +158,7 @@ export const CHANNELS: Channel[] = [
     displayName: "UnchartedX",
     description:
       "Ben van Kerkwyk exploring ancient sites, precision engineering, and lost civilizations.",
-    videoCount: 253,
+    videoCount: 245,
     category: "Ancient History",
     avatar: "/channels/unchartedx_avatar.jpg",
     color: "#D97706",
@@ -168,7 +168,7 @@ export const CHANNELS: Channel[] = [
     displayName: "Bright Insight",
     description:
       "Jimmy Corsetti investigating lost ancient history and forgotten civilizations.",
-    videoCount: 340,
+    videoCount: 164,
     category: "Ancient History",
     avatar: "/channels/bright_insight_avatar.jpg",
     color: "#FBBF24",
@@ -178,9 +178,9 @@ export const CHANNELS: Channel[] = [
     displayName: "Randall Carlson",
     description:
       "Exploring the profound mysteries of our world — science, sacred geometry, and catastrophism.",
-    videoCount: 64,
+    videoCount: 1662,
     category: "Ancient History",
-    avatar: "",
+    avatar: "/channels/the_randall_carlson_avatar.jpg",
     color: "#78716C",
   },
   {
@@ -188,7 +188,7 @@ export const CHANNELS: Channel[] = [
     displayName: "GeoCosmic REX",
     description:
       "Ice Age Floods, catastrophe and Earth change, mythology, symbolism, and ancient mysteries.",
-    videoCount: 851,
+    videoCount: 210,
     category: "Ancient History",
     avatar: "/channels/geocosmic_rex_avatar.jpg",
     color: "#2DD4BF",
@@ -198,7 +198,7 @@ export const CHANNELS: Channel[] = [
     displayName: "History with Kayleigh",
     description:
       "Archaeology, ancient structures, and the untold stories of the ancient world.",
-    videoCount: 782,
+    videoCount: 387,
     category: "Ancient History",
     avatar: "/channels/history_with_kayleigh_avatar.jpg",
     color: "#A78BFA",
@@ -208,7 +208,7 @@ export const CHANNELS: Channel[] = [
     displayName: "Funny Olde World",
     description:
       "Actress, comedian, and ancient history geek exploring our mysterious past.",
-    videoCount: 286,
+    videoCount: 139,
     category: "Ancient History",
     avatar: "/channels/funny_olde_world_avatar.jpg",
     color: "#FB923C",
@@ -220,7 +220,7 @@ export const CHANNELS: Channel[] = [
     displayName: "Wes Huff",
     description:
       "Christian apologetics, interfaith dialogue, and theological scholarship (BA, MTS, PhD candidate).",
-    videoCount: 300,
+    videoCount: 320,
     category: "Theology",
     avatar: "/channels/wes_huff_avatar.jpg",
     color: "#60A5FA",
@@ -232,7 +232,7 @@ export const CHANNELS: Channel[] = [
     displayName: "Katie Clarke",
     description:
       "Helping you reconnect with your divine power — spirituality and self-development.",
-    videoCount: 193,
+    videoCount: 192,
     category: "Spirituality",
     avatar: "/channels/katie_clarke_avatar.jfif",
     color: "#C084FC",
@@ -242,7 +242,7 @@ export const CHANNELS: Channel[] = [
     displayName: "Metanoia",
     description:
       "Hidden knowledge, mysteries, and the Fibonacci sequence of consciousness.",
-    videoCount: 191,
+    videoCount: 57,
     category: "Spirituality",
     avatar: "/channels/metanoia_avatar.jpg",
     color: "#34D399",

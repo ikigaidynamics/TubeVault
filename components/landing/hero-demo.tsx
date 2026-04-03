@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
   Search,
   Play,
@@ -18,16 +19,18 @@ const DEMO_ANSWER =
 
 const DEMO_SOURCES = [
   {
-    title: "The Science of Cold Exposure for Health",
+    title: "Using Deliberate Cold Exposure for Health and Performance",
     channel: "Andrew Huberman",
     timestamp: "14:32",
+    videoId: "x3MgDtZovks",
     snippet:
       "...deliberate cold exposure causes a 250% increase in dopamine that lasts for hours...",
   },
   {
-    title: "Cold Plunge Protocols & Benefits",
+    title: "How to Use Cold & Heat Exposure to Improve Your Health",
     channel: "Andrew Huberman",
     timestamp: "8:17",
+    videoId: "pq6WHJzOkno",
     snippet:
       "...end your shower cold, not warm. The catecholamine response is what gives you that lasting energy...",
   },
@@ -82,7 +85,13 @@ export function HeroDemo() {
             <div className="h-2.5 w-2.5 rounded-full bg-white/10" />
           </div>
           <div className="ml-2 flex items-center gap-1.5 rounded-md bg-white/[0.04] px-3 py-1">
-            <div className="h-3 w-3 rounded-sm bg-primary/60" />
+            <Image
+              src="/channels/andrew_huberman_avatar.jpg"
+              alt="Andrew Huberman"
+              width={16}
+              height={16}
+              className="h-4 w-4 rounded-full object-cover"
+            />
             <span className="text-[11px] text-gray-text">
               Andrew Huberman
             </span>
@@ -124,11 +133,13 @@ export function HeroDemo() {
             {/* AI Answer */}
             <div className="mb-3 rounded-xl bg-white/[0.03] p-4">
               <div className="mb-2 flex items-center gap-2">
-                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/20">
-                  <span className="text-[10px] font-bold text-primary">
-                    AI
-                  </span>
-                </div>
+                <Image
+                  src="/TubeVault_Symbol.png"
+                  alt="TubeVault"
+                  width={20}
+                  height={20}
+                  className="h-5 w-5 rounded-md object-cover"
+                />
                 <span className="text-xs font-medium text-gray-text">
                   Answer
                 </span>
@@ -163,8 +174,15 @@ export function HeroDemo() {
                       "opacity 0.4s ease, transform 0.4s ease, border-color 0.2s ease",
                   }}
                 >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10">
-                    <Play className="h-3.5 w-3.5 text-red-400" />
+                  <div className="relative h-[45px] w-[80px] shrink-0 overflow-hidden rounded-lg bg-black/30">
+                    <Image
+                      src={`https://img.youtube.com/vi/${source.videoId}/mqdefault.jpg`}
+                      alt={source.title}
+                      fill
+                      sizes="80px"
+                      className="object-cover"
+                      unoptimized
+                    />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
@@ -191,6 +209,17 @@ export function HeroDemo() {
                   </div>
                 </div>
               ))}
+              <div
+                className="flex items-center justify-center rounded-lg border border-white/[0.04] bg-white/[0.01] py-2 text-[11px] text-gray-text/40"
+                style={{
+                  transitionDelay: "300ms",
+                  opacity: showSources ? 1 : 0,
+                  transform: showSources ? "translateY(0)" : "translateY(8px)",
+                  transition: "opacity 0.4s ease, transform 0.4s ease",
+                }}
+              >
+                +3 more sources
+              </div>
             </div>
           </div>
         </div>

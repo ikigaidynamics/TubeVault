@@ -45,7 +45,7 @@ export default function Home() {
       </div>
 
       {/* Hero */}
-      <section className="hero-gradient grid-pattern relative overflow-hidden pt-20 pb-8 md:pt-28 md:pb-16">
+      <section className="hero-gradient grid-pattern relative flex min-h-[calc(100vh-3.5rem)] flex-col justify-center overflow-hidden pb-6 pt-16 md:pb-10 md:pt-20">
         <div className="pointer-events-none absolute left-1/2 top-[20%] h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-primary/[0.04] blur-[140px]" />
 
         <div className="relative mx-auto max-w-7xl px-6">
@@ -58,22 +58,22 @@ export default function Home() {
                   width={500}
                   height={500}
                   priority
-                  className="w-44 sm:w-52 md:w-60 lg:w-72 xl:w-80"
+                  className="w-36 sm:w-44 md:w-48 lg:w-56 xl:w-64"
                 />
               </div>
-              <h1 className="text-center text-4xl font-bold leading-[1.08] tracking-tight text-cream sm:text-5xl md:text-left md:text-6xl lg:text-7xl">
+              <h1 className="text-center text-3xl font-bold leading-[1.08] tracking-tight text-cream sm:text-4xl md:text-left md:text-5xl lg:text-6xl">
                 Every answer.
                 <br />
                 Every creator.
                 <br />
-                <span className="bg-gradient-to-r from-primary to-[#7bc361] bg-clip-text text-transparent">
+                <span className="text-primary">
                   One search.
                 </span>
               </h1>
             </div>
           </AnimateOnScroll>
 
-          <div className="mx-auto mt-10 max-w-2xl text-center">
+          <div className="mx-auto mt-6 max-w-2xl text-center">
             <AnimateOnScroll delay={300}>
               <p className="text-base leading-relaxed text-gray-text md:text-lg">
                 Search across 20+ YouTube channels by meaning. Get answers from
@@ -82,7 +82,7 @@ export default function Home() {
             </AnimateOnScroll>
 
             <AnimateOnScroll delay={400}>
-              <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+              <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
                 <Link
                   href="/try"
                   className="glow-pulse inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover sm:w-auto"
@@ -101,47 +101,10 @@ export default function Home() {
           </div>
 
           <AnimateOnScroll delay={500}>
-            <div className="mt-16 md:mt-20">
+            <div className="mt-14 md:mt-18">
               <HeroDemo />
             </div>
           </AnimateOnScroll>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="relative border-t border-white/[0.06] px-6 py-24 md:py-32">
-        <div className="mx-auto max-w-5xl">
-          <AnimateOnScroll>
-            <div className="text-center">
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/70">
-                How it works
-              </span>
-              <h2 className="mt-3 text-3xl font-bold text-cream md:text-4xl">
-                Three steps to any answer
-              </h2>
-            </div>
-          </AnimateOnScroll>
-
-          <div className="relative mt-16 grid gap-8 md:grid-cols-3 md:gap-6">
-            <div className="step-connector pointer-events-none absolute left-[20%] right-[20%] top-12 hidden h-px md:block" />
-            {STEPS.map((step, i) => (
-              <AnimateOnScroll key={step.number} delay={i * 150}>
-                <div className="group relative text-center">
-                  <div className="relative mx-auto mb-6 flex h-24 w-24 items-center justify-center">
-                    <div className="absolute inset-0 rounded-2xl bg-primary/[0.06] transition-colors duration-300 group-hover:bg-primary/[0.12]" />
-                    <div className="relative flex flex-col items-center">
-                      <step.icon className="h-7 w-7 text-primary" />
-                      <span className="mt-1 text-[10px] font-bold tracking-widest text-primary/50">
-                        {step.number}
-                      </span>
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-semibold text-cream">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-text">{step.description}</p>
-                </div>
-              </AnimateOnScroll>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -187,6 +150,43 @@ export default function Home() {
               </p>
             </div>
           </AnimateOnScroll>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="relative border-t border-white/[0.06] px-6 py-8 md:py-10">
+        <div className="mx-auto max-w-5xl">
+          <AnimateOnScroll>
+            <div className="text-center">
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/70">
+                How it works
+              </span>
+              <h2 className="mt-3 text-3xl font-bold text-cream md:text-4xl">
+                Three steps to any answer
+              </h2>
+            </div>
+          </AnimateOnScroll>
+
+          <div className="relative mt-16 grid gap-8 md:grid-cols-3 md:gap-6">
+
+            {STEPS.map((step, i) => (
+              <AnimateOnScroll key={step.number} delay={i * 150}>
+                <div className="group relative text-center">
+                  <div className="relative mx-auto mb-6 flex h-24 w-24 items-center justify-center">
+                    <div className="absolute inset-0 rounded-2xl bg-primary/[0.06] transition-colors duration-300 group-hover:bg-primary/[0.12]" />
+                    <div className="relative flex flex-col items-center">
+                      <step.icon className="h-7 w-7 text-primary" />
+                      <span className="mt-1 text-[10px] font-bold tracking-widest text-primary/50">
+                        {step.number}
+                      </span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-semibold text-cream">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-text">{step.description}</p>
+                </div>
+              </AnimateOnScroll>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -263,11 +263,11 @@ export default function Home() {
               &copy; 2026 IkigAI Dynamics. All rights reserved.
             </p>
             <Image
-              src="/IkigAI_Logo_No_Background.png"
+              src="/IkigAI_Logo_Transparent.png"
               alt="IkigAI Dynamics"
               width={120}
               height={40}
-              className="h-8 w-auto opacity-40"
+              className="h-24 w-auto opacity-40"
             />
           </div>
         </div>

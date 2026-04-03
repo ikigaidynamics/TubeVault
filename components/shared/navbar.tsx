@@ -31,7 +31,16 @@ export function Navbar() {
             height={28}
             className="h-7 w-7"
           />
-          <span className="font-[family-name:var(--font-alice)] text-[15px] text-cream">TubeVault</span>
+          <span className="-ml-1 mt-[2px] inline-block h-8 overflow-hidden">
+            <Image
+              src="/TubeVault_Font.png"
+              alt="TubeVault"
+              width={600}
+              height={600}
+              className="-mx-[42px] h-[260px] w-auto -mt-[116px] object-contain"
+              unoptimized
+            />
+          </span>
         </Link>
 
         {/* Desktop nav */}

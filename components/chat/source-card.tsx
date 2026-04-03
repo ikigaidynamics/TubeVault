@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { ChevronDown, Play, ExternalLink } from "lucide-react";
 import type { Source } from "@/lib/api";
 
@@ -9,8 +10,18 @@ interface SourceCardProps {
   index: number;
 }
 
+function getStartSeconds(url: string | null): number {
+  if (!url) return 0;
+  const match = url.match(/[?&]t=(\d+)/);
+  return match ? parseInt(match[1], 10) : 0;
+}
+
 export function SourceCard({ source, index }: SourceCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const thumbnailUrl = source.video_id
+    ? `https://img.youtube.com/vi/${source.video_id}/mqdefault.jpg`
+    : null;
+  const startSeconds = getStartSeconds(source.url);
 
   return (
     <div
@@ -23,6 +34,22 @@ export function SourceCard({ source, index }: SourceCardProps) {
     >
       {/* Header */}
       <div className="flex items-center gap-3 px-3 py-2.5">
+        {/* Thumbnail */}
+        {thumbnailUrl && (
+          <div className="relative h-[45px] w-[80px] shrink-0 overflow-hidden rounded-md bg-black/30">
+            <Image
+              src={thumbnailUrl}
+              alt={source.title}
+              fill
+              sizes="80px"
+              className="object-cover"
+              unoptimized
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+              <Play className="h-4 w-4 fill-white text-white opacity-80" />
+            </div>
+          </div>
+        )}
         <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[10px] font-semibold text-primary">
           {index + 1}
         </div>
@@ -54,6 +81,21 @@ export function SourceCard({ source, index }: SourceCardProps) {
           className="border-t border-white/[0.05] px-3 pb-3 pt-2.5"
           onClick={(e) => e.stopPropagation()}
         >
+          {/* YouTube Embed */}
+          {source.video_id && (
+            <div className="mb-3 w-full max-w-[560px]">
+              <div className="relative aspect-video w-full overflow-hidden rounded-lg">
+                <iframe
+                  src={`https://www.youtube.com/embed/${source.video_id}?start=${startSeconds}`}
+                  title={source.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 h-full w-full"
+                />
+              </div>
+            </div>
+          )}
+
           <p className="max-h-[160px] overflow-y-auto text-[12px] leading-relaxed text-gray-text/70">
             {source.text}
           </p>

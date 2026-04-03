@@ -440,7 +440,7 @@ export default function DashboardPage() {
                 placeholder={hasActiveChat ? `Ask about ${chatLabel}...` : "Select a channel first..."}
                 disabled={!hasActiveChat || loading}
                 rows={1}
-                className="max-h-[120px] min-h-[24px] flex-1 resize-none bg-transparent py-2.5 text-[14px] leading-[1.6] text-cream placeholder:text-gray-text/35 focus:outline-none disabled:opacity-30"
+                className="max-h-[120px] min-h-[24px] flex-1 resize-none overflow-hidden bg-transparent py-2.5 text-[14px] leading-[1.6] text-cream placeholder:text-gray-text/35 focus:outline-none disabled:opacity-30"
               />
               <button
                 onClick={handleSend}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, ArrowRight, Play } from "lucide-react";
+import { Search, ArrowRight, Video } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { Navbar } from "@/components/shared/navbar";
 import {
@@ -156,8 +156,8 @@ export default function ChannelsPage() {
                   </p>
                   <div className="mt-3 flex items-center gap-3">
                     <span className="flex items-center gap-1.5 text-xs text-gray-text/50">
-                      <Play className="h-3 w-3 shrink-0" />
-                      {channel.videoCount.toLocaleString()} videos
+                      <Video className="h-3 w-3 shrink-0" />
+                      {channel.videoCount.toLocaleString()} Videos
                     </span>
                     <span className="rounded-full bg-white/[0.04] px-2 py-0.5 text-[11px] text-gray-text/50">
                       {channel.category}
