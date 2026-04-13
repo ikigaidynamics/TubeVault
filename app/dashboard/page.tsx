@@ -278,37 +278,31 @@ export default function DashboardPage() {
             <div className="relative flex h-full items-center justify-center px-6">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_40%,rgba(101,174,76,0.03)_0%,transparent_70%)]" />
 
-              <div className="relative flex w-full max-w-[860px] animate-[fadeUp_0.6s_ease-out] flex-col items-center gap-10 md:flex-row md:items-start md:gap-0">
-                {/* Left — golden major */}
-                <div className="flex flex-[0_0_61.8%] flex-col gap-4 text-center md:pr-12 md:text-left">
-                  <div className="flex items-center justify-center gap-3 md:justify-start">
-                    <Image
-                      src="/TubeVault_Logo_noBG.png"
-                      alt="TubeVault"
-                      width={48}
-                      height={48}
-                      className="h-12 w-12"
-                    />
+              <div className="relative w-full max-w-[860px] animate-[fadeUp_0.6s_ease-out]">
+                {/* Header — full width above golden ratio */}
+                <div className="mb-8 flex items-center justify-center gap-3 md:justify-start">
+                  <Image
+                    src="/TubeVault_Logo_noBG.png"
+                    alt="TubeVault"
+                    width={48}
+                    height={48}
+                    className="h-12 w-12"
+                  />
+                  <div>
                     <h2 className="text-2xl font-semibold text-cream">
                       Welcome to TubeVault
                     </h2>
+                    <p className="text-[13px] text-gray-text/50">
+                      {collectionsLoading
+                        ? "Loading channels..."
+                        : "Pick a channel from the sidebar, or try one of these:"}
+                    </p>
                   </div>
-                  <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-gray-text/35">
-                    Your AI search engine
-                  </p>
-                  <p className="text-[13px] leading-relaxed text-gray-text/50">
-                    {collectionsLoading
-                      ? "Loading channels..."
-                      : "Pick a channel from the sidebar to start searching, or try one of these creators:"}
-                  </p>
                 </div>
 
-                {/* Right — golden minor: featured creator cards */}
+                {/* Creator cards — full width grid */}
                 {!collectionsLoading && (
-                  <div className="flex w-full flex-[0_0_38.2%] flex-col gap-2.5 md:w-auto">
-                    <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-gray-text/35">
-                      Try a creator
-                    </p>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     {[
                       { slug: "andrew_huberman", name: "Andrew Huberman", question: "How do I get better sleep?" },
                       { slug: "the_randall_carlson", name: "Randall Carlson", question: "What caused the great floods?" },
