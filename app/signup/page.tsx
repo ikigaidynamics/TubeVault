@@ -1,9 +1,10 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Loader2, Mail, Lock, ShieldCheck } from "lucide-react";
+import { ArrowRight, Loader2, Mail, Lock, ShieldCheck, Gift } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 
 function GoogleIcon() {
@@ -38,6 +39,8 @@ export default function SignupPage() {
 }
 
 function SignupForm() {
+  const searchParams = useSearchParams();
+  const isTrialBonus = searchParams.get("bonus") === "trial";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -153,7 +156,7 @@ function SignupForm() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-dark-bg px-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-dark-bg px-4 py-6">
       {/* Animated background */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-1/2 top-1/3 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/[0.04] blur-[150px]" />
@@ -162,25 +165,27 @@ function SignupForm() {
       </div>
 
       <div className="relative w-full max-w-sm">
-        {/* Logo */}
-        <div className="mb-8 flex justify-center">
-          <Link href="/">
-            <Image
-              src="/TubeVault_Logo_noBG.png"
-              alt="TubeVault"
-              width={64}
-              height={64}
-              priority
-            />
-          </Link>
-        </div>
-
         {/* Card */}
-        <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-8 shadow-2xl shadow-black/40 backdrop-blur-xl">
+        <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] px-8 py-6 shadow-2xl shadow-black/40 backdrop-blur-xl">
+          {isTrialBonus && (
+            <div className="mb-5 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/[0.08] px-4 py-3">
+              <Gift className="h-5 w-5 shrink-0 text-primary" />
+              <div>
+                <p className="text-sm font-semibold text-cream">
+                  Get 3 extra questions
+                </p>
+                <p className="text-xs text-gray-text">
+                  Create an account and get 3 bonus questions — one-time offer.
+                </p>
+              </div>
+            </div>
+          )}
           <div className="space-y-1.5">
             <h2 className="text-2xl font-bold text-cream">Create account</h2>
             <p className="text-sm text-gray-text">
-              Start searching YouTube channels by meaning
+              {isTrialBonus
+                ? "Sign up to unlock your bonus questions"
+                : "Start searching YouTube channels by meaning"}
             </p>
           </div>
 
@@ -195,7 +200,7 @@ function SignupForm() {
           <button
             onClick={handleGoogleSignUp}
             disabled={googleLoading}
-            className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl bg-white/90 py-3 text-sm font-semibold text-gray-700 transition-all hover:bg-white disabled:opacity-50"
+            className="mt-5 flex w-full items-center justify-center gap-3 rounded-xl bg-white/90 py-3 text-sm font-semibold text-gray-700 transition-all hover:bg-white disabled:opacity-50"
           >
             {googleLoading ? (
               <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
@@ -206,7 +211,7 @@ function SignupForm() {
           </button>
 
           {/* Divider */}
-          <div className="relative my-6 flex items-center">
+          <div className="relative my-5 flex items-center">
             <div className="flex-grow border-t border-white/[0.08]" />
             <span className="mx-4 text-xs uppercase text-gray-text/50">
               or continue with email
@@ -215,7 +220,7 @@ function SignupForm() {
           </div>
 
           {/* Email form */}
-          <form onSubmit={handleEmailSignUp} className="space-y-4">
+          <form onSubmit={handleEmailSignUp} className="space-y-3">
             <div className="relative">
               <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-text/40" />
               <input
@@ -304,7 +309,7 @@ function SignupForm() {
           </form>
 
           {/* Footer */}
-          <p className="mt-6 text-center text-sm text-gray-text">
+          <p className="mt-5 text-center text-sm text-gray-text">
             Already have an account?{" "}
             <Link
               href="/login"
@@ -313,6 +318,20 @@ function SignupForm() {
               Sign in
             </Link>
           </p>
+        </div>
+
+        {/* Logo below card */}
+        <div className="mt-6 flex justify-center">
+          <Link href="/">
+            <Image
+              src="/TubeVault_Logo_noBG.png"
+              alt="TubeVault"
+              width={48}
+              height={48}
+              priority
+              className="opacity-60 transition-opacity hover:opacity-100"
+            />
+          </Link>
         </div>
       </div>
     </div>

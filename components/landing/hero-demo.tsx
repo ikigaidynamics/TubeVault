@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   Search,
-  Play,
   Clock,
   ExternalLink,
   ChevronRight,
@@ -21,16 +20,16 @@ const DEMO_SOURCES = [
   {
     title: "Using Deliberate Cold Exposure for Health and Performance",
     channel: "Andrew Huberman",
-    timestamp: "14:32",
-    videoId: "x3MgDtZovks",
+    timestamp: "28:23",
+    video_id: "pq6WHJzOkno",
     snippet:
       "...deliberate cold exposure causes a 250% increase in dopamine that lasts for hours...",
   },
   {
-    title: "How to Use Cold & Heat Exposure to Improve Your Health",
+    title: "How to Optimize Your Water Quality & Intake for Health",
     channel: "Andrew Huberman",
-    timestamp: "8:17",
-    videoId: "pq6WHJzOkno",
+    timestamp: "3:48",
+    video_id: "at37Y8rKDlA",
     snippet:
       "...end your shower cold, not warm. The catecholamine response is what gives you that lasting energy...",
   },
@@ -86,11 +85,12 @@ export function HeroDemo() {
           </div>
           <div className="ml-2 flex items-center gap-1.5 rounded-md bg-white/[0.04] px-3 py-1">
             <Image
-              src="/channels/andrew_huberman_avatar.jpg"
-              alt="Andrew Huberman"
+              src="https://mindvault.ikigai-dynamics.com/static/andrew_huberman_avatar.jpg"
+              alt=""
               width={16}
               height={16}
-              className="h-4 w-4 rounded-full object-cover"
+              className="h-4 w-4 rounded-sm object-cover"
+              unoptimized
             />
             <span className="text-[11px] text-gray-text">
               Andrew Huberman
@@ -134,11 +134,11 @@ export function HeroDemo() {
             <div className="mb-3 rounded-xl bg-white/[0.03] p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Image
-                  src="/TubeVault_Symbol.png"
+                  src="/TubeVault_Logo_noBG.png"
                   alt="TubeVault"
                   width={20}
                   height={20}
-                  className="h-5 w-5 rounded-md object-cover"
+                  className="h-5 w-5"
                 />
                 <span className="text-xs font-medium text-gray-text">
                   Answer
@@ -174,16 +174,14 @@ export function HeroDemo() {
                       "opacity 0.4s ease, transform 0.4s ease, border-color 0.2s ease",
                   }}
                 >
-                  <div className="relative h-[45px] w-[80px] shrink-0 overflow-hidden rounded-lg bg-black/30">
-                    <Image
-                      src={`https://img.youtube.com/vi/${source.videoId}/mqdefault.jpg`}
-                      alt={source.title}
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </div>
+                  <Image
+                    src={`https://img.youtube.com/vi/${source.video_id}/mqdefault.jpg`}
+                    alt=""
+                    width={80}
+                    height={45}
+                    className="h-[40px] w-[70px] shrink-0 rounded-md object-cover"
+                    unoptimized
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="truncate text-xs font-medium text-cream">

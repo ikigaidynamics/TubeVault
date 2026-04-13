@@ -23,7 +23,7 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#1d1d1d]/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
         {/* Logo — always links home */}
-        <Link href="/" className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2">
           <Image
             src="/TubeVault_Logo_round.png"
             alt="TubeVault"
@@ -31,16 +31,14 @@ export function Navbar() {
             height={28}
             className="h-7 w-7"
           />
-          <span className="-ml-1 mt-[2px] inline-block h-8 overflow-hidden">
-            <Image
-              src="/TubeVault_Font.png"
-              alt="TubeVault"
-              width={600}
-              height={600}
-              className="-mx-[42px] h-[260px] w-auto -mt-[116px] object-contain"
-              unoptimized
-            />
-          </span>
+          <Image
+            src="/TubeVault_Font_cropped.png"
+            alt="TubeVault"
+            width={108}
+            height={19}
+            className="h-[19px] w-auto"
+            priority
+          />
         </Link>
 
         {/* Desktop nav */}

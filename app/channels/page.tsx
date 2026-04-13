@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Search, ArrowRight, Video } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { Navbar } from "@/components/shared/navbar";
+import { HeroDemo } from "@/components/landing/hero-demo";
 import {
   CHANNELS,
   CATEGORIES,
@@ -51,10 +52,13 @@ function ChannelAvatar({
   );
 }
 
+const INITIAL_SHOW = 12;
+
 export default function ChannelsPage() {
   const [activeCategory, setActiveCategory] = useState<Category>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -115,7 +119,7 @@ export default function ChannelsPage() {
             return (
               <button
                 key={cat}
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => { setActiveCategory(cat); setShowAll(false); }}
                 className={`shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                   activeCategory === cat
                     ? "bg-primary text-white"
@@ -137,9 +141,19 @@ export default function ChannelsPage() {
           })}
         </div>
 
+        {/* Animated demo widget */}
+        <div className="mt-10 mb-12">
+          <div className="mb-4 text-center">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/70">
+              See it in action
+            </span>
+          </div>
+          <HeroDemo />
+        </div>
+
         {/* Channel grid — A-Z sorted */}
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((channel) => (
+          {(showAll || searchQuery ? filtered : filtered.slice(0, INITIAL_SHOW)).map((channel) => (
             <Link
               key={channel.slug}
               href={channelLink(channel.slug)}
@@ -157,7 +171,7 @@ export default function ChannelsPage() {
                   <div className="mt-3 flex items-center gap-3">
                     <span className="flex items-center gap-1.5 text-xs text-gray-text/50">
                       <Video className="h-3 w-3 shrink-0" />
-                      {channel.videoCount.toLocaleString()} Videos
+                      {channel.videoCount.toLocaleString()} videos
                     </span>
                     <span className="rounded-full bg-white/[0.04] px-2 py-0.5 text-[11px] text-gray-text/50">
                       {channel.category}
@@ -172,6 +186,19 @@ export default function ChannelsPage() {
             </Link>
           ))}
         </div>
+
+        {/* Show more button */}
+        {!showAll && !searchQuery && filtered.length > INITIAL_SHOW && (
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => setShowAll(true)}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] px-6 py-3 text-sm font-medium text-cream transition-colors hover:bg-white/[0.04]"
+            >
+              + {filtered.length - INITIAL_SHOW} more channels
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
 
         {filtered.length === 0 && (
           <div className="mt-16 text-center">
@@ -215,7 +242,7 @@ export default function ChannelsPage() {
             Ready to search these channels?
           </h2>
           <p className="mt-2 text-sm text-gray-text">
-            Free plan includes 3 channels and 5 questions per day.
+            Free plan includes 3 channels and 3 trial questions.
           </p>
           <Link
             href={loggedIn ? "/dashboard" : "/signup"}

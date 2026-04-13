@@ -10,24 +10,22 @@ export interface Channel {
 
 export const CATEGORIES = [
   "All",
-  "Health & Nutrition",
-  "Ancient History",
-  "Theology",
-  "Spirituality",
-  "Education",
+  "Health & Longevity",
+  "History & Ancient Knowledge",
+  "Other",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
 
 export const CHANNELS: Channel[] = [
-  // ── Health & Nutrition ──
+  // ── Health & Longevity ──
   {
     slug: "andrew_huberman",
     displayName: "Andrew Huberman",
     description:
       "Neuroscience & science-based tools for everyday life from the Huberman Lab podcast.",
     videoCount: 468,
-    category: "Health & Nutrition",
+    category: "Health & Longevity",
     avatar: "/channels/andrew_huberman_avatar.jpg",
     color: "#4A90D9",
   },
@@ -37,7 +35,7 @@ export const CHANNELS: Channel[] = [
     description:
       "American medical doctor exploring carnivore nutrition and optimal human diet.",
     videoCount: 1485,
-    category: "Health & Nutrition",
+    category: "Health & Longevity",
     avatar: "/channels/anthony_chaffee_md_avatar.jpg",
     color: "#06B6D4",
   },
@@ -46,8 +44,8 @@ export const CHANNELS: Channel[] = [
     displayName: "Dr Brad Stanfield",
     description:
       "Primary care physician sharing the latest research and clinical guidelines on longevity.",
-    videoCount: 422,
-    category: "Health & Nutrition",
+    videoCount: 880,
+    category: "Health & Longevity",
     avatar: "/channels/dr_brad_stanfield_avatar.jpg",
     color: "#10B981",
   },
@@ -56,8 +54,8 @@ export const CHANNELS: Channel[] = [
     displayName: "Dr. William Li",
     description:
       "World-renowned physician and scientist on nutrition, angiogenesis, and disease prevention.",
-    videoCount: 997,
-    category: "Health & Nutrition",
+    videoCount: 62,
+    category: "Health & Longevity",
     avatar: "/channels/dr_william_li_avatar.jpg",
     color: "#EF4444",
   },
@@ -66,8 +64,8 @@ export const CHANNELS: Channel[] = [
     displayName: "FoundMyFitness",
     description:
       "Dr. Rhonda Patrick on health science, fitness protocols, and longevity research.",
-    videoCount: 186,
-    category: "Health & Nutrition",
+    videoCount: 192,
+    category: "Health & Longevity",
     avatar: "/channels/foundmyfitness_avatar.jpg",
     color: "#E8573A",
   },
@@ -77,7 +75,7 @@ export const CHANNELS: Channel[] = [
     description:
       "The world's most measured human. Longevity, metabolic health, and Project Blueprint.",
     videoCount: 911,
-    category: "Health & Nutrition",
+    category: "Health & Longevity",
     avatar: "/channels/bryan_johnson_avatar.jpg",
     color: "#8B5CF6",
   },
@@ -87,7 +85,7 @@ export const CHANNELS: Channel[] = [
     description:
       "MD from Harvard & PhD from Oxford. Metabolic health enthusiast — stay curious.",
     videoCount: 509,
-    category: "Health & Nutrition",
+    category: "Health & Longevity",
     avatar: "/channels/nick_norwitz_md_phd_avatar.jpg",
     color: "#F97316",
   },
@@ -97,7 +95,7 @@ export const CHANNELS: Channel[] = [
     description:
       "Helping men step into their highest potential through testosterone and health optimization.",
     videoCount: 199,
-    category: "Health & Nutrition",
+    category: "Health & Longevity",
     avatar: "/channels/nathan_sages_avatar.jpg",
     color: "#FB7185",
   },
@@ -107,7 +105,7 @@ export const CHANNELS: Channel[] = [
     description:
       "Dr. Liu on immune health, front-line medical insights, and wellness strategies.",
     videoCount: 314,
-    category: "Health & Nutrition",
+    category: "Health & Longevity",
     avatar: "/channels/healthy_immune_doc_avatar.jpg",
     color: "#14B8A6",
   },
@@ -117,7 +115,7 @@ export const CHANNELS: Channel[] = [
     description:
       "Board-certified cardiovascular surgeon on optimizing life for a better, longer health span.",
     videoCount: 454,
-    category: "Health & Nutrition",
+    category: "Health & Longevity",
     avatar: "/channels/jeremy_london_md_avatar.jpg",
     color: "#EC4899",
   },
@@ -127,7 +125,7 @@ export const CHANNELS: Channel[] = [
     description:
       "Health podcast focused on metabolic health, hosted by Rina Ahluwalia.",
     videoCount: 135,
-    category: "Health & Nutrition",
+    category: "Health & Longevity",
     avatar: "/channels/the_primal_podcast_avatar.jpg",
     color: "#84CC16",
   },
@@ -137,7 +135,7 @@ export const CHANNELS: Channel[] = [
     description:
       "Deep conversations on business, health, and human performance with Steven Bartlett.",
     videoCount: 675,
-    category: "Health & Nutrition",
+    category: "Health & Longevity",
     avatar: "/channels/the_diary_of_a_ceo_avatar.jpg",
     color: "#F59E0B",
   },
@@ -147,19 +145,19 @@ export const CHANNELS: Channel[] = [
     description:
       "Harvard & Stanford-trained gastroenterologist making gut health easy to understand.",
     videoCount: 22,
-    category: "Health & Nutrition",
+    category: "Health & Longevity",
     avatar: "/channels/doctor_sethi_avatar.jpg",
     color: "#A3E635",
   },
 
-  // ── Ancient History & Exploration ──
+  // ── History & Ancient Knowledge ──
   {
     slug: "unchartedx",
     displayName: "UnchartedX",
     description:
       "Ben van Kerkwyk exploring ancient sites, precision engineering, and lost civilizations.",
-    videoCount: 245,
-    category: "Ancient History",
+    videoCount: 253,
+    category: "History & Ancient Knowledge",
     avatar: "/channels/unchartedx_avatar.jpg",
     color: "#D97706",
   },
@@ -168,8 +166,8 @@ export const CHANNELS: Channel[] = [
     displayName: "Bright Insight",
     description:
       "Jimmy Corsetti investigating lost ancient history and forgotten civilizations.",
-    videoCount: 164,
-    category: "Ancient History",
+    videoCount: 340,
+    category: "History & Ancient Knowledge",
     avatar: "/channels/bright_insight_avatar.jpg",
     color: "#FBBF24",
   },
@@ -178,8 +176,8 @@ export const CHANNELS: Channel[] = [
     displayName: "Randall Carlson",
     description:
       "Exploring the profound mysteries of our world — science, sacred geometry, and catastrophism.",
-    videoCount: 1662,
-    category: "Ancient History",
+    videoCount: 64,
+    category: "History & Ancient Knowledge",
     avatar: "/channels/the_randall_carlson_avatar.jpg",
     color: "#78716C",
   },
@@ -188,8 +186,8 @@ export const CHANNELS: Channel[] = [
     displayName: "GeoCosmic REX",
     description:
       "Ice Age Floods, catastrophe and Earth change, mythology, symbolism, and ancient mysteries.",
-    videoCount: 210,
-    category: "Ancient History",
+    videoCount: 851,
+    category: "History & Ancient Knowledge",
     avatar: "/channels/geocosmic_rex_avatar.jpg",
     color: "#2DD4BF",
   },
@@ -198,8 +196,8 @@ export const CHANNELS: Channel[] = [
     displayName: "History with Kayleigh",
     description:
       "Archaeology, ancient structures, and the untold stories of the ancient world.",
-    videoCount: 387,
-    category: "Ancient History",
+    videoCount: 782,
+    category: "History & Ancient Knowledge",
     avatar: "/channels/history_with_kayleigh_avatar.jpg",
     color: "#A78BFA",
   },
@@ -208,32 +206,28 @@ export const CHANNELS: Channel[] = [
     displayName: "Funny Olde World",
     description:
       "Actress, comedian, and ancient history geek exploring our mysterious past.",
-    videoCount: 139,
-    category: "Ancient History",
+    videoCount: 286,
+    category: "History & Ancient Knowledge",
     avatar: "/channels/funny_olde_world_avatar.jpg",
     color: "#FB923C",
   },
-
-  // ── Theology ──
   {
     slug: "wes_huff",
     displayName: "Wes Huff",
     description:
       "Christian apologetics, interfaith dialogue, and theological scholarship (BA, MTS, PhD candidate).",
-    videoCount: 320,
-    category: "Theology",
+    videoCount: 300,
+    category: "Other",
     avatar: "/channels/wes_huff_avatar.jpg",
     color: "#60A5FA",
   },
-
-  // ── Spirituality ──
   {
     slug: "katie_clarke",
     displayName: "Katie Clarke",
     description:
       "Helping you reconnect with your divine power — spirituality and self-development.",
-    videoCount: 192,
-    category: "Spirituality",
+    videoCount: 193,
+    category: "Other",
     avatar: "/channels/katie_clarke_avatar.jfif",
     color: "#C084FC",
   },
@@ -242,22 +236,10 @@ export const CHANNELS: Channel[] = [
     displayName: "Metanoia",
     description:
       "Hidden knowledge, mysteries, and the Fibonacci sequence of consciousness.",
-    videoCount: 57,
-    category: "Spirituality",
+    videoCount: 191,
+    category: "Other",
     avatar: "/channels/metanoia_avatar.jpg",
     color: "#34D399",
-  },
-
-  // ── Education ──
-  {
-    slug: "btu_cottbus_senftenberg",
-    displayName: "BTU Cottbus-Senftenberg",
-    description:
-      "Brandenburg Technical University — lectures, research talks, and academic content.",
-    videoCount: 283,
-    category: "Education",
-    avatar: "/channels/btu_cottbus_senftenberg_avatar.jpg",
-    color: "#0EA5E9",
   },
 ];
 

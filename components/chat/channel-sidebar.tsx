@@ -102,7 +102,13 @@ export function ChannelSidebar({
             height={24}
             className="h-6 w-6"
           />
-          <span className="font-[family-name:var(--font-alice)] text-[14px] text-cream">TubeVault</span>
+          <Image
+            src="/TubeVault_Font_cropped.png"
+            alt="TubeVault"
+            width={90}
+            height={16}
+            className="h-4 w-auto"
+          />
         </Link>
       </div>
 

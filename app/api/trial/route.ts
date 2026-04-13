@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createHash } from "crypto";
 
-const TRIAL_LIMIT = 5;
+const TRIAL_LIMIT = 3;
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -69,6 +69,19 @@ export async function GET(request: Request) {
   const remaining = Math.max(0, TRIAL_LIMIT - used);
 
   return NextResponse.json({ remaining, limit: TRIAL_LIMIT, used });
+}
+
+// DELETE: reset trial questions (dev convenience)
+export async function DELETE(request: Request) {
+  const hash = computeFingerprint(request);
+  memoryStore.delete(hash);
+
+  await supabaseAdmin
+    .from("anonymous_trials")
+    .delete()
+    .eq("fingerprint_hash", hash);
+
+  return NextResponse.json({ remaining: TRIAL_LIMIT, limit: TRIAL_LIMIT, used: 0 });
 }
 
 // POST: increment trial question count

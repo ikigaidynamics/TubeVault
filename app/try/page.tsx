@@ -19,7 +19,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://mindvault.ikigai-dynamics.com/api";
 
-const TRIAL_LIMIT = 5;
+const TRIAL_LIMIT = 3;
 
 function getScreenInfo(): string {
   if (typeof window === "undefined") return "";
@@ -28,7 +28,7 @@ function getScreenInfo(): string {
 
 export default function TryPage() {
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<string | null>("andrew_huberman");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -61,7 +61,9 @@ export default function TryPage() {
       .then((r) => r.json())
       .then((data) => {
         setRemaining(data.remaining);
-        if (data.remaining <= 0) setLimitReached(true);
+        if (data.remaining <= 0) {
+          setLimitReached(true);
+        }
       })
       .catch(() => {});
   }, []);
@@ -77,16 +79,30 @@ export default function TryPage() {
     }));
   }, [messages]);
 
+  async function submitQuestion(q: string) {
+    if (!q.trim() || !selectedChannel || loading) return;
+    if (limitReached || remaining <= 0) {
+      window.location.href = "/signup?bonus=trial";
+      return;
+    }
+    setInput("");
+    await doSend(q.trim());
+  }
+
   async function handleSend() {
     if (!input.trim() || !selectedChannel || loading) return;
 
     if (limitReached || remaining <= 0) {
-      setLimitReached(true);
+      window.location.href = "/signup?bonus=trial";
       return;
     }
 
     const question = input.trim();
     setInput("");
+    await doSend(question);
+  }
+
+  async function doSend(question: string) {
     setError(null);
     setMessages((prev) => [...prev, { role: "user", content: question }]);
     setLoading(true);
@@ -100,11 +116,7 @@ export default function TryPage() {
       });
 
       if (incRes.status === 429) {
-        setMessages((prev) => prev.slice(0, -1));
-        setInput(question);
-        setRemaining(0);
-        setLimitReached(true);
-        setLoading(false);
+        window.location.href = "/signup?bonus=trial";
         return;
       }
 
@@ -113,7 +125,7 @@ export default function TryPage() {
       if (incData.remaining <= 0) setLimitReached(true);
 
       const history = getHistory();
-      const data = await queryCollection(selectedChannel, question, history);
+      const data = await queryCollection(selectedChannel!, question, history);
 
       setMessages((prev) => [
         ...prev,
@@ -264,8 +276,8 @@ export default function TryPage() {
                 Try TubeVault
               </h2>
               <p className="mt-2 max-w-sm text-sm text-gray-text">
-                Pick a channel above and ask any question. You have{" "}
-                {remaining} free questions — no account needed.
+                3 free questions, no signup needed. Pick a channel above and
+                ask anything.
               </p>
             </div>
           ) : limitReached ? (
@@ -279,11 +291,10 @@ export default function TryPage() {
                   className="mx-auto -mb-2"
                 />
                 <h2 className="mt-4 text-lg font-semibold text-cream">
-                  You&apos;ve used your free trial
+                  You&apos;ve used your 3 free questions
                 </h2>
                 <p className="mt-2 text-sm text-gray-text">
-                  Create a free account to keep searching — no credit card
-                  required.
+                  Sign up for unlimited questions — no credit card required.
                 </p>
                 <Link
                   href="/signup"
@@ -348,15 +359,26 @@ export default function TryPage() {
                   </p>
                 </div>
                 <div className="flex w-full max-w-sm flex-col gap-2">
-                  {[
-                    `What are the main topics ${selectedCollection?.display_name} covers?`,
-                    `What's the most surprising insight from recent videos?`,
-                  ].map((s) => (
+                  {(selectedChannel === "andrew_huberman"
+                    ? [
+                        "How does Huberman recommend optimizing sleep?",
+                        "What\u2019s Huberman\u2019s morning routine?",
+                        "What does Huberman say about caffeine timing?",
+                      ]
+                    : [
+                        `What are the main topics ${selectedCollection?.display_name} covers?`,
+                        `What's the most surprising insight from recent videos?`,
+                      ]
+                  ).map((s) => (
                     <button
                       key={s}
                       onClick={() => {
                         setInput(s);
-                        inputRef.current?.focus();
+                        // Auto-submit after a tick so state updates
+                        setTimeout(() => {
+                          setInput(s);
+                          submitQuestion(s);
+                        }, 0);
                       }}
                       className="w-full rounded-xl border border-[#2E2F31] bg-[#1C1D1F] px-3.5 py-2.5 text-left text-[13px] leading-relaxed text-gray-text/70 transition-all duration-200 hover:translate-x-1 hover:border-primary/30 hover:text-cream"
                     >
