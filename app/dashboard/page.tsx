@@ -147,7 +147,7 @@ export default function DashboardPage() {
     if (!input.trim() || (!selectedChannel && !searchAllActive) || loading) return;
 
     if (questionsRemaining !== null && questionsRemaining <= 0) {
-      setUpgradeModal({ open: true, title: "Daily Limit Reached", message: "You've used all 5 free questions today. Upgrade to Starter for unlimited questions." });
+      setUpgradeModal({ open: true, title: "Daily Limit Reached", message: "You've used all 3 free questions today. Upgrade to Starter for more questions." });
       return;
     }
 
@@ -164,7 +164,7 @@ export default function DashboardPage() {
           setMessages((prev) => prev.slice(0, -1));
           setInput(question);
           setQuestionsRemaining(0);
-          setUpgradeModal({ open: true, title: "Daily Limit Reached", message: "You've used all 5 free questions today. Upgrade to Starter for unlimited questions." });
+          setUpgradeModal({ open: true, title: "Daily Limit Reached", message: "You've used all 3 free questions today. Upgrade to Starter for more questions." });
           setLoading(false);
           return;
         }
@@ -278,26 +278,37 @@ export default function DashboardPage() {
             <div className="relative flex h-full items-center justify-center px-6">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_40%,rgba(101,174,76,0.03)_0%,transparent_70%)]" />
 
-              <div className="relative w-full max-w-3xl animate-[fadeUp_0.6s_ease-out] text-center">
-                <Image
-                  src="/TubeVault_Logo_noBG.png"
-                  alt="TubeVault"
-                  width={56}
-                  height={56}
-                  className="mx-auto mb-4 h-14 w-14"
-                />
-                <h2 className="text-2xl font-semibold text-cream">
-                  Welcome to TubeVault
-                </h2>
-                <p className="mt-2 text-sm text-gray-text/60">
-                  {collectionsLoading
-                    ? "Loading channels..."
-                    : "Pick a channel below to start, or try one of these:"}
-                </p>
+              <div className="relative flex w-full max-w-[860px] animate-[fadeUp_0.6s_ease-out] flex-col items-center gap-10 md:flex-row md:items-start md:gap-0">
+                {/* Left — golden major */}
+                <div className="flex flex-[0_0_61.8%] flex-col gap-4 text-center md:pr-12 md:text-left">
+                  <div className="flex items-center justify-center gap-3 md:justify-start">
+                    <Image
+                      src="/TubeVault_Logo_noBG.png"
+                      alt="TubeVault"
+                      width={48}
+                      height={48}
+                      className="h-12 w-12"
+                    />
+                    <h2 className="text-2xl font-semibold text-cream">
+                      Welcome to TubeVault
+                    </h2>
+                  </div>
+                  <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-gray-text/35">
+                    Your AI search engine
+                  </p>
+                  <p className="text-[13px] leading-relaxed text-gray-text/50">
+                    {collectionsLoading
+                      ? "Loading channels..."
+                      : "Pick a channel from the sidebar to start searching, or try one of these creators:"}
+                  </p>
+                </div>
 
-                {/* Featured creator cards */}
+                {/* Right — golden minor: featured creator cards */}
                 {!collectionsLoading && (
-                  <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div className="flex w-full flex-[0_0_38.2%] flex-col gap-2.5 md:w-auto">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-gray-text/35">
+                      Try a creator
+                    </p>
                     {[
                       { slug: "andrew_huberman", name: "Andrew Huberman", question: "How do I get better sleep?" },
                       { slug: "the_randall_carlson", name: "Randall Carlson", question: "What caused the great floods?" },
@@ -317,30 +328,29 @@ export default function DashboardPage() {
                             setInput(creator.question);
                             setTimeout(() => inputRef.current?.focus(), 100);
                           }}
-                          className="group flex flex-col items-center gap-3 rounded-2xl border border-[#2E2F31] bg-[#141416] px-5 py-6 text-center transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_8px_32px_rgba(101,174,76,0.08)]"
+                          className="group flex w-full items-center gap-3 rounded-xl border border-[#2E2F31] bg-[#141416] px-4 py-3 text-left transition-all duration-200 hover:border-primary/20 hover:shadow-[0_4px_20px_rgba(101,174,76,0.06)]"
                         >
                           {logoUrl ? (
                             <Image
                               src={logoUrl}
                               alt={creator.name}
-                              width={64}
-                              height={64}
-                              className="h-16 w-16 rounded-2xl object-cover"
+                              width={40}
+                              height={40}
+                              className="h-10 w-10 shrink-0 rounded-xl object-cover"
                               unoptimized
                             />
                           ) : (
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/[0.06] text-lg font-bold text-gray-text">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-xs font-bold text-gray-text">
                               {creator.name.split(" ").map((w) => w[0]).join("")}
                             </div>
                           )}
-                          <p className="text-sm font-semibold text-cream">{creator.name}</p>
-                          <p className="text-[11px] leading-relaxed text-gray-text/40">
-                            &ldquo;{creator.question}&rdquo;
-                          </p>
-                          <span className="mt-auto flex items-center gap-1 text-[12px] font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                            Try {creator.name.split(" ").pop()}
-                            <ArrowRight className="h-3 w-3" />
-                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[12px] font-semibold text-cream/80">{creator.name}</p>
+                            <p className="truncate text-[10px] text-gray-text/40">
+                              &ldquo;{creator.question}&rdquo;
+                            </p>
+                          </div>
+                          <ArrowRight className="h-3.5 w-3.5 shrink-0 text-primary/0 transition-colors group-hover:text-primary/60" />
                         </button>
                       );
                     })}

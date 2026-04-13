@@ -13,7 +13,7 @@ export interface TierLimits {
 export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
   free: {
     maxChannels: 3,
-    maxQuestionsPerDay: 5,
+    maxQuestionsPerDay: 3,
     hasTranscripts: false,
     hasTranslation: false,
     hasCrossChannelSearch: false,
@@ -21,8 +21,8 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     hasTranscriptEditing: false,
   },
   starter: {
-    maxChannels: 5,
-    maxQuestionsPerDay: Infinity,
+    maxChannels: 10,
+    maxQuestionsPerDay: 30,
     hasTranscripts: false,
     hasTranslation: false,
     hasCrossChannelSearch: false,
