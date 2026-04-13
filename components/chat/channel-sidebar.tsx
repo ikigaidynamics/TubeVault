@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { LogOut, Menu, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight } from "lucide-react";
+import { LogOut, Menu, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight, ArrowRight, Zap } from "lucide-react";
 import type { Collection } from "@/lib/api";
 import type { SubscriptionTier } from "@/lib/tiers";
 import { TIER_LIMITS } from "@/lib/tiers";
@@ -89,6 +89,7 @@ export function ChannelSidebar({
   const lockDays = lockedUntil ? daysUntil(lockedUntil) : 0;
   const hasQuestionLimit = questionLimit !== null && questionLimit !== undefined && questionLimit > 0;
   const qRemaining = questionsRemaining ?? 0;
+  const qUsed = hasQuestionLimit ? (questionLimit ?? 0) - qRemaining : 0;
 
   const sidebar = (
     <div className="relative flex h-full flex-col bg-[#0A0A0B]">
@@ -113,7 +114,7 @@ export function ChannelSidebar({
       </div>
 
       {/* Header + lock info */}
-      <div className="flex items-center justify-between px-4 py-2.5">
+      <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-medium uppercase tracking-wider text-gray-text/50">
             My Channels
@@ -134,7 +135,7 @@ export function ChannelSidebar({
 
       {/* Lock timer or change button */}
       {!hasUnlimitedChannels && pickedChannels.length > 0 && (
-        <div className="px-4 pb-2">
+        <div className="px-4 pb-3">
           {canChange ? (
             <button
               onClick={onChangeChannels}
@@ -146,53 +147,17 @@ export function ChannelSidebar({
           ) : (
             <div className="flex items-center justify-center gap-1.5 rounded-lg bg-white/[0.03] py-1.5 text-[10px] text-gray-text/40">
               <Lock className="h-3 w-3" />
-              Resets in {lockDays}d
+              Change channels in {lockDays}d
             </div>
           )}
         </div>
       )}
 
-      {/* Search All */}
-      <div className="px-2 pb-1">
-        <button
-          onClick={() => {
-            if (canCrossSearch) {
-              onSearchAll?.();
-              setMobileOpen(false);
-            } else {
-              router.push("/pricing");
-            }
-          }}
-          className={`mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-all duration-200 ${
-            searchAllActive
-              ? "bg-primary/10 text-cream"
-              : "text-gray-text hover:bg-white/[0.04] hover:text-cream"
-          }`}
-        >
-          <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${
-            searchAllActive ? "bg-primary/20" : "bg-primary/[0.08]"
-          }`}>
-            <Globe className="h-3.5 w-3.5 text-primary" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[12px] font-medium">Search All</p>
-          </div>
-          {!canCrossSearch && (
-            <span className="shrink-0 rounded-full border border-primary/20 px-1.5 py-px text-[8px] font-medium text-primary/60">
-              PRO
-            </span>
-          )}
-          {searchAllActive && (
-            <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-          )}
-        </button>
-      </div>
-
       {/* Divider */}
       <div className="mx-4 border-b border-white/[0.05]" />
 
       {/* Channel list */}
-      <div className="flex-1 overflow-y-auto px-2 pt-2 pb-1">
+      <div className="flex-1 overflow-y-auto px-2 pt-3 pb-2">
         {sidebarChannels.length === 0 && !hasUnlimitedChannels ? (
           <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
             <p className="text-[11px] text-gray-text/40">
@@ -209,15 +174,15 @@ export function ChannelSidebar({
                   onSelectChannel(col.name);
                   setMobileOpen(false);
                 }}
-                className={`group mb-0.5 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-all duration-150 ${
+                className={`group mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left transition-all duration-200 ${
                   active
-                    ? "bg-primary/[0.08] text-cream shadow-[inset_0_0_0_1px_rgba(101,174,76,0.15)]"
-                    : "text-gray-text hover:bg-white/[0.04] hover:text-cream"
+                    ? "border-l-[3px] border-l-primary bg-primary/[0.08] pl-2 text-cream"
+                    : "border-l-[3px] border-l-transparent text-gray-text hover:bg-white/[0.04] hover:text-cream"
                 }`}
               >
                 <ChannelAvatar col={col} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[12px] font-medium">
+                  <p className={`truncate text-[12px] ${active ? "font-semibold text-cream" : "font-medium"}`}>
                     {col.display_name}
                   </p>
                   <p className="text-[10px] text-gray-text/40">
@@ -235,22 +200,76 @@ export function ChannelSidebar({
         )}
       </div>
 
-      {/* Question counter (free tier) */}
-      {hasQuestionLimit && (
-        <div className="px-4 pb-1">
-          <div className="flex items-center gap-2">
-            <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
-              <div
-                className="h-full rounded-full bg-primary/60 transition-all duration-500"
-                style={{ width: `${(qRemaining / (questionLimit ?? 1)) * 100}%` }}
-              />
-            </div>
-            <span className={`text-[9px] font-medium tabular-nums ${
-              qRemaining <= 1 ? "text-red-400/70" : "text-gray-text/40"
-            }`}>
-              {qRemaining}/{questionLimit}
+      {/* Divider */}
+      <div className="mx-4 border-b border-white/[0.05]" />
+
+      {/* Search All — bottom, subtle */}
+      <div className="px-3 py-2">
+        <button
+          onClick={() => {
+            if (canCrossSearch) {
+              onSearchAll?.();
+              setMobileOpen(false);
+            } else {
+              router.push("/pricing");
+            }
+          }}
+          className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-all duration-200 ${
+            searchAllActive
+              ? "bg-primary/10 text-cream"
+              : "text-gray-text/60 hover:bg-white/[0.04] hover:text-cream"
+          }`}
+        >
+          <Globe className="h-3.5 w-3.5 text-primary/60" />
+          <span className="text-[11px] font-medium">
+            {canCrossSearch ? "Search all channels" : "Search all channels"}
+          </span>
+          {!canCrossSearch && (
+            <span className="ml-auto shrink-0 rounded-full border border-primary/20 px-1.5 py-px text-[8px] font-medium text-primary/60">
+              PRO
             </span>
+          )}
+        </button>
+      </div>
+
+      {/* Question counter */}
+      {hasQuestionLimit && (
+        <div className="px-4 py-2">
+          <p className="mb-1.5 text-[10px] font-medium text-gray-text/40">
+            {qRemaining > 0
+              ? `Daily questions: ${qUsed}/${questionLimit} used`
+              : "Daily limit reached"}
+          </p>
+          <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                qRemaining <= 0 ? "bg-red-400/60" : "bg-primary/60"
+              }`}
+              style={{ width: `${((questionLimit ?? 0) - qRemaining) / (questionLimit ?? 1) * 100}%` }}
+            />
           </div>
+          {qRemaining <= 0 && (
+            <Link
+              href="/pricing"
+              className="mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-primary/10 py-1.5 text-[10px] font-medium text-primary transition-colors hover:bg-primary/20"
+            >
+              Upgrade for unlimited
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          )}
+        </div>
+      )}
+
+      {/* Upgrade CTA for free users */}
+      {tier === "free" && (
+        <div className="px-3 pb-2">
+          <Link
+            href="/pricing"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-[12px] font-semibold text-white transition-colors hover:bg-primary-hover"
+          >
+            <Zap className="h-3.5 w-3.5" />
+            Upgrade to Pro
+          </Link>
         </div>
       )}
 
@@ -282,12 +301,6 @@ export function ChannelSidebar({
               title="Settings"
             >
               <Settings className="h-3.5 w-3.5" />
-            </Link>
-            <Link
-              href="/pricing"
-              className="rounded-md border border-primary/15 px-2 py-0.5 text-[9px] font-medium text-primary/70 transition-all duration-200 hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
-            >
-              {tier === "free" ? "Upgrade" : "Plans"}
             </Link>
             <button
               onClick={onLogout}

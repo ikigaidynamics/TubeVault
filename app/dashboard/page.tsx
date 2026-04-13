@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Send, AlertCircle, MessageSquare, Sparkles, Globe } from "lucide-react";
+import { Send, AlertCircle, Globe, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { queryCollection, type Collection, type HistoryMessage, type Source } from "@/lib/api";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
@@ -248,12 +248,17 @@ export default function DashboardPage() {
           <Link href="/" className="text-[12px] text-gray-text/40 transition-colors hover:text-cream">
             TubeVault
           </Link>
-          {hasActiveChat && (
+          {hasActiveChat ? (
             <>
               <span className="text-[10px] text-gray-text/20">/</span>
               <span className="text-[12px] font-medium text-cream/80">
                 {searchAllActive ? "Cross-Channel" : selectedCollection?.display_name || "..."}
               </span>
+            </>
+          ) : (
+            <>
+              <span className="text-[10px] text-gray-text/20">/</span>
+              <span className="text-[12px] text-gray-text/50">Welcome</span>
             </>
           )}
           {selectedCollection && (
@@ -269,89 +274,76 @@ export default function DashboardPage() {
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto">
           {!hasActiveChat ? (
-            /* ── Welcome screen ── */
+            /* ── Welcome screen with featured creator cards ── */
             <div className="relative flex h-full items-center justify-center px-6">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_40%,rgba(101,174,76,0.03)_0%,transparent_70%)]" />
 
-              <div className="relative flex w-full max-w-[860px] animate-[fadeUp_0.6s_ease-out] flex-col items-center gap-10 md:flex-row md:items-start md:gap-0">
-                {/* Left — golden major */}
-                <div className="flex flex-[0_0_61.8%] flex-col gap-4 text-center md:pr-12 md:text-left">
-                  <Image
-                    src="/TubeVault_Logo_noBG.png"
-                    alt="TubeVault"
-                    width={56}
-                    height={56}
-                    className="mx-auto h-14 w-14 md:mx-0"
-                  />
-                  <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-gray-text/35">
-                    Your AI search engine
-                  </p>
-                  <h2 className="text-[1.6rem] font-normal leading-tight text-cream/90">
-                    What would you like to{" "}
-                    <span className="text-cream">know?</span>
-                  </h2>
-                  <p className="text-[13px] leading-relaxed text-gray-text/50">
-                    {collectionsLoading
-                      ? "Loading channels..."
-                      : "Pick a channel from the sidebar to start searching through thousands of hours of video content."}
-                  </p>
-                </div>
+              <div className="relative w-full max-w-3xl animate-[fadeUp_0.6s_ease-out] text-center">
+                <Image
+                  src="/TubeVault_Logo_noBG.png"
+                  alt="TubeVault"
+                  width={56}
+                  height={56}
+                  className="mx-auto mb-4 h-14 w-14"
+                />
+                <h2 className="text-2xl font-semibold text-cream">
+                  Welcome to TubeVault
+                </h2>
+                <p className="mt-2 text-sm text-gray-text/60">
+                  {collectionsLoading
+                    ? "Loading channels..."
+                    : "Pick a channel below to start, or try one of these:"}
+                </p>
 
-                {/* Right — golden minor */}
+                {/* Featured creator cards */}
                 {!collectionsLoading && (
-                  <div className="flex w-full flex-[0_0_38.2%] flex-col gap-2.5 md:w-auto">
-                    <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-gray-text/35">
-                      Quick start
-                    </p>
-                    <button
-                      onClick={() => {
-                        const first = pickedChannels[0] || collections[0]?.name;
-                        if (first) {
-                          handleSelectChannel(first);
-                          setTimeout(() => inputRef.current?.focus(), 100);
-                        }
-                      }}
-                      className="group flex w-full items-center gap-3 rounded-xl border border-[#2E2F31] bg-[#141416] px-4 py-3 text-left transition-all duration-200 hover:border-primary/20 hover:shadow-[0_4px_20px_rgba(101,174,76,0.06)]"
-                    >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] text-primary transition-colors group-hover:bg-primary/15">
-                        <MessageSquare className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="text-[12px] font-medium text-cream/80">Pick a channel</p>
-                        <p className="text-[10px] text-gray-text/40">Choose from your sidebar</p>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => {
-                        const first = pickedChannels[0] || collections[0]?.name;
-                        if (first) {
-                          handleSelectChannel(first);
-                          setInput("What are the benefits of cold exposure?");
-                          setTimeout(() => inputRef.current?.focus(), 100);
-                        }
-                      }}
-                      className="group flex w-full items-center gap-3 rounded-xl border border-[#2E2F31] bg-[#141416] px-4 py-3 text-left transition-all duration-200 hover:border-primary/20 hover:shadow-[0_4px_20px_rgba(101,174,76,0.06)]"
-                    >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] text-primary transition-colors group-hover:bg-primary/15">
-                        <Sparkles className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="text-[12px] font-medium text-cream/80">Ask about health</p>
-                        <p className="text-[10px] text-gray-text/40">Try cold exposure, fasting...</p>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => router.push("/pricing")}
-                      className="group flex w-full items-center gap-3 rounded-xl border border-[#2E2F31] bg-[#141416] px-4 py-3 text-left transition-all duration-200 hover:border-primary/20 hover:shadow-[0_4px_20px_rgba(101,174,76,0.06)]"
-                    >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] text-primary transition-colors group-hover:bg-primary/15">
-                        <Globe className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="text-[12px] font-medium text-cream/80">Search all channels</p>
-                        <p className="text-[10px] text-gray-text/40">Premium cross-channel search</p>
-                      </div>
-                    </button>
+                  <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    {[
+                      { slug: "andrew_huberman", name: "Andrew Huberman", question: "How do I get better sleep?" },
+                      { slug: "the_randall_carlson", name: "Randall Carlson", question: "What caused the great floods?" },
+                      { slug: "bryan_johnson", name: "Bryan Johnson", question: "What is the Blueprint protocol?" },
+                    ].map((creator) => {
+                      const col = collections.find((c) => c.name === creator.slug);
+                      const logoUrl = col?.logo
+                        ? col.logo.startsWith("/")
+                          ? `https://mindvault.ikigai-dynamics.com${col.logo}`
+                          : col.logo
+                        : null;
+                      return (
+                        <button
+                          key={creator.slug}
+                          onClick={() => {
+                            handleSelectChannel(creator.slug);
+                            setInput(creator.question);
+                            setTimeout(() => inputRef.current?.focus(), 100);
+                          }}
+                          className="group flex flex-col items-center gap-3 rounded-2xl border border-[#2E2F31] bg-[#141416] px-5 py-6 text-center transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_8px_32px_rgba(101,174,76,0.08)]"
+                        >
+                          {logoUrl ? (
+                            <Image
+                              src={logoUrl}
+                              alt={creator.name}
+                              width={64}
+                              height={64}
+                              className="h-16 w-16 rounded-2xl object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/[0.06] text-lg font-bold text-gray-text">
+                              {creator.name.split(" ").map((w) => w[0]).join("")}
+                            </div>
+                          )}
+                          <p className="text-sm font-semibold text-cream">{creator.name}</p>
+                          <p className="text-[11px] leading-relaxed text-gray-text/40">
+                            &ldquo;{creator.question}&rdquo;
+                          </p>
+                          <span className="mt-auto flex items-center gap-1 text-[12px] font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                            Try {creator.name.split(" ").pop()}
+                            <ArrowRight className="h-3 w-3" />
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -406,7 +398,34 @@ export default function DashboardPage() {
                   ).map((s) => (
                     <button
                       key={s}
-                      onClick={() => { setInput(s); inputRef.current?.focus(); }}
+                      onClick={() => {
+                        setInput(s);
+                        // Auto-submit after state update
+                        setTimeout(() => {
+                          setInput(s);
+                          const fakeEvent = { trim: () => s } as unknown;
+                          void fakeEvent;
+                          // Directly trigger send logic
+                          setInput("");
+                          setError(null);
+                          setMessages((prev) => [...prev, { role: "user", content: s }]);
+                          setLoading(true);
+                          const channelName = searchAllActive ? "_all" : selectedChannel!;
+                          queryCollection(channelName, s, getHistory())
+                            .then((data) => {
+                              setMessages((prev) => [...prev, { role: "assistant", content: data.answer, sources: data.sources }]);
+                            })
+                            .catch(() => {
+                              setError("Failed to get a response. Please try again.");
+                              setMessages((prev) => prev.slice(0, -1));
+                              setInput(s);
+                            })
+                            .finally(() => {
+                              setLoading(false);
+                              inputRef.current?.focus();
+                            });
+                        }, 0);
+                      }}
                       className="w-full rounded-xl border border-[#2E2F31] bg-[#141416] px-3.5 py-2.5 text-left text-[12px] leading-relaxed text-gray-text/60 transition-all duration-200 hover:translate-x-1 hover:border-primary/20 hover:text-cream/80 hover:shadow-[0_4px_20px_rgba(101,174,76,0.06)]"
                     >
                       {s}
@@ -456,7 +475,7 @@ export default function DashboardPage() {
                   e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={hasActiveChat ? `Ask about ${chatLabel}...` : "Select a channel first..."}
+                placeholder={hasActiveChat ? `Ask anything about ${chatLabel}...` : "Pick a channel to start asking questions..."}
                 disabled={!hasActiveChat || loading}
                 rows={1}
                 className="max-h-[120px] min-h-[24px] flex-1 resize-none overflow-hidden bg-transparent py-2.5 text-[14px] leading-[1.6] text-cream placeholder:text-gray-text/35 focus:outline-none disabled:opacity-30"
