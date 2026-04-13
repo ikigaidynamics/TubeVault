@@ -269,70 +269,89 @@ export default function DashboardPage() {
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto">
           {!hasActiveChat ? (
-            /* ── Welcome screen with gradient bg ── */
-            <div className="relative flex h-full flex-col items-center justify-center px-6 text-center">
-              {/* Subtle radial gradient */}
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_40%,rgba(101,174,76,0.04)_0%,transparent_70%)]" />
+            /* ── Welcome screen ── */
+            <div className="relative flex h-full items-center justify-center px-6">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_40%,rgba(101,174,76,0.03)_0%,transparent_70%)]" />
 
-              <div className="relative animate-[fadeUp_0.6s_ease-out]">
-                <Image
-                  src="/TubeVault_Logo_noBG.png"
-                  alt="TubeVault"
-                  width={80}
-                  height={80}
-                  className="mx-auto mb-3"
-                />
-                <h2 className="text-lg font-semibold text-cream">
-                  What would you like to know?
-                </h2>
-                <p className="mt-1.5 max-w-xs text-[13px] text-gray-text/50">
-                  {collectionsLoading
-                    ? "Loading channels..."
-                    : "Pick a channel from the sidebar or explore one of these:"}
-                </p>
+              <div className="relative flex w-full max-w-[860px] animate-[fadeUp_0.6s_ease-out] flex-col items-center gap-10 md:flex-row md:items-start md:gap-0">
+                {/* Left — golden major */}
+                <div className="flex flex-[0_0_61.8%] flex-col gap-4 text-center md:pr-12 md:text-left">
+                  <Image
+                    src="/TubeVault_Logo_noBG.png"
+                    alt="TubeVault"
+                    width={56}
+                    height={56}
+                    className="mx-auto h-14 w-14 md:mx-0"
+                  />
+                  <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-gray-text/35">
+                    Your AI search engine
+                  </p>
+                  <h2 className="text-[1.6rem] font-normal leading-tight text-cream/90">
+                    What would you like to{" "}
+                    <span className="text-cream">know?</span>
+                  </h2>
+                  <p className="text-[13px] leading-relaxed text-gray-text/50">
+                    {collectionsLoading
+                      ? "Loading channels..."
+                      : "Pick a channel from the sidebar to start searching through thousands of hours of video content."}
+                  </p>
+                </div>
 
-                {/* Suggestion cards */}
+                {/* Right — golden minor */}
                 {!collectionsLoading && (
-                  <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                    {[
-                      {
-                        icon: <MessageSquare className="h-4 w-4" />,
-                        title: "Pick a channel",
-                        desc: "Choose from your sidebar",
-                        action: () => {},
-                      },
-                      {
-                        icon: <Sparkles className="h-4 w-4" />,
-                        title: "Ask about health",
-                        desc: "Try cold exposure, fasting...",
-                        action: () => {
-                          const first = pickedChannels[0] || collections[0]?.name;
-                          if (first) {
-                            handleSelectChannel(first);
-                            setInput("What are the benefits of cold exposure?");
-                            setTimeout(() => inputRef.current?.focus(), 100);
-                          }
-                        },
-                      },
-                      {
-                        icon: <Globe className="h-4 w-4" />,
-                        title: "Search all channels",
-                        desc: "Premium cross-channel",
-                        action: () => router.push("/pricing"),
-                      },
-                    ].map((card) => (
-                      <button
-                        key={card.title}
-                        onClick={card.action}
-                        className="group flex w-full flex-col items-center gap-2 rounded-xl border border-[#2E2F31] bg-[#141416] px-5 py-4 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_8px_32px_rgba(101,174,76,0.06)] sm:w-44"
-                      >
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/[0.08] text-primary transition-colors group-hover:bg-primary/15">
-                          {card.icon}
-                        </div>
-                        <p className="text-[12px] font-medium text-cream/80">{card.title}</p>
-                        <p className="text-[10px] text-gray-text/40">{card.desc}</p>
-                      </button>
-                    ))}
+                  <div className="flex w-full flex-[0_0_38.2%] flex-col gap-2.5 md:w-auto">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-gray-text/35">
+                      Quick start
+                    </p>
+                    <button
+                      onClick={() => {
+                        const first = pickedChannels[0] || collections[0]?.name;
+                        if (first) {
+                          handleSelectChannel(first);
+                          setTimeout(() => inputRef.current?.focus(), 100);
+                        }
+                      }}
+                      className="group flex w-full items-center gap-3 rounded-xl border border-[#2E2F31] bg-[#141416] px-4 py-3 text-left transition-all duration-200 hover:border-primary/20 hover:shadow-[0_4px_20px_rgba(101,174,76,0.06)]"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] text-primary transition-colors group-hover:bg-primary/15">
+                        <MessageSquare className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-[12px] font-medium text-cream/80">Pick a channel</p>
+                        <p className="text-[10px] text-gray-text/40">Choose from your sidebar</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const first = pickedChannels[0] || collections[0]?.name;
+                        if (first) {
+                          handleSelectChannel(first);
+                          setInput("What are the benefits of cold exposure?");
+                          setTimeout(() => inputRef.current?.focus(), 100);
+                        }
+                      }}
+                      className="group flex w-full items-center gap-3 rounded-xl border border-[#2E2F31] bg-[#141416] px-4 py-3 text-left transition-all duration-200 hover:border-primary/20 hover:shadow-[0_4px_20px_rgba(101,174,76,0.06)]"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] text-primary transition-colors group-hover:bg-primary/15">
+                        <Sparkles className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-[12px] font-medium text-cream/80">Ask about health</p>
+                        <p className="text-[10px] text-gray-text/40">Try cold exposure, fasting...</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => router.push("/pricing")}
+                      className="group flex w-full items-center gap-3 rounded-xl border border-[#2E2F31] bg-[#141416] px-4 py-3 text-left transition-all duration-200 hover:border-primary/20 hover:shadow-[0_4px_20px_rgba(101,174,76,0.06)]"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] text-primary transition-colors group-hover:bg-primary/15">
+                        <Globe className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-[12px] font-medium text-cream/80">Search all channels</p>
+                        <p className="text-[10px] text-gray-text/40">Premium cross-channel search</p>
+                      </div>
+                    </button>
                   </div>
                 )}
               </div>
