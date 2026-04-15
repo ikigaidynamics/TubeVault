@@ -37,7 +37,7 @@ export function AnimateOnScroll({
   return (
     <div
       ref={ref}
-      className={`transition-all duration-700 ease-out ${
+      className={`transition-[opacity,transform] duration-700 ease-out ${
         isVisible
           ? "translate-y-0 opacity-100"
           : "translate-y-8 opacity-0"

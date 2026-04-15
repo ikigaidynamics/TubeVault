@@ -462,13 +462,13 @@ export function HeroLiveDemo() {
   const showCursor = isTyping && !hasAutoSearched && typedText.length < DEFAULT_QUESTION.length;
 
   return (
-    <div className="relative mx-auto w-full max-w-[900px]">
-      {/* Glow backdrop */}
-      <div className="pointer-events-none absolute -inset-6 rounded-3xl bg-primary/[0.06] blur-3xl" />
+    <div className="relative mx-auto w-full max-w-[900px] overflow-hidden">
+      {/* Glow backdrop — no blur on mobile (iOS Safari counts blur beyond overflow:hidden) */}
+      <div className="pointer-events-none absolute inset-0 rounded-3xl bg-primary/[0.08] sm:blur-3xl" />
 
-      <div className="relative rounded-2xl border-2 border-white/10 bg-[#1a1a1a] shadow-[0_0_40px_rgba(101,174,76,0.1)]">
+      <div className="relative overflow-hidden rounded-2xl border-2 border-white/10 bg-[#1a1a1a] shadow-[0_0_10px_rgba(101,174,76,0.08)] sm:shadow-[0_0_40px_rgba(101,174,76,0.1)]">
         {/* Window chrome with channel picker */}
-        <div className="flex flex-col gap-3 border-b border-white/[0.06] px-5 py-4 sm:flex-row sm:items-center sm:justify-between md:px-8">
+        <div className="flex flex-col gap-3 border-b border-white/[0.06] px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 md:px-8">
           <div className="flex items-center gap-2">
             <div className="hidden gap-1.5 sm:flex">
               <div className="h-2.5 w-2.5 rounded-full bg-white/10" />
@@ -509,7 +509,7 @@ export function HeroLiveDemo() {
                     className="fixed inset-0 z-10"
                     onClick={() => setDropdownOpen(false)}
                   />
-                  <div className="absolute left-0 top-full z-20 mt-1 max-h-72 w-72 overflow-y-auto rounded-xl border border-white/[0.08] bg-[#1C1D1F] shadow-xl">
+                  <div className="absolute left-0 top-full z-20 mt-1 max-h-72 w-64 overflow-y-auto rounded-xl border border-white/[0.08] bg-[#1C1D1F] shadow-lg sm:w-72 sm:shadow-xl">
                     {collections.map((col) => {
                       const colLogo = getLogoUrl(col);
                       return (
@@ -567,10 +567,10 @@ export function HeroLiveDemo() {
         </div>
 
         {/* Search input — bigger */}
-        <div className="px-5 pt-5 pb-4 md:px-8">
+        <div className="px-3 pt-5 pb-4 sm:px-5 md:px-8">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <div className="relative flex flex-1 items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 py-4 transition-colors focus-within:border-primary/30">
-              <Search className="h-5 w-5 shrink-0 text-gray-text/60" />
+            <div className="relative flex flex-1 items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-3 transition-colors focus-within:border-primary/30 md:px-5 md:py-4">
+              <Search className="h-4 w-4 shrink-0 text-gray-text/60 md:h-5 md:w-5" />
               <input
                 ref={inputRef}
                 type="text"
@@ -578,16 +578,16 @@ export function HeroLiveDemo() {
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder={`Ask ${channelDisplayName} anything...`}
-                className="flex-1 bg-transparent text-base text-cream placeholder:text-gray-text/40 focus:outline-none"
+                className="flex-1 bg-transparent text-xs text-cream placeholder:text-gray-text/40 focus:outline-none sm:text-sm md:text-base"
               />
               {showCursor && (
-                <span className="pointer-events-none absolute right-5 inline-block h-5 w-[2px] animate-pulse bg-primary" />
+                <span className="pointer-events-none absolute right-3 inline-block h-5 w-[2px] animate-pulse bg-primary md:right-5" />
               )}
             </div>
             <button
               onClick={() => handleSearch()}
               disabled={loading || !question.trim()}
-              className="h-14 shrink-0 rounded-xl bg-primary px-8 text-base font-semibold text-white transition-all hover:bg-primary-hover disabled:opacity-50 disabled:hover:bg-primary"
+              className="h-14 shrink-0 rounded-xl bg-primary px-8 text-base font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:hover:bg-primary"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -639,7 +639,7 @@ export function HeroLiveDemo() {
 
         {/* Loading state — improved */}
         {loading && (
-          <div className="px-5 pb-5 md:px-8">
+          <div className="px-3 pb-5 sm:px-5 md:px-8">
             <div className="flex items-center gap-3 rounded-xl bg-white/[0.03] p-4">
               <svg
                 className="h-4 w-4 animate-spin text-primary"
@@ -675,7 +675,7 @@ export function HeroLiveDemo() {
 
         {/* Error */}
         {error && (
-          <div className="px-5 pb-5 md:px-8">
+          <div className="px-3 pb-5 sm:px-5 md:px-8">
             <div className="rounded-xl bg-red-500/10 p-4 text-sm text-red-400">
               {error}
             </div>
@@ -684,9 +684,9 @@ export function HeroLiveDemo() {
 
         {/* Result area */}
         {searched && answer && (
-          <div className="animate-[fadeUp_0.5s_ease-out] px-5 pb-6 md:px-8">
+          <div className="animate-[fadeUp_0.5s_ease-out] overflow-hidden px-3 pb-6 sm:px-5 md:px-8">
             {/* AI Answer */}
-            <div className="mb-4 rounded-xl border border-primary/10 bg-white/[0.03] p-5">
+            <div className="mb-4 overflow-hidden rounded-xl border border-primary/10 bg-white/[0.03] p-3 sm:p-5">
               <div className="mb-3 flex items-center gap-2">
                 <Image
                   src="/TubeVault_Logo_noBG.png"
@@ -700,7 +700,7 @@ export function HeroLiveDemo() {
                 </span>
               </div>
               <div
-                className="prose-invert prose-sm max-w-none text-sm leading-relaxed text-cream/90"
+                className="prose-invert prose-sm max-w-none break-words text-sm leading-relaxed text-cream/90"
                 dangerouslySetInnerHTML={{
                   __html: answer
                     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
@@ -726,7 +726,7 @@ export function HeroLiveDemo() {
                       {/* Source header — clickable */}
                       <button
                         onClick={() => toggleSource(i)}
-                        className="flex w-full items-start gap-3 p-3 text-left"
+                        className="flex w-full items-start gap-2 p-2 text-left sm:gap-3 sm:p-3"
                       >
                         {/* Video thumbnail */}
                         {source.video_id ? (
@@ -735,15 +735,15 @@ export function HeroLiveDemo() {
                             alt=""
                             width={120}
                             height={68}
-                            className="h-[52px] w-[92px] shrink-0 rounded-md object-cover"
+                            className="h-[40px] w-[70px] shrink-0 rounded-md object-cover sm:h-[52px] sm:w-[92px]"
                             unoptimized
                           />
                         ) : (
-                          <div className="flex h-[52px] w-[92px] shrink-0 items-center justify-center rounded-md bg-red-500/10">
+                          <div className="flex h-[40px] w-[70px] shrink-0 items-center justify-center rounded-md bg-red-500/10 sm:h-[52px] sm:w-[92px]">
                             <span className="text-red-400 text-xs">Video</span>
                           </div>
                         )}
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 overflow-hidden">
                           <div className="flex items-center gap-2">
                             <span className="truncate text-xs font-medium text-cream">
                               {source.title}
@@ -771,7 +771,7 @@ export function HeroLiveDemo() {
                             )}
                           </div>
                           {source.snippet && expandedSource !== i && (
-                            <p className="mt-1 text-[11px] leading-relaxed text-gray-text/60">
+                            <p className="mt-1 break-words text-[11px] leading-relaxed text-gray-text/60">
                               {source.snippet}
                             </p>
                           )}
@@ -780,7 +780,7 @@ export function HeroLiveDemo() {
 
                       {/* Expanded content */}
                       {expandedSource === i && (
-                        <div className="border-t border-white/[0.06] px-3 pb-3 pt-3 animate-[fadeUp_0.3s_ease-out]">
+                        <div className="overflow-hidden border-t border-white/[0.06] px-3 pb-3 pt-3 animate-[fadeUp_0.3s_ease-out]">
                           {/* YouTube embed */}
                           {source.video_id && (
                             <div className="mb-3 aspect-video w-full overflow-hidden rounded-lg">
@@ -799,7 +799,7 @@ export function HeroLiveDemo() {
                               <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-gray-text/50">
                                 Transcript excerpt
                               </span>
-                              <p className="text-[12px] leading-relaxed text-cream/70 italic">
+                              <p className="break-words text-[12px] leading-relaxed text-cream/70 italic">
                                 &ldquo;{source.text}&rdquo;
                               </p>
                             </div>
@@ -835,17 +835,17 @@ export function HeroLiveDemo() {
             <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:gap-3">
               <Link
                 href="/signup"
-                className="flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+                className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-semibold text-white transition-colors hover:bg-primary-hover sm:px-6 sm:text-sm"
               >
                 Sign up for unlimited questions
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-4 w-4 shrink-0" />
               </Link>
               <Link
                 href="/try"
-                className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] px-6 py-3 text-sm font-medium text-cream transition-colors hover:bg-white/[0.04]"
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] px-4 py-3 text-xs font-medium text-cream transition-colors hover:bg-white/[0.04] sm:px-6 sm:text-sm"
               >
                 Try another question
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-4 w-4 shrink-0" />
               </Link>
             </div>
           </div>
@@ -853,7 +853,7 @@ export function HeroLiveDemo() {
 
         {/* Example question cards — shown before first search */}
         {!searched && !loading && (
-          <div className="px-5 pb-5 md:px-8">
+          <div className="px-3 pb-5 sm:px-5 md:px-8">
             <span className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-gray-text/40">
               Examples
             </span>
@@ -862,7 +862,7 @@ export function HeroLiveDemo() {
               <button
                 key={q}
                 onClick={() => handleExampleClick(q)}
-                className="flex-1 rounded-xl border border-white/[0.06] bg-white/[0.04] px-4 py-3 text-left text-[13px] leading-relaxed text-gray-text/70 transition-all duration-200 hover:border-primary/30 hover:text-cream"
+                className="flex-1 rounded-xl border border-white/[0.06] bg-white/[0.04] px-4 py-3 text-left text-[13px] leading-relaxed text-gray-text/70 transition-colors duration-200 hover:border-primary/30 hover:text-cream"
               >
                 {q}
               </button>

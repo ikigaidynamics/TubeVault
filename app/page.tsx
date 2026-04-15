@@ -5,7 +5,6 @@ import {
   Layers,
   MessageCircleQuestion,
   Timer,
-  ExternalLink,
   XCircle,
   CheckCircle,
   ShieldCheck,
@@ -40,15 +39,15 @@ const STEPS = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-dark-bg">
+    <div className="min-h-screen overflow-x-hidden bg-dark-bg">
       {/* Navigation */}
       <div className="fixed top-0 z-50 w-full">
         <Navbar />
       </div>
 
       {/* Hero */}
-      <section className="hero-gradient grid-pattern relative flex min-h-[calc(100vh-3.5rem)] flex-col justify-center overflow-hidden pb-6 pt-16 md:pb-10 md:pt-20">
-        <div className="pointer-events-none absolute left-1/2 top-[20%] h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-primary/[0.04] blur-[140px]" />
+      <section className="hero-gradient grid-pattern relative flex min-h-[calc(100vh-3.5rem)] flex-col overflow-hidden pb-10 pt-24 md:justify-center md:pb-16 md:pt-28">
+        <div className="pointer-events-none absolute left-1/2 top-[20%] hidden h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-primary/[0.04] blur-[140px] sm:block" />
 
         <div className="relative mx-auto max-w-7xl px-6">
           <AnimateOnScroll delay={150}>
@@ -112,7 +111,7 @@ export default function Home() {
             </p>
           </AnimateOnScroll>
           <AnimateOnScroll delay={150}>
-            <div className="flex items-center justify-start gap-6 overflow-x-auto pb-2 md:justify-center md:gap-8">
+            <div className="flex items-start justify-start gap-6 overflow-x-auto pb-2 md:justify-center md:gap-8">
               {[
                 { name: "Andrew Huberman", logo: "/static/andrew_huberman_avatar.jpg" },
                 { name: "Dr Brad Stanfield", logo: "/static/dr_brad_stanfield_avatar.jpg" },
@@ -360,8 +359,8 @@ export default function Home() {
                 Legal
               </h4>
               <ul className="mt-4 space-y-2.5">
-                <li><Link href="/impressum" className="text-sm text-gray-text transition-colors hover:text-cream">Impressum</Link></li>
-                <li><Link href="/datenschutz" className="text-sm text-gray-text transition-colors hover:text-cream">Datenschutz</Link></li>
+                <li><Link href="/terms" className="text-sm text-gray-text transition-colors hover:text-cream">Terms of Service</Link></li>
+                <li><Link href="/privacy" className="text-sm text-gray-text transition-colors hover:text-cream">Privacy</Link></li>
               </ul>
             </div>
           </div>

@@ -284,7 +284,7 @@ function SignupForm() {
                 </Link>{" "}
                 and{" "}
                 <Link
-                  href="/tos"
+                  href="/terms"
                   className="text-primary hover:text-primary-hover"
                 >
                   Terms of Service
