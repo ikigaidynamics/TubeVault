@@ -30,10 +30,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" style={{ overflowX: 'hidden', maxWidth: '100vw' }}>
-      <body className={`${inter.className} ${alice.variable} antialiased`} style={{ overflowX: 'hidden', maxWidth: '100vw', position: 'relative' }} suppressHydrationWarning>
+    <html lang="en" className="dark">
+      <body className={`${inter.className} ${alice.variable} antialiased`} suppressHydrationWarning>
         {children}
-        {/* TEMP DEBUG v2 — will be removed once confirmed fixed */}
+        {/* TEMP DEBUG v2 */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
             if(window.innerWidth>640)return;
