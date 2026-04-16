@@ -51,7 +51,7 @@ export default function Home() {
       <section className="hero-gradient grid-pattern relative flex min-h-[calc(100vh-3.5rem)] flex-col overflow-hidden pb-10 pt-24 md:justify-center md:pb-16 md:pt-28">
         <div className="pointer-events-none absolute left-1/2 top-[20%] hidden h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-primary/[0.04] blur-[140px] sm:block" />
 
-        <div className="relative mx-auto max-w-7xl px-6">
+        <div className="relative mx-auto w-full max-w-7xl px-6">
           <AnimateOnScroll delay={150}>
             <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.25em] text-[#65ae4c]">
               Finally: Searchable YouTube.
