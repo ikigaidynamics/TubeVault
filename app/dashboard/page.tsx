@@ -331,7 +331,7 @@ export default function DashboardPage() {
           ) : messages.length === 0 && !loading ? (
             /* ── Channel welcome ── */
             <div className="flex h-full animate-[fadeUp_0.5s_ease-out] items-center justify-center px-6 md:px-12">
-              <div className="flex w-full max-w-[860px] flex-col items-center gap-8 md:flex-row md:items-start md:gap-0">
+              <div className="flex w-full max-w-[860px] flex-col items-center gap-8 md:flex-row md:items-center md:gap-0">
                 <div className="flex flex-[0_0_61.8%] flex-col gap-4 text-center md:pr-12 md:text-left">
                   {searchAllActive ? (
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 md:mx-0">
