@@ -103,7 +103,7 @@ export default function Home() {
       </section>
 
       {/* Trust Strip */}
-      <section className="border-t border-white/[0.06] px-6 py-16 md:py-20">
+      <section className="overflow-hidden border-t border-white/[0.06] px-6 py-16 md:py-20">
         <div className="mx-auto max-w-5xl">
           <AnimateOnScroll>
             <p className="mb-8 text-center text-xs font-medium uppercase tracking-[0.2em] text-gray-text/50">
@@ -156,7 +156,7 @@ export default function Home() {
       </section>
 
       {/* Stats Bar */}
-      <section className="border-t border-white/[0.06] px-6 py-20 md:py-24">
+      <section className="overflow-hidden border-t border-white/[0.06] px-6 py-20 md:py-24">
         <div className="mx-auto max-w-4xl">
           <AnimateOnScroll>
             <p className="mb-12 text-center text-xs font-semibold uppercase tracking-[0.2em] text-primary/70">
@@ -189,7 +189,7 @@ export default function Home() {
       </section>
 
       {/* How It Works */}
-      <section className="relative border-t border-white/[0.06] px-6 py-24 md:py-32">
+      <section className="relative overflow-hidden border-t border-white/[0.06] px-6 py-24 md:py-32">
         <div className="mx-auto max-w-5xl">
           <AnimateOnScroll>
             <div className="text-center">
@@ -226,7 +226,7 @@ export default function Home() {
       </section>
 
       {/* How Is This Different */}
-      <section className="border-t border-white/[0.06] px-6 py-24 md:py-32">
+      <section className="overflow-hidden border-t border-white/[0.06] px-6 py-24 md:py-32">
         <div className="mx-auto max-w-4xl">
           <AnimateOnScroll>
             <h2 className="text-center text-2xl font-bold text-cream md:text-3xl">
@@ -298,7 +298,7 @@ export default function Home() {
       </section>
 
       {/* CTA Banner */}
-      <section className="border-t border-white/[0.06] px-6 py-24 md:py-32">
+      <section className="overflow-hidden border-t border-white/[0.06] px-6 py-24 md:py-32">
         <AnimateOnScroll>
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="text-3xl font-bold text-cream md:text-4xl">
@@ -323,7 +323,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] px-6 py-12">
+      <footer className="overflow-hidden border-t border-white/[0.06] px-6 py-12">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-10 md:grid-cols-4">
             <div className="md:col-span-2">
