@@ -126,14 +126,16 @@ export default function Home() {
                   key={c.name}
                   className="flex shrink-0 flex-col items-center gap-2"
                 >
-                  <Image
-                    src={`https://mindvault.ikigai-dynamics.com${c.logo}`}
-                    alt={c.name}
-                    width={48}
-                    height={48}
-                    className="h-12 w-12 shrink-0 rounded-full object-cover opacity-70 transition-opacity hover:opacity-100"
-                    unoptimized
-                  />
+                  <div className="h-12 w-12 shrink-0">
+                    <Image
+                      src={`https://mindvault.ikigai-dynamics.com${c.logo}`}
+                      alt={c.name}
+                      width={48}
+                      height={48}
+                      className="h-12 w-12 rounded-full object-cover opacity-70 transition-opacity hover:opacity-100"
+                      unoptimized
+                    />
+                  </div>
                   <span className="max-w-[72px] text-center text-[10px] leading-tight text-gray-text/60">
                     {c.name}
                   </span>
