@@ -39,6 +39,22 @@
 @layer base {
   * {
     @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: #2E2F31 transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: #2E2F31;
+    border-radius: 4px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: #3E3F41;
   }
   html,
   body {
@@ -112,25 +128,6 @@
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
-}
-
-/* Dark scrollbar for description boxes */
-.desc-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #2E2F31 transparent;
-}
-.desc-scroll::-webkit-scrollbar {
-  width: 4px;
-}
-.desc-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-.desc-scroll::-webkit-scrollbar-thumb {
-  background: #2E2F31;
-  border-radius: 4px;
-}
-.desc-scroll::-webkit-scrollbar-thumb:hover {
-  background: #3E3F41;
 }
 
 /* Custom checkbox checkmark */
