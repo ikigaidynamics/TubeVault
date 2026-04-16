@@ -110,7 +110,7 @@ export default function DashboardPage() {
       try {
         const res = await fetch(`${API_BASE_URL}/collections`);
         if (!res.ok) throw new Error("Failed to fetch");
-        const HIDDEN = ["ihk_cottbus", "btu_cottbus_senftenberg", "doctor_sethi"];
+        const HIDDEN = ["industrie_und_handelskammer_cottbus", "btu_cottbus_senftenberg", "doctor_sethi"];
         const all: Collection[] = await res.json();
         setCollections(all.filter((c) => !HIDDEN.includes(c.name)));
       } catch {

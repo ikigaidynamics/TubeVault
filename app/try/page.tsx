@@ -45,7 +45,7 @@ export default function TryPage() {
     fetch(`${API_BASE_URL}/collections`)
       .then((r) => r.json())
       .then((data: Collection[]) => {
-        const HIDDEN = ["ihk_cottbus", "btu_cottbus_senftenberg", "doctor_sethi"];
+        const HIDDEN = ["industrie_und_handelskammer_cottbus", "btu_cottbus_senftenberg", "doctor_sethi"];
         const sorted = data
           .filter((c: Collection) => !HIDDEN.includes(c.name))
           .sort((a: Collection, b: Collection) => a.display_name.localeCompare(b.display_name));
