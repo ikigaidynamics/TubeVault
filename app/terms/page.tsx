@@ -10,7 +10,7 @@ export default function TermsPage() {
         <p className="mt-2 text-sm text-gray-text">
           TubeVault &middot; tubevault.io
           <br />
-          Effective date: June 2025 &middot; Operator: IkigAI Dynamics, Robin Jost, Cottbus, Germany
+          Effective date: June 2025 &middot; Operator: Robin Jost, Cottbus, Germany
         </p>
 
         <div className="mt-10 space-y-8 text-sm leading-relaxed text-cream/80">
@@ -19,11 +19,11 @@ export default function TermsPage() {
             <h2 className="mb-3 text-lg font-semibold text-cream">1. Operator and Scope</h2>
             <p>TubeVault (tubevault.io) is operated by:</p>
             <p className="mt-2">
-              Robin Jost &middot; IkigAI Dynamics<br />
+              Robin Jost<br />
               Cottbus, Germany<br />
               Email:{" "}
-              <a href="mailto:legal@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">
-                legal@ikigai-dynamics.com
+              <a href="mailto:jost@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">
+                jost@ikigai-dynamics.com
               </a>
             </p>
             <p className="mt-2">
@@ -102,8 +102,8 @@ export default function TermsPage() {
               Subscriptions are billed monthly and renew automatically for successive monthly periods
               unless cancelled before the end of the current billing period. You may cancel at any time
               in your account settings or by emailing{" "}
-              <a href="mailto:legal@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">
-                legal@ikigai-dynamics.com
+              <a href="mailto:jost@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">
+                jost@ikigai-dynamics.com
               </a>.
             </p>
 
@@ -154,7 +154,7 @@ export default function TermsPage() {
             <h3 className="mb-2 mt-4 text-base font-medium text-cream">6.1 Platform Rights</h3>
             <p>
               TubeVault, including its source code, user interface, search algorithms, database
-              structure and branding, is the intellectual property of Robin Jost / IkigAI Dynamics
+              structure and branding, is the intellectual property of Robin Jost
               and is protected by copyright. Use of the platform does not grant any right to copy,
               distribute or modify these elements.
             </p>
@@ -226,8 +226,8 @@ export default function TermsPage() {
             <p className="mt-2">
               To request full account deletion (including all personal data), use the
               &ldquo;Delete Account&rdquo; function in your settings or contact us at{" "}
-              <a href="mailto:legal@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">
-                legal@ikigai-dynamics.com
+              <a href="mailto:jost@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">
+                jost@ikigai-dynamics.com
               </a>.
             </p>
 
@@ -282,8 +282,8 @@ export default function TermsPage() {
             </p>
             <p className="mt-1">
               Our email address:{" "}
-              <a href="mailto:legal@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">
-                legal@ikigai-dynamics.com
+              <a href="mailto:jost@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">
+                jost@ikigai-dynamics.com
               </a>
             </p>
             <p className="mt-1">
@@ -316,20 +316,14 @@ export default function TermsPage() {
               <Link href="/privacy" className="text-primary hover:text-primary-hover">
                 Privacy Policy
               </Link>{" "}
-              constitute the entire agreement between you and IkigAI Dynamics regarding your use of
+              constitute the entire agreement between you and Robin Jost regarding your use of
               TubeVault and supersede all prior oral or written agreements.
             </p>
 
             <h3 className="mb-2 mt-4 text-base font-medium text-cream">11.4 Contact</h3>
             <p>
-              General enquiries:{" "}
-              <a href="mailto:hello@tubevault.io" className="text-primary hover:text-primary-hover">hello@tubevault.io</a>
-              <br />
-              Legal matters:{" "}
-              <a href="mailto:legal@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">legal@ikigai-dynamics.com</a>
-              <br />
-              Privacy matters:{" "}
-              <a href="mailto:privacy@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">privacy@ikigai-dynamics.com</a>
+              For all enquiries (general, legal, privacy):{" "}
+              <a href="mailto:jost@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">jost@ikigai-dynamics.com</a>
             </p>
           </section>
 
@@ -339,13 +333,13 @@ export default function TermsPage() {
             <p>Information pursuant to &sect; 5 TMG:</p>
             <p className="mt-2">
               Robin Jost<br />
-              IkigAI Dynamics<br />
+              <br />
               Cottbus, Germany
             </p>
             <p className="mt-2">
               Email:{" "}
-              <a href="mailto:legal@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">
-                legal@ikigai-dynamics.com
+              <a href="mailto:jost@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">
+                jost@ikigai-dynamics.com
               </a>
             </p>
             <p className="mt-2">
@@ -357,7 +351,7 @@ export default function TermsPage() {
         </div>
 
         <div className="mt-12 border-t border-white/[0.06] pt-6 text-xs text-gray-text/40">
-          <p>TubeVault &middot; IkigAI Dynamics &middot; Robin Jost &middot; Cottbus, Germany</p>
+          <p>TubeVault &middot; Robin Jost &middot; Cottbus, Germany</p>
         </div>
 
         <div className="mt-4">

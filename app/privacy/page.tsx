@@ -10,7 +10,7 @@ export default function PrivacyPage() {
         <p className="mt-2 text-sm text-gray-text">
           TubeVault &middot; tubevault.io
           <br />
-          Effective date: June 2025 &middot; Operator: IkigAI Dynamics, Robin Jost, Cottbus, Germany
+          Effective date: June 2025 &middot; Operator: Robin Jost, Cottbus, Germany
         </p>
 
         <div className="mt-10 space-y-8 text-sm leading-relaxed text-cream/80">
@@ -21,7 +21,7 @@ export default function PrivacyPage() {
               Data Controller within the meaning of Art. 4 No. 7 GDPR:
             </p>
             <p className="mt-2">
-              Robin Jost &middot; IkigAI Dynamics<br />
+              Robin Jost<br />
               Cottbus, Germany<br />
               Email:{" "}
               <a href="mailto:jost@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">
@@ -375,7 +375,7 @@ export default function PrivacyPage() {
         </div>
 
         <div className="mt-12 border-t border-white/[0.06] pt-6 text-xs text-gray-text/40">
-          <p>TubeVault &middot; IkigAI Dynamics &middot; Robin Jost &middot; Cottbus, Germany</p>
+          <p>TubeVault &middot; Robin Jost &middot; Cottbus, Germany</p>
         </div>
 
         <div className="mt-4">
