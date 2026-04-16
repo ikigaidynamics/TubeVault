@@ -310,37 +310,30 @@ export default function DashboardPage() {
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)", backgroundSize: "64px 64px" }}>
           {!hasActiveChat ? (
-            /* ── Welcome screen with featured creator cards ── */
-            <div className="relative flex h-full items-center justify-center px-6">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_40%,rgba(101,174,76,0.03)_0%,transparent_70%)]" />
+            /* ── Welcome screen ── */
+            <div className="relative flex min-h-full items-center justify-center px-4 py-8 sm:px-6">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,rgba(101,174,76,0.03),transparent_70%)]" />
 
-              <div className="relative w-full max-w-3xl animate-[fadeUp_0.6s_ease-out] text-center">
-                {/* Header */}
-                <div className="mb-2 flex items-center justify-center gap-3">
-                  <Image
-                    src="/TubeVault_Logo_noBG.png"
-                    alt="TubeVault"
-                    width={48}
-                    height={48}
-                    className="h-12 w-12"
-                  />
-                  <h2 className="text-2xl font-semibold text-cream">
-                    Welcome to TubeVault
+              <div className="relative w-full max-w-4xl animate-[fadeUp_0.6s_ease-out]">
+                {/* Heading */}
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-cream sm:text-3xl">
+                    What would you like to know?
                   </h2>
+                  <p className="mt-2 text-base text-gray-text/60">
+                    {collectionsLoading
+                      ? "Loading channels..."
+                      : "Pick a channel from the sidebar, or start with one of these:"}
+                  </p>
                 </div>
-                <p className="text-sm text-gray-text/50">
-                  {collectionsLoading
-                    ? "Loading channels..."
-                    : "Pick a channel from the sidebar, or try one of these:"}
-                </p>
 
                 {/* Creator cards */}
                 {!collectionsLoading && (
                   <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
                     {[
-                      { slug: "andrew_huberman", name: "Andrew Huberman", question: "How do I get better sleep?" },
-                      { slug: "the_randall_carlson", name: "Randall Carlson", question: "What caused the great floods?" },
-                      { slug: "bryan_johnson", name: "Bryan Johnson", question: "What is the Blueprint protocol?" },
+                      { slug: "andrew_huberman", name: "Andrew Huberman", category: "Health & Neuroscience", question: "How do I get better sleep?" },
+                      { slug: "the_randall_carlson", name: "Randall Carlson", category: "History & Ancient Knowledge", question: "What caused the great floods?" },
+                      { slug: "bryan_johnson", name: "Bryan Johnson", category: "Health & Longevity", question: "What is the Blueprint protocol?" },
                     ].map((creator) => {
                       const col = collections.find((c) => c.name === creator.slug);
                       const logoUrl = col?.logo
@@ -356,33 +349,70 @@ export default function DashboardPage() {
                             setInput(creator.question);
                             setTimeout(() => inputRef.current?.focus(), 100);
                           }}
-                          className="group flex flex-col items-center gap-4 rounded-2xl border border-[#2E2F31] bg-[#0A0A0B] px-5 py-7 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_0_20px_rgba(101,174,76,0.08)]"
+                          className="group flex flex-col items-center rounded-2xl border border-[#2E2F31] bg-[#141516] p-6 text-center transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_0_30px_rgba(101,174,76,0.08)]"
                         >
+                          <span className="rounded-full bg-primary/5 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary/60">
+                            {creator.category}
+                          </span>
                           {logoUrl ? (
                             <Image
                               src={logoUrl}
                               alt={creator.name}
-                              width={80}
-                              height={80}
-                              className="h-20 w-20 rounded-2xl object-cover ring-2 ring-primary/20"
+                              width={72}
+                              height={72}
+                              className="mt-4 h-[72px] w-[72px] rounded-2xl object-cover ring-2 ring-primary/20"
                               unoptimized
                             />
                           ) : (
-                            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/[0.06] text-xl font-bold text-gray-text ring-2 ring-white/[0.06]">
+                            <div className="mt-4 flex h-[72px] w-[72px] items-center justify-center rounded-2xl bg-white/[0.06] text-xl font-bold text-gray-text ring-2 ring-white/[0.06]">
                               {creator.name.split(" ").map((w) => w[0]).join("")}
                             </div>
                           )}
-                          <p className="text-sm font-semibold text-cream">{creator.name}</p>
-                          <p className="text-[11px] italic leading-relaxed text-gray-text/60">
+                          <p className="mt-3 text-lg font-semibold text-cream">{creator.name}</p>
+                          <p className="text-xs text-gray-text/40">
+                            {col?.video_count ? `${col.video_count} videos indexed` : ""}
+                          </p>
+                          <p className="mt-3 text-sm italic leading-relaxed text-cream/80">
                             &ldquo;{creator.question}&rdquo;
                           </p>
-                          <span className="mt-auto flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-[12px] font-medium text-primary transition-all duration-200 group-hover:bg-primary group-hover:text-white">
-                            Try {creator.name.split(" ").pop()}
-                            <ArrowRight className="h-3 w-3" />
+                          <span className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-primary/30 py-2.5 text-[13px] font-medium text-primary transition-all duration-200 group-hover:bg-primary/10">
+                            Ask {creator.name.split(" ").pop()}
+                            <ArrowRight className="h-3.5 w-3.5" />
                           </span>
                         </button>
                       );
                     })}
+                  </div>
+                )}
+
+                {/* Trending questions */}
+                {!collectionsLoading && (
+                  <div className="mt-10 text-center">
+                    <p className="mb-4 text-[10px] font-medium uppercase tracking-[0.15em] text-gray-text/40">
+                      Trending questions
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {[
+                        { q: "What does Huberman say about morning sunlight?", ch: "andrew_huberman" },
+                        { q: "How does Bryan Johnson reverse aging?", ch: "bryan_johnson" },
+                        { q: "What caused the Younger Dryas?", ch: "the_randall_carlson" },
+                        { q: "Best sleep protocol according to Huberman?", ch: "andrew_huberman" },
+                        { q: "Randall Carlson on sacred geometry?", ch: "the_randall_carlson" },
+                        { q: "Bryan Johnson's supplement stack?", ch: "bryan_johnson" },
+                      ].map((item) => (
+                        <button
+                          key={item.q}
+                          onClick={() => {
+                            handleSelectChannel(item.ch);
+                            setInput(item.q);
+                            setTimeout(() => inputRef.current?.focus(), 100);
+                          }}
+                          className="rounded-full border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-gray-text/70 transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:text-cream"
+                        >
+                          {item.q}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

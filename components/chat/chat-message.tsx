@@ -51,7 +51,7 @@ export function ChatMessage({ role, content, sources, userAvatar, channelId }: C
           className={`rounded-2xl px-4 py-3 text-[14px] leading-[1.65] ${
             role === "user"
               ? "bg-primary/10 font-medium text-cream border border-primary/20"
-              : "border border-[#2E2F31] bg-[#1C1D1F] text-cream/90"
+              : "border border-[#1E1F21] bg-[#111213] text-cream/90"
           }`}
         >
           {role === "assistant" ? (

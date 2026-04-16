@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, AlertCircle, Globe, ArrowRight, ChevronRight } from "lucide-react";
+import { Search, ArrowRight, ChevronRight } from "lucide-react";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { ChatMessage } from "@/components/chat/chat-message";
 import type { Collection, Source } from "@/lib/api";
