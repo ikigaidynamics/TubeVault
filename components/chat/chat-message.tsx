@@ -25,7 +25,7 @@ export function ChatMessage({ role, content, sources, userAvatar, channelId }: C
             alt="You"
             width={32}
             height={32}
-            className="h-8 w-8 shrink-0 rounded-[10px] object-cover"
+            className="h-8 w-8 shrink-0 rounded-[10px] object-cover ring-1 ring-white/[0.08]"
             unoptimized
           />
         ) : (
@@ -39,7 +39,7 @@ export function ChatMessage({ role, content, sources, userAvatar, channelId }: C
           alt="TubeVault"
           width={32}
           height={32}
-          className="h-8 w-8 shrink-0 rounded-[10px] object-cover"
+          className="h-8 w-8 shrink-0 rounded-[10px] object-cover ring-1 ring-primary/20"
         />
       )}
 
@@ -48,10 +48,10 @@ export function ChatMessage({ role, content, sources, userAvatar, channelId }: C
         className={`max-w-[85%] space-y-2 ${role === "user" ? "items-end" : "items-start"}`}
       >
         <div
-          className={`rounded-xl px-4 py-3 text-[14px] leading-[1.65] ${
+          className={`rounded-2xl px-4 py-3 text-[14px] leading-[1.65] ${
             role === "user"
-              ? "rounded-br-sm bg-[#3D7A35] font-medium text-white"
-              : "border border-[#1E1F21] bg-[#141416] text-cream/90"
+              ? "bg-primary/10 font-medium text-cream border border-primary/20"
+              : "border border-[#2E2F31] bg-[#1C1D1F] text-cream/90"
           }`}
         >
           {role === "assistant" ? (

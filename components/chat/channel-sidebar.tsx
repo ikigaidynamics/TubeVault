@@ -45,11 +45,11 @@ function ChannelAvatar({ col }: { col: Collection }) {
       alt={col.display_name}
       width={32}
       height={32}
-      className="h-8 w-8 shrink-0 rounded-lg object-cover"
+      className="h-8 w-8 shrink-0 rounded-lg object-cover ring-1 ring-transparent transition-all duration-200 group-hover:ring-primary/20"
       unoptimized
     />
   ) : (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-[10px] font-bold text-gray-text">
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-[10px] font-bold text-gray-text ring-1 ring-transparent transition-all duration-200 group-hover:ring-primary/20">
       {initials}
     </div>
   );
@@ -93,7 +93,7 @@ export function ChannelSidebar({
   const qUsed = hasQuestionLimit ? (questionLimit ?? 0) - qRemaining : 0;
 
   const sidebar = (
-    <div className="relative flex h-full flex-col bg-[#0A0A0B]">
+    <div className="relative flex h-full flex-col bg-[#0F1011]">
       {/* Logo */}
       <div className="border-b border-white/[0.06] px-4 py-2.5">
         <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
@@ -272,7 +272,7 @@ export function ChannelSidebar({
             href="/pricing"
             // analytics
             onClick={() => track("upgrade_click", { metadata: { trigger: "manual", current_tier: "free" } })}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-[12px] font-semibold text-white transition-colors hover:bg-primary-hover"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 py-2.5 text-[12px] font-semibold text-primary transition-all duration-200 hover:bg-primary/10 hover:shadow-[0_0_20px_rgba(101,174,76,0.15)]"
           >
             <Zap className="h-3.5 w-3.5" />
             Upgrade to Pro
@@ -326,7 +326,7 @@ export function ChannelSidebar({
     <>
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed left-3 top-3 z-50 rounded-lg border border-white/[0.08] bg-[#0A0A0B] p-2 text-gray-text transition-colors hover:text-cream md:hidden"
+        className="fixed left-3 top-3 z-50 rounded-lg border border-white/[0.08] bg-[#0F1011] p-2 text-gray-text transition-colors hover:text-cream md:hidden"
       >
         <Menu className="h-5 w-5" />
       </button>

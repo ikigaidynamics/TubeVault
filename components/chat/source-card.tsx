@@ -44,8 +44,8 @@ export function SourceCard({ source, index, channelId }: SourceCardProps) {
     <div
       className={`rounded-lg border transition-all duration-200 ${
         expanded
-          ? "border-white/[0.1] bg-[#111213]"
-          : "border-white/[0.05] bg-[#111213] hover:border-white/[0.1] hover:bg-[#1C1D1F]"
+          ? "border-primary/20 bg-[#1C1D1F]"
+          : "border-[#2E2F31] bg-[#1C1D1F] hover:border-primary/20 hover:shadow-[0_0_20px_rgba(101,174,76,0.06)]"
       }`}
     >
       {/* Header — clickable */}

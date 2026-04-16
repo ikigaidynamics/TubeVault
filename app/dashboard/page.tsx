@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Send, AlertCircle, Globe, ArrowRight } from "lucide-react";
+import { Search, AlertCircle, Globe, ArrowRight, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { queryCollection, type Collection, type HistoryMessage, type Source } from "@/lib/api";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
@@ -251,22 +251,17 @@ export default function DashboardPage() {
       {/* Main area */}
       <div className="flex flex-1 flex-col">
         {/* Top bar — breadcrumb */}
-        <header className="flex items-center gap-2 border-b border-white/[0.06] bg-[#0A0A0B]/95 px-6 py-2.5 pl-14 backdrop-blur-sm md:pl-6">
-          <Link href="/" className="text-[12px] text-gray-text/40 transition-colors hover:text-cream">
+        <header className="flex items-center gap-1.5 border-b border-white/[0.04] bg-[#0F1011]/95 px-6 py-2.5 pl-14 backdrop-blur-sm md:pl-6">
+          <Link href="/" className="text-[12px] text-gray-text/50 transition-colors hover:text-cream">
             TubeVault
           </Link>
+          <ChevronRight className="h-3 w-3 text-gray-text/20" />
           {hasActiveChat ? (
-            <>
-              <span className="text-[10px] text-gray-text/20">/</span>
-              <span className="text-[12px] font-medium text-cream/80">
-                {searchAllActive ? "Cross-Channel" : selectedCollection?.display_name || "..."}
-              </span>
-            </>
+            <span className="text-[12px] font-medium text-cream">
+              {searchAllActive ? "Cross-Channel" : selectedCollection?.display_name || "..."}
+            </span>
           ) : (
-            <>
-              <span className="text-[10px] text-gray-text/20">/</span>
-              <span className="text-[12px] text-gray-text/50">Welcome</span>
-            </>
+            <span className="text-[12px] text-gray-text/50">Welcome</span>
           )}
           {selectedCollection && (
             <span className="ml-1 text-[10px] text-gray-text/30">
@@ -279,7 +274,7 @@ export default function DashboardPage() {
         </header>
 
         {/* Messages area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)", backgroundSize: "64px 64px" }}>
           {!hasActiveChat ? (
             /* ── Welcome screen with featured creator cards ── */
             <div className="relative flex h-full items-center justify-center px-6">
@@ -327,27 +322,27 @@ export default function DashboardPage() {
                             setInput(creator.question);
                             setTimeout(() => inputRef.current?.focus(), 100);
                           }}
-                          className="group flex flex-col items-center gap-3 rounded-2xl border border-[#2E2F31] bg-[#141416] px-5 py-7 text-center transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_8px_32px_rgba(101,174,76,0.08)]"
+                          className="group flex flex-col items-center gap-4 rounded-2xl border border-[#2E2F31] bg-[#1C1D1F] px-5 py-7 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_0_20px_rgba(101,174,76,0.08)]"
                         >
                           {logoUrl ? (
                             <Image
                               src={logoUrl}
                               alt={creator.name}
-                              width={64}
-                              height={64}
-                              className="h-16 w-16 rounded-2xl object-cover"
+                              width={80}
+                              height={80}
+                              className="h-20 w-20 rounded-2xl object-cover ring-2 ring-primary/20"
                               unoptimized
                             />
                           ) : (
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/[0.06] text-lg font-bold text-gray-text">
+                            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/[0.06] text-xl font-bold text-gray-text ring-2 ring-white/[0.06]">
                               {creator.name.split(" ").map((w) => w[0]).join("")}
                             </div>
                           )}
                           <p className="text-sm font-semibold text-cream">{creator.name}</p>
-                          <p className="text-[11px] leading-relaxed text-gray-text/40">
+                          <p className="text-[11px] italic leading-relaxed text-gray-text/60">
                             &ldquo;{creator.question}&rdquo;
                           </p>
-                          <span className="mt-auto flex items-center gap-1 text-[12px] font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                          <span className="mt-auto flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-[12px] font-medium text-primary transition-all duration-200 group-hover:bg-primary group-hover:text-white">
                             Try {creator.name.split(" ").pop()}
                             <ArrowRight className="h-3 w-3" />
                           </span>
@@ -467,15 +462,16 @@ export default function DashboardPage() {
         )}
 
         {/* Input */}
-        <div className="border-t border-[#1E1F21] bg-[#0A0A0B] px-6 py-4 md:px-10 lg:px-14">
+        <div className="border-t border-[#2E2F31] bg-[#0F1011] px-6 py-4 md:px-10 lg:px-14">
           <div className="mx-auto max-w-3xl">
             <div
-              className={`flex items-end gap-3 rounded-2xl border bg-[#141416] px-5 py-2 transition-all duration-200 ${
+              className={`flex items-end gap-3 rounded-2xl border bg-[#1C1D1F] px-5 py-2 transition-all duration-200 ${
                 input
-                  ? "border-primary/30 shadow-[0_0_0_3px_rgba(101,174,76,0.08),0_0_20px_rgba(101,174,76,0.04)]"
-                  : "border-white/[0.07] hover:border-white/[0.12]"
+                  ? "border-primary/30 ring-1 ring-primary/30 shadow-[0_0_20px_rgba(101,174,76,0.06)]"
+                  : "border-[#2E2F31] hover:border-white/[0.12]"
               }`}
             >
+              <Search className="mb-3 h-5 w-5 shrink-0 text-gray-text/30" />
               <textarea
                 ref={inputRef}
                 value={input}
@@ -488,14 +484,14 @@ export default function DashboardPage() {
                 placeholder={hasActiveChat ? `Ask anything about ${chatLabel}...` : "Pick a channel to start asking questions..."}
                 disabled={!hasActiveChat || loading}
                 rows={1}
-                className="max-h-[120px] min-h-[24px] flex-1 resize-none overflow-hidden bg-transparent py-2.5 text-[14px] leading-[1.6] text-cream placeholder:text-gray-text/35 focus:outline-none disabled:opacity-30"
+                className="max-h-[120px] min-h-[24px] flex-1 resize-none overflow-hidden bg-transparent py-2.5 text-base leading-[1.6] text-cream placeholder:text-gray-text/35 focus:outline-none disabled:opacity-30"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || !hasActiveChat || loading}
-                className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-all duration-150 hover:scale-105 hover:bg-primary-hover hover:shadow-[0_0_12px_rgba(101,174,76,0.3)] disabled:opacity-20 disabled:hover:scale-100 disabled:hover:shadow-none"
+                className="mb-1 shrink-0 rounded-xl bg-primary px-5 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-primary-hover hover:shadow-[0_0_12px_rgba(101,174,76,0.3)] disabled:opacity-20 disabled:hover:shadow-none"
               >
-                <Send className="h-4 w-4" />
+                Search
               </button>
             </div>
             <p className="mt-2 text-center text-[10px] text-gray-text/25">
