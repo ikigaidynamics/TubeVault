@@ -59,9 +59,25 @@ export default function DashboardPage() {
   const [canChange, setCanChange] = useState(true);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [channelDataLoaded, setChannelDataLoaded] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const hasUnlimitedChannels = TIER_LIMITS[tier].maxChannels === Infinity;
   const maxChannels = TIER_LIMITS[tier].maxChannels;
+
+  // Admin tier toggle check
+  useEffect(() => {
+    fetch("/api/admin/tier").then((r) => {
+      if (r.ok) setIsAdmin(true);
+    }).catch(() => {});
+  }, []);
+
+  function handleAdminTierChange(newTier: SubscriptionTier) {
+    fetch("/api/admin/tier", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tier: newTier }),
+    }).then(() => window.location.reload()).catch(() => {});
+  }
 
   useEffect(() => {
     const supabase = createClient();
@@ -220,6 +236,24 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen bg-[#0A0A0B]">
       <UpgradeModal open={upgradeModal.open} onClose={() => setUpgradeModal({ open: false })} title={upgradeModal.title} message={upgradeModal.message} />
+
+      {/* Admin tier toggle */}
+      {isAdmin && (
+        <div className="fixed right-4 top-4 z-[200] flex items-center gap-1 rounded-xl border border-primary/30 bg-[#1C1D1F] p-1 shadow-lg">
+          <span className="px-2 text-[10px] font-medium text-gray-text/50">TIER:</span>
+          {(["free", "starter", "pro", "premium"] as SubscriptionTier[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => handleAdminTierChange(t)}
+              className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
+                t === tier ? "bg-primary text-white" : "text-gray-text hover:text-cream"
+              }`}
+            >
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </button>
+          ))}
+        </div>
+      )}
 
       <ChannelPickerModal
         open={pickerOpen}
