@@ -7,7 +7,7 @@ import {
   Timer,
   XCircle,
   CheckCircle,
-  ShieldCheck,
+  Bot,
 } from "lucide-react";
 import { HeroLiveDemo } from "@/components/landing/hero-live-demo";
 import { AnimateOnScroll } from "@/components/landing/animate-on-scroll";
@@ -19,7 +19,7 @@ const STEPS = [
     number: "01",
     title: "Pick your channels",
     description:
-      "Choose from 20+ indexed YouTube channels across health, history, science, and more.",
+      "Choose from 50+ indexed YouTube channels across health, history, science, and more \u2014 with new creators added regularly.",
   },
   {
     icon: MessageCircleQuestion,
@@ -230,19 +230,22 @@ export default function Home() {
         <div className="mx-auto max-w-4xl">
           <AnimateOnScroll>
             <h2 className="text-center text-2xl font-bold text-cream md:text-3xl">
-              Wait &mdash; how is this different from ChatGPT?
+              Wait &mdash; how is this different from other AI services?
             </h2>
+            <p className="mt-2 text-center text-sm text-gray-text/60">
+              ChatGPT, Gemini, Perplexity&hellip;
+            </p>
           </AnimateOnScroll>
 
           <div className="mt-12 grid gap-5 md:grid-cols-2">
-            {/* ChatGPT side */}
+            {/* Generic AI side */}
             <AnimateOnScroll delay={100}>
               <div className="rounded-2xl border border-red-500/10 bg-red-500/[0.03] p-6">
                 <div className="mb-4 flex items-center gap-2.5">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10">
-                    <XCircle className="h-4.5 w-4.5 text-red-400" />
+                    <Bot className="h-4.5 w-4.5 text-red-400" />
                   </div>
-                  <span className="text-sm font-semibold text-red-400">ChatGPT</span>
+                  <span className="text-sm font-semibold text-red-400">Generic AI</span>
                 </div>
                 <ul className="space-y-3">
                   <li className="flex items-start gap-2.5 text-sm leading-relaxed text-gray-text">
@@ -265,9 +268,13 @@ export default function Home() {
             <AnimateOnScroll delay={250}>
               <div className="rounded-2xl border border-primary/15 bg-primary/[0.04] p-6">
                 <div className="mb-4 flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                    <ShieldCheck className="h-4.5 w-4.5 text-primary" />
-                  </div>
+                  <Image
+                    src="/TubeVault_Logo_noBG.png"
+                    alt="TubeVault"
+                    width={32}
+                    height={32}
+                    className="h-8 w-8"
+                  />
                   <span className="text-sm font-semibold text-primary">TubeVault</span>
                 </div>
                 <ul className="space-y-3">

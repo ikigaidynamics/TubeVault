@@ -25,7 +25,7 @@ const TRIAL_LIMIT = 3;
 const TYPING_SPEED = 40;
 const HUBERMAN_LOGO = "https://mindvault.ikigai-dynamics.com/static/andrew_huberman_avatar.jpg";
 
-const DEFAULT_QUESTION = "How do I get better sleep according to Huberman?";
+const DEFAULT_QUESTION = "How do I get better sleep?";
 
 const HUBERMAN_EXAMPLES = [
   "What are the benefits of cold exposure?",
@@ -38,7 +38,7 @@ const CACHED_RESPONSES: Record<
   string,
   { answer: string; sources: Source[] }
 > = {
-  "How do I get better sleep according to Huberman?": {
+  "How do I get better sleep?": {
     answer:
       "According to Andrew Huberman, getting better sleep involves several key strategies. He emphasizes the importance of understanding both sleep and wakefulness, as they are interconnected and govern mental and physical health. Key tips include: optimizing your sleep environment (dark, cool, quiet), establishing a consistent sleep schedule, managing light exposure in the evening to promote melatonin production, limiting caffeine in the hours before bedtime, and developing a calming pre-sleep routine.",
     sources: [
