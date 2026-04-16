@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -60,6 +60,14 @@ function formatTime(seconds: number): string {
 }
 
 export default function TranscriptsPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0A0A0B]"><p className="text-sm text-gray-text/40">Loading...</p></div>}>
+      <TranscriptsContent />
+    </Suspense>
+  );
+}
+
+function TranscriptsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
