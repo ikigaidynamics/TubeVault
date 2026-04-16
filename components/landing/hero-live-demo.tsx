@@ -366,7 +366,10 @@ export function HeroLiveDemo() {
     setIsTyping(false);
     setTypedText("");
     setHasAutoSearched(true);
-    inputRef.current?.focus();
+    // Don't auto-focus on mobile — iOS Safari zooms into focused inputs
+    if (window.innerWidth >= 640) {
+      inputRef.current?.focus();
+    }
   }
 
   async function handleSearch(q?: string) {
@@ -578,7 +581,7 @@ export function HeroLiveDemo() {
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder={`Ask ${channelDisplayName} anything...`}
-                className="flex-1 bg-transparent text-xs text-cream placeholder:text-gray-text/40 focus:outline-none sm:text-sm md:text-base"
+                className="flex-1 bg-transparent text-base text-cream placeholder:text-gray-text/40 focus:outline-none"
               />
               {showCursor && (
                 <span className="pointer-events-none absolute right-3 inline-block h-5 w-[2px] animate-pulse bg-primary md:right-5" />
