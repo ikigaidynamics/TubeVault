@@ -2,7 +2,9 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -14,14 +16,20 @@ import {
   X,
   Loader2,
   Clock,
+  ChevronRight,
+  ExternalLink,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { type Collection } from "@/lib/api";
 import { type SubscriptionTier } from "@/lib/tiers";
+import { ChannelSidebar } from "@/components/chat/channel-sidebar";
+import { UpgradeModal } from "@/components/chat/upgrade-modal";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://mindvault.ikigai-dynamics.com/api";
+
+const HIDDEN = ["industrie_und_handelskammer_cottbus", "btu_cottbus_senftenberg", "doctor_sethi"];
 
 interface TranscriptChunk {
   text: string;
@@ -47,33 +55,41 @@ function formatTime(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
-  if (h > 0) {
-    return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  }
+  if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 export default function TranscriptsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [tier, setTier] = useState<SubscriptionTier>("free");
   const [creatorChannels, setCreatorChannels] = useState<string[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<string | null>(searchParams.get("channel"));
   const [videos, setVideos] = useState<VideoItem[]>([]);
-  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(searchParams.get("video"));
   const [transcript, setTranscript] = useState<TranscriptData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [videoSearch, setVideoSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [videosLoading, setVideosLoading] = useState(false);
   const [editingChunk, setEditingChunk] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
   const [saving, setSaving] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [upgradeModal, setUpgradeModal] = useState({ open: false });
+  const [pickedChannels, setPickedChannels] = useState<string[]>([]);
+  const [mobileShowTranscript, setMobileShowTranscript] = useState(false);
+  const transcriptRef = useRef<HTMLDivElement>(null);
 
   const hasAccess = tier === "pro" || tier === "premium" || tier === "creator";
 
-  // Fetch tier info
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
+      if (!user) { router.push("/login"); return; }
+      setUserEmail(user.email || "");
       supabase
         .from("subscriptions")
         .select("tier, creator_channels")
@@ -87,27 +103,36 @@ export default function TranscriptsPage() {
           }
         });
     });
-  }, []);
+  }, [router]);
 
-  // Fetch collections
   useEffect(() => {
     fetch(`${API_BASE_URL}/collections`)
       .then((r) => r.json())
-      .then((data: Collection[]) => setCollections(data))
+      .then((data: Collection[]) => setCollections(data.filter((c) => !HIDDEN.includes(c.name))))
       .catch(() => {});
   }, []);
 
-  // Fetch videos when channel selected (via search endpoint)
   useEffect(() => {
-    if (!selectedChannel || !hasAccess) return;
+    fetch("/api/channels/select")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.selectedChannels) setPickedChannels(data.selectedChannels);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch videos when channel selected
+  useEffect(() => {
+    if (!selectedChannel) return;
     setVideos([]);
     setSelectedVideo(null);
     setTranscript(null);
+    setMobileShowTranscript(false);
+    setVideosLoading(true);
 
-    fetch(`${API_BASE_URL}/search/${selectedChannel}?q=*&limit=100`)
+    fetch(`${API_BASE_URL}/search/${selectedChannel}?q=*&limit=200`)
       .then((r) => r.json())
       .then((data) => {
-        // Extract unique videos from search results
         const videoMap = new Map<string, VideoItem>();
         if (Array.isArray(data)) {
           for (const item of data) {
@@ -122,12 +147,13 @@ export default function TranscriptsPage() {
         }
         setVideos(Array.from(videoMap.values()));
       })
-      .catch(() => {});
-  }, [selectedChannel, hasAccess]);
+      .catch(() => {})
+      .finally(() => setVideosLoading(false));
+  }, [selectedChannel]);
 
   // Fetch transcript when video selected
   useEffect(() => {
-    if (!selectedVideo || !hasAccess) return;
+    if (!selectedVideo) return;
     setLoading(true);
     setTranscript(null);
 
@@ -136,322 +162,344 @@ export default function TranscriptsPage() {
       .then((data: TranscriptData) => setTranscript(data))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [selectedVideo, hasAccess]);
+  }, [selectedVideo]);
 
-  const isCreatorForChannel =
-    tier === "creator" && selectedChannel !== null && creatorChannels.includes(selectedChannel);
+  function handleSelectChannel(name: string) {
+    setSelectedChannel(name);
+    router.replace(`/dashboard/transcripts?channel=${name}`, { scroll: false });
+  }
+
+  function handleSelectVideo(id: string) {
+    setSelectedVideo(id);
+    setMobileShowTranscript(true);
+    router.replace(`/dashboard/transcripts?channel=${selectedChannel}&video=${id}`, { scroll: false });
+    setTimeout(() => transcriptRef.current?.scrollTo({ top: 0 }), 100);
+  }
+
+  const isCreatorForChannel = tier === "creator" && selectedChannel !== null && creatorChannels.includes(selectedChannel);
 
   async function handleSaveEdit(chunkIndex: number) {
     if (!selectedVideo || !editText.trim()) return;
     setSaving(true);
-
     try {
       const res = await fetch("/api/transcript/edit", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          video_id: selectedVideo,
-          chunk_index: chunkIndex,
-          text: editText.trim(),
-        }),
+        body: JSON.stringify({ video_id: selectedVideo, chunk_index: chunkIndex, text: editText.trim() }),
       });
-
       if (res.ok) {
-        // Update local state
-        setTranscript((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            chunks: prev.chunks.map((c) =>
-              c.chunk_index === chunkIndex ? { ...c, text: editText.trim() } : c
-            ),
-          };
-        });
+        setTranscript((prev) => prev ? {
+          ...prev,
+          chunks: prev.chunks.map((c) => c.chunk_index === chunkIndex ? { ...c, text: editText.trim() } : c),
+        } : prev);
         setEditingChunk(null);
       }
-    } catch {
-      // silently fail
-    } finally {
-      setSaving(false);
-    }
+    } catch { /* silent */ } finally { setSaving(false); }
   }
 
-  // Filter transcript chunks by search
   const filteredChunks = transcript?.chunks.filter((c) =>
-    searchQuery
-      ? c.text.toLowerCase().includes(searchQuery.toLowerCase())
-      : true
+    searchQuery ? c.text.toLowerCase().includes(searchQuery.toLowerCase()) : true
   );
 
-  // No access: blurred preview with upgrade overlay
-  if (!hasAccess) {
-    return (
-      <div className="min-h-screen bg-[#0A0A0B]">
-        <header className="border-b border-white/[0.06] px-6 py-4">
-          <div className="mx-auto flex max-w-5xl items-center gap-3">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-1.5 text-sm text-gray-text transition-colors hover:text-cream"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to chat
-            </Link>
-            <span className="text-gray-text/30">|</span>
-            <FileText className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-cream">Transcripts</span>
-          </div>
-        </header>
+  const filteredVideos = videos.filter((v) =>
+    videoSearch ? v.title.toLowerCase().includes(videoSearch.toLowerCase()) : true
+  );
 
-        <div className="relative mx-auto max-w-5xl px-6 py-12">
-          {/* Blurred fake transcript */}
-          <div className="pointer-events-none select-none blur-[6px]">
-            <div className="space-y-3">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4"
-                >
-                  <div className="mb-2 flex items-center gap-2">
-                    <div className="h-3 w-12 rounded bg-primary/20" />
-                    <div className="h-3 w-16 rounded bg-white/10" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="h-3 w-full rounded bg-white/[0.06]" />
-                    <div className="h-3 w-4/5 rounded bg-white/[0.06]" />
-                    <div className="h-3 w-3/5 rounded bg-white/[0.06]" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+  const selectedCollection = collections.find((c) => c.name === selectedChannel);
 
-          {/* Upgrade overlay */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="mx-4 w-full max-w-md rounded-2xl border border-white/[0.08] bg-[#1C1D1F]/95 p-8 text-center shadow-2xl backdrop-blur-sm">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                <Lock className="h-7 w-7 text-primary" />
-              </div>
-              <h2 className="mt-5 text-xl font-semibold text-cream">
-                Transcript Access
-              </h2>
-              <p className="mt-2 text-sm text-gray-text">
-                Full transcript access with search, timestamps, and direct YouTube links
-                is available on Pro and above.
-              </p>
-              <Link
-                href="/pricing"
-                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
-              >
-                Upgrade to Pro
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const sidebar = (
+    <ChannelSidebar
+      collections={collections}
+      selectedChannel={selectedChannel}
+      onSelectChannel={handleSelectChannel}
+      userEmail={userEmail}
+      onLogout={async () => { const s = createClient(); await s.auth.signOut(); router.push("/"); }}
+      tier={tier}
+      pickedChannels={pickedChannels}
+      lockedUntil={null}
+      canChange={false}
+      onSearchAll={() => {}}
+      searchAllActive={false}
+      questionsRemaining={null}
+      questionLimit={null}
+    />
+  );
 
   return (
-    <div className="min-h-screen bg-[#0A0A0B]">
-      <header className="border-b border-white/[0.06] px-6 py-4">
-        <div className="mx-auto flex max-w-5xl items-center gap-3">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-1.5 text-sm text-gray-text transition-colors hover:text-cream"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to chat
+    <div className="flex h-screen bg-[#0A0A0B]">
+      <UpgradeModal open={upgradeModal.open} onClose={() => setUpgradeModal({ open: false })} />
+      {sidebar}
+
+      <div className="flex flex-1 flex-col">
+        {/* Breadcrumb */}
+        <header className="flex items-center gap-1.5 border-b border-white/[0.04] bg-[#0F1011]/95 px-6 py-2.5 pl-14 backdrop-blur-sm md:pl-6">
+          <Link href="/dashboard" className="text-[12px] text-gray-text/50 transition-colors hover:text-cream">
+            TubeVault
           </Link>
-          <span className="text-gray-text/30">|</span>
-          <FileText className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium text-cream">Transcripts</span>
-        </div>
-      </header>
+          <ChevronRight className="h-3 w-3 text-gray-text/20" />
+          <Link href="/dashboard/transcripts" className="text-[12px] text-gray-text/50 transition-colors hover:text-cream">
+            Transcripts
+          </Link>
+          {selectedCollection && (
+            <>
+              <ChevronRight className="h-3 w-3 text-gray-text/20" />
+              <span className="text-[12px] font-medium text-cream">{selectedCollection.display_name}</span>
+            </>
+          )}
+          {transcript && (
+            <>
+              <ChevronRight className="h-3 w-3 text-gray-text/20" />
+              <span className="max-w-[200px] truncate text-[12px] text-cream/70">{transcript.video_title}</span>
+            </>
+          )}
+        </header>
 
-      <div className="mx-auto max-w-5xl px-6 py-8">
-        <div className="flex flex-col gap-6 md:flex-row">
-          {/* Left: Channel + video picker */}
-          <div className="w-full md:w-64 shrink-0 space-y-4">
-            <div>
-              <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-text/50">
-                Channel
-              </label>
-              <select
-                value={selectedChannel || ""}
-                onChange={(e) => setSelectedChannel(e.target.value || null)}
-                className="w-full rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2.5 text-sm text-cream focus:border-primary/30 focus:outline-none"
-              >
-                <option value="">Select a channel</option>
-                {collections.map((col) => (
-                  <option key={col.name} value={col.name}>
-                    {col.display_name}
-                  </option>
-                ))}
-              </select>
+        {/* Main content */}
+        <div className="flex flex-1 overflow-hidden">
+          {!hasAccess ? (
+            /* Tier gate */
+            <div className="flex flex-1 items-center justify-center px-6">
+              <div className="w-full max-w-md rounded-2xl border border-[#2E2F31] bg-[#141516] p-8 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+                  <Lock className="h-7 w-7 text-primary" />
+                </div>
+                <h2 className="mt-5 text-xl font-semibold text-cream">Transcript Access</h2>
+                <p className="mt-2 text-sm text-gray-text">
+                  Browse full transcripts with search, timestamps, and direct YouTube links.
+                  Available on Pro and above.
+                </p>
+                <Link
+                  href="/pricing"
+                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+                >
+                  Upgrade to Pro
+                </Link>
+              </div>
             </div>
-
-            {videos.length > 0 && (
-              <div>
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-gray-text/50">
-                  Video ({videos.length})
-                </label>
-                <div className="max-h-[60vh] space-y-1 overflow-y-auto">
-                  {videos.map((v) => (
-                    <button
-                      key={v.video_id}
-                      onClick={() => setSelectedVideo(v.video_id)}
-                      className={`w-full rounded-lg px-3 py-2 text-left text-xs transition-colors ${
-                        selectedVideo === v.video_id
-                          ? "bg-primary/10 text-cream"
-                          : "text-gray-text hover:bg-white/[0.04] hover:text-cream"
-                      }`}
-                    >
-                      <p className="line-clamp-2">{v.title}</p>
-                    </button>
-                  ))}
-                </div>
+          ) : !selectedChannel ? (
+            /* No channel selected */
+            <div className="flex flex-1 items-center justify-center px-6">
+              <div className="text-center">
+                <FileText className="mx-auto h-10 w-10 text-gray-text/20" />
+                <p className="mt-4 text-sm text-gray-text/50">Select a channel from the sidebar to browse transcripts</p>
               </div>
-            )}
-          </div>
-
-          {/* Right: Transcript view */}
-          <div className="flex-1 min-w-0">
-            {!selectedChannel ? (
-              <div className="flex h-64 items-center justify-center text-center">
-                <div>
-                  <FileText className="mx-auto h-8 w-8 text-gray-text/30" />
-                  <p className="mt-3 text-sm text-gray-text/60">
-                    Select a channel to browse transcripts
+            </div>
+          ) : (
+            <>
+              {/* Video list panel */}
+              <div className={`w-full border-r border-white/[0.04] md:w-[40%] md:max-w-[380px] ${mobileShowTranscript ? "hidden md:flex" : "flex"} flex-col`}>
+                {/* Video search */}
+                <div className="border-b border-white/[0.04] p-3">
+                  <div className="flex items-center gap-2 rounded-xl border border-[#2E2F31] bg-[#1C1D1F] px-3 py-2">
+                    <Search className="h-3.5 w-3.5 shrink-0 text-gray-text/30" />
+                    <input
+                      type="text"
+                      value={videoSearch}
+                      onChange={(e) => setVideoSearch(e.target.value)}
+                      placeholder="Search videos..."
+                      className="flex-1 bg-transparent text-sm text-cream placeholder:text-gray-text/35 focus:outline-none"
+                    />
+                  </div>
+                  <p className="mt-2 text-[10px] text-gray-text/30">
+                    {filteredVideos.length} video{filteredVideos.length !== 1 ? "s" : ""}
+                    {selectedCollection ? ` in ${selectedCollection.display_name}` : ""}
                   </p>
                 </div>
-              </div>
-            ) : !selectedVideo ? (
-              <div className="flex h-64 items-center justify-center text-center">
-                <div>
-                  <FileText className="mx-auto h-8 w-8 text-gray-text/30" />
-                  <p className="mt-3 text-sm text-gray-text/60">
-                    Select a video to view its transcript
-                  </p>
-                </div>
-              </div>
-            ) : loading ? (
-              <div className="flex h-64 items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              </div>
-            ) : transcript ? (
-              <div>
-                <div className="mb-4 flex items-center gap-3">
-                  <h2 className="flex-1 text-lg font-semibold text-cream">
-                    {transcript.video_title}
-                  </h2>
-                  {isCreatorForChannel && (
-                    <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
-                      Creator Mode
-                    </span>
+
+                {/* Video list */}
+                <div className="flex-1 overflow-y-auto">
+                  {videosLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary/50" />
+                    </div>
+                  ) : filteredVideos.length === 0 ? (
+                    <p className="py-12 text-center text-xs text-gray-text/40">No videos found</p>
+                  ) : (
+                    filteredVideos.map((v) => {
+                      const active = selectedVideo === v.video_id;
+                      return (
+                        <button
+                          key={v.video_id}
+                          onClick={() => handleSelectVideo(v.video_id)}
+                          className={`flex w-full items-start gap-3 border-b border-white/[0.03] px-3 py-3 text-left transition-all duration-150 ${
+                            active
+                              ? "border-l-[3px] border-l-primary bg-primary/[0.06]"
+                              : "border-l-[3px] border-l-transparent hover:bg-white/[0.03]"
+                          }`}
+                        >
+                          <Image
+                            src={`https://img.youtube.com/vi/${v.video_id}/default.jpg`}
+                            alt=""
+                            width={120}
+                            height={68}
+                            className="h-[52px] w-[92px] shrink-0 rounded-lg object-cover"
+                            unoptimized
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className={`line-clamp-2 text-xs font-medium leading-relaxed ${active ? "text-cream" : "text-gray-text/80"}`}>
+                              {v.title}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })
                   )}
                 </div>
+              </div>
 
-                {/* Search within transcript */}
-                <div className="relative mb-4">
-                  <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-text/40" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search in transcript..."
-                    className="w-full rounded-lg border border-white/[0.06] bg-white/[0.03] py-2.5 pl-9 pr-3 text-sm text-cream placeholder:text-gray-text/40 focus:border-primary/30 focus:outline-none"
-                  />
-                </div>
-
-                {/* Chunks */}
-                <div className="space-y-2">
-                  {filteredChunks?.map((chunk) => (
-                    <div
-                      key={chunk.chunk_index}
-                      className="group rounded-lg border border-white/[0.06] bg-white/[0.02] p-4 transition-colors hover:border-white/[0.1]"
+              {/* Transcript panel */}
+              <div
+                ref={transcriptRef}
+                className={`flex-1 overflow-y-auto ${mobileShowTranscript ? "flex" : "hidden md:flex"} flex-col`}
+              >
+                {!selectedVideo ? (
+                  <div className="flex flex-1 items-center justify-center px-6">
+                    <div className="text-center">
+                      <FileText className="mx-auto h-8 w-8 text-gray-text/20" />
+                      <p className="mt-3 text-sm text-gray-text/50">Select a video to view its transcript</p>
+                    </div>
+                  </div>
+                ) : loading ? (
+                  <div className="flex flex-1 items-center justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : transcript ? (
+                  <div className="p-4 md:p-6">
+                    {/* Mobile back */}
+                    <button
+                      onClick={() => setMobileShowTranscript(false)}
+                      className="mb-3 flex items-center gap-1 text-xs text-gray-text/50 transition-colors hover:text-cream md:hidden"
                     >
-                      <div className="mb-2 flex items-center gap-2">
-                        <a
-                          href={`https://youtube.com/watch?v=${selectedVideo}&t=${Math.floor(chunk.start_time)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary/20"
-                        >
-                          <Clock className="h-3 w-3" />
-                          {formatTime(chunk.start_time)}
-                        </a>
-                        <span className="text-[10px] text-gray-text/30">
-                          to {formatTime(chunk.end_time)}
-                        </span>
+                      <ArrowLeft className="h-3 w-3" />
+                      Back to videos
+                    </button>
 
-                        {/* Creator edit button */}
-                        {isCreatorForChannel && editingChunk !== chunk.chunk_index && (
-                          <button
-                            onClick={() => {
-                              setEditingChunk(chunk.chunk_index);
-                              setEditText(chunk.text);
-                            }}
-                            className="ml-auto hidden items-center gap-1 rounded px-2 py-0.5 text-[10px] text-gray-text/50 transition-colors hover:bg-white/[0.06] hover:text-cream group-hover:flex"
-                          >
-                            <Pencil className="h-3 w-3" />
-                            Edit
-                          </button>
+                    {/* Video header */}
+                    <div className="mb-5 rounded-xl border border-[#2E2F31] bg-[#141516] p-4">
+                      <h2 className="text-lg font-semibold text-cream">{transcript.video_title}</h2>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-xs text-gray-text/50">{selectedCollection?.display_name}</span>
+                        {isCreatorForChannel && (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                            Creator Mode
+                          </span>
                         )}
                       </div>
+                      <a
+                        href={`https://youtube.com/watch?v=${selectedVideo}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary/70 transition-colors hover:text-primary"
+                      >
+                        Watch on YouTube
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
 
-                      {editingChunk === chunk.chunk_index ? (
-                        <div>
-                          <textarea
-                            value={editText}
-                            onChange={(e) => setEditText(e.target.value)}
-                            rows={4}
-                            className="w-full rounded-lg border border-primary/30 bg-white/[0.03] p-3 text-sm text-cream focus:outline-none"
-                          />
-                          <div className="mt-2 flex items-center gap-2">
-                            <button
-                              onClick={() => handleSaveEdit(chunk.chunk_index)}
-                              disabled={saving}
-                              className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
-                            >
-                              {saving ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <Check className="h-3 w-3" />
-                              )}
-                              Save
-                            </button>
-                            <button
-                              onClick={() => setEditingChunk(null)}
-                              className="flex items-center gap-1 rounded-lg border border-white/[0.08] px-3 py-1.5 text-xs text-gray-text transition-colors hover:text-cream"
-                            >
-                              <X className="h-3 w-3" />
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-sm leading-relaxed text-gray-text/80">
-                          {chunk.text}
-                        </p>
+                    {/* Transcript search */}
+                    <div className="mb-4 flex items-center gap-2 rounded-xl border border-[#2E2F31] bg-[#1C1D1F] px-3 py-2">
+                      <Search className="h-3.5 w-3.5 shrink-0 text-gray-text/30" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search in transcript..."
+                        className="flex-1 bg-transparent text-sm text-cream placeholder:text-gray-text/35 focus:outline-none"
+                      />
+                      {searchQuery && (
+                        <button onClick={() => setSearchQuery("")} className="text-gray-text/40 hover:text-cream">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
                       )}
                     </div>
-                  ))}
-                </div>
 
-                {filteredChunks?.length === 0 && (
-                  <p className="py-8 text-center text-sm text-gray-text/50">
-                    No matches found for &ldquo;{searchQuery}&rdquo;
-                  </p>
+                    {/* Chunks */}
+                    <div className="space-y-1">
+                      {(filteredChunks ?? []).map((chunk) => (
+                          <div
+                            key={chunk.chunk_index}
+                            className="group border-b border-white/[0.03] py-3 transition-colors"
+                          >
+                            <div className="mb-1.5 flex items-center gap-2">
+                              <a
+                                href={`https://youtube.com/watch?v=${selectedVideo}&t=${Math.floor(chunk.start_time)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary/20"
+                              >
+                                <Clock className="h-2.5 w-2.5" />
+                                {formatTime(chunk.start_time)}
+                              </a>
+                              <span className="text-[10px] text-gray-text/25">
+                                — {formatTime(chunk.end_time)}
+                              </span>
+
+                              {isCreatorForChannel && editingChunk !== chunk.chunk_index && (
+                                <button
+                                  onClick={() => { setEditingChunk(chunk.chunk_index); setEditText(chunk.text); }}
+                                  className="ml-auto hidden items-center gap-1 rounded px-2 py-0.5 text-[10px] text-gray-text/40 transition-colors hover:bg-white/[0.06] hover:text-cream group-hover:flex"
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                  Edit
+                                </button>
+                              )}
+                            </div>
+
+                            {editingChunk === chunk.chunk_index ? (
+                              <div>
+                                <textarea
+                                  value={editText}
+                                  onChange={(e) => setEditText(e.target.value)}
+                                  rows={4}
+                                  className="w-full rounded-lg border border-primary/30 bg-[#1C1D1F] p-3 text-sm text-cream focus:outline-none"
+                                />
+                                <div className="mt-2 flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleSaveEdit(chunk.chunk_index)}
+                                    disabled={saving}
+                                    className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
+                                  >
+                                    {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingChunk(null)}
+                                    className="flex items-center gap-1 rounded-lg border border-[#2E2F31] px-3 py-1.5 text-xs text-gray-text transition-colors hover:text-cream"
+                                  >
+                                    <X className="h-3 w-3" />
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-sm leading-relaxed text-cream/80">
+                                {searchQuery ? (
+                                  chunk.text.split(new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi")).map((part, j) =>
+                                    part.toLowerCase() === searchQuery.toLowerCase()
+                                      ? <mark key={j} className="rounded bg-primary/20 px-0.5 text-cream">{part}</mark>
+                                      : part
+                                  )
+                                ) : chunk.text}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+
+                    {filteredChunks?.length === 0 && (
+                      <p className="py-8 text-center text-sm text-gray-text/50">
+                        No matches for &ldquo;{searchQuery}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-1 items-center justify-center">
+                    <p className="text-sm text-gray-text/50">Failed to load transcript.</p>
+                  </div>
                 )}
               </div>
-            ) : (
-              <div className="flex h-64 items-center justify-center text-center">
-                <p className="text-sm text-gray-text/60">
-                  Failed to load transcript.
-                </p>
-              </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </div>
     </div>
