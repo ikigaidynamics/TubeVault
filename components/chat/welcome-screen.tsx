@@ -126,7 +126,7 @@ export function WelcomeScreen({
   }
 
   return (
-    <div className="relative min-h-full overflow-y-auto px-4 py-8 sm:px-6">
+    <div className="relative min-h-full overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
       {/* Background */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_20%,rgba(101,174,76,0.025),transparent_60%)]" />
       <div
@@ -140,7 +140,7 @@ export function WelcomeScreen({
 
       <div className="relative mx-auto max-w-4xl">
         {/* Section 1: Animated Search */}
-        <div className="animate-[fadeUp_0.5s_ease-out] pt-8 text-center sm:pt-16">
+        <div className="animate-[fadeUp_0.5s_ease-out] pt-2 text-center sm:pt-6 lg:pt-10">
           <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-primary/40">
             Your AI Search Engine
           </p>

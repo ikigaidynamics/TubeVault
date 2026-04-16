@@ -41,6 +41,9 @@ const CHANNEL_STRIPS: Record<string, (RegExp | string)[]> = {
     /Email:[\s\S]*$/i,
     /Wanna do a Collab\?[\s\S]*$/i,
   ],
+  nick_norwitz_md_phd: [
+    /Please also follow at my Newsletter[\s\S]*$/i,
+  ],
 };
 
 // Generic patterns to strip from any channel

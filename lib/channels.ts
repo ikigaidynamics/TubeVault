@@ -139,17 +139,6 @@ export const CHANNELS: Channel[] = [
     avatar: "/channels/the_diary_of_a_ceo_avatar.jpg",
     color: "#F59E0B",
   },
-  {
-    slug: "doctor_sethi",
-    displayName: "Doctor Sethi",
-    description:
-      "Harvard & Stanford-trained gastroenterologist making gut health easy to understand.",
-    videoCount: 22,
-    category: "Health & Longevity",
-    avatar: "/channels/doctor_sethi_avatar.jpg",
-    color: "#A3E635",
-  },
-
   // ── History & Ancient Knowledge ──
   {
     slug: "unchartedx",

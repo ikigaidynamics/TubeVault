@@ -351,8 +351,10 @@ export function HeroLiveDemo() {
     fetch(`${API_BASE_URL}/collections`)
       .then((r) => r.json())
       .then((data: Collection[]) => {
+        const HIDDEN = ["ihk_cottbus", "btu_cottbus_senftenberg", "doctor_sethi"];
         setCollections(
-          data.sort((a, b) => a.display_name.localeCompare(b.display_name))
+          data.filter((c: Collection) => !HIDDEN.includes(c.name))
+            .sort((a: Collection, b: Collection) => a.display_name.localeCompare(b.display_name))
         );
       })
       .catch(() => {});
