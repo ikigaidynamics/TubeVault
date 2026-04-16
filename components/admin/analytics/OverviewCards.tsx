@@ -9,12 +9,6 @@ interface Props {
   days: number;
 }
 
-interface CardData {
-  label: string;
-  value: string | number;
-  color?: string;
-}
-
 export async function OverviewCards({ days }: Props) {
   const since = new Date(Date.now() - days * 86_400_000).toISOString();
 
@@ -30,8 +24,8 @@ export async function OverviewCards({ days }: Props) {
   const upgrades = rows.filter((e) => e.event_type === "upgrade_click");
   const signups = rows.filter((e) => e.event_type === "signup");
 
-  const uniqueUsers = new Set(rows.filter((e) => e.user_id).map((e) => e.user_id)).size;
-  const uniqueSessions = new Set(rows.map((e) => e.session_id)).size;
+  const registeredUsers = new Set(rows.filter((e) => e.user_id).map((e) => e.user_id)).size;
+  const anonymousSessions = new Set(rows.filter((e) => !e.user_id).map((e) => e.session_id)).size;
 
   const noResultRate = searches.length > 0
     ? Math.round((noResults.length / searches.length) * 100)
@@ -41,12 +35,16 @@ export async function OverviewCards({ days }: Props) {
   if (noResultRate > 25) noResultColor = "text-red-400";
   else if (noResultRate > 15) noResultColor = "text-yellow-400";
 
-  const cards: CardData[] = [
-    { label: "Total Searches", value: searches.length },
-    { label: "Unique Users", value: uniqueUsers || uniqueSessions },
+  const cards = [
+    { label: "Total Searches", value: String(searches.length) },
+    {
+      label: "Unique Users",
+      value: `${registeredUsers} registered`,
+      sub: `${anonymousSessions} anonymous`,
+    },
     { label: "No-Result Rate", value: `${noResultRate}%`, color: noResultColor },
-    { label: "Upgrade Clicks", value: upgrades.length },
-    { label: "New Signups", value: signups.length },
+    { label: "Upgrade Clicks", value: String(upgrades.length) },
+    { label: "New Signups", value: String(signups.length) },
   ];
 
   return (
@@ -65,6 +63,9 @@ export async function OverviewCards({ days }: Props) {
             <p className={`mt-1 text-2xl font-bold ${card.color ?? "text-cream"}`}>
               {card.value}
             </p>
+            {"sub" in card && card.sub && (
+              <p className="mt-0.5 text-xs text-gray-text/50">{card.sub}</p>
+            )}
           </div>
         ))}
       </div>

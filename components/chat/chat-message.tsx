@@ -9,9 +9,10 @@ interface ChatMessageProps {
   content: string;
   sources?: Source[];
   userAvatar?: string | null;
+  channelId?: string;
 }
 
-export function ChatMessage({ role, content, sources, userAvatar }: ChatMessageProps) {
+export function ChatMessage({ role, content, sources, userAvatar, channelId }: ChatMessageProps) {
   return (
     <div
       className={`flex gap-3 ${role === "user" ? "flex-row-reverse" : "flex-row"}`}
@@ -74,7 +75,7 @@ export function ChatMessage({ role, content, sources, userAvatar }: ChatMessageP
               Sources
             </span>
             {sources.map((source, i) => (
-              <SourceCard key={i} source={source} index={i} />
+              <SourceCard key={i} source={source} index={i} channelId={channelId} />
             ))}
           </div>
         )}

@@ -329,6 +329,7 @@ export default function TryPage() {
                       content={msg.content}
                       sources={msg.sources}
                       userAvatar={null}
+                      channelId={selectedChannel ?? undefined}
                     />
                   ))}
                 </div>

@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { formatChannelName } from "./utils";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,7 +14,6 @@ export async function ChannelRankings() {
     .select("event_type, channel_id, user_id, session_id")
     .in("event_type", ["search", "timestamp_click"])
     .gte("created_at", since)
-    .not("channel_id", "is", null)
     .limit(5000);
 
   const rows = events ?? [];
@@ -24,7 +24,7 @@ export async function ChannelRankings() {
   >();
 
   for (const row of rows) {
-    const ch = row.channel_id!;
+    const ch = row.channel_id ?? "_no_channel";
     const existing = byChannel.get(ch);
     const uid = row.user_id ?? row.session_id;
     if (existing) {
@@ -43,6 +43,7 @@ export async function ChannelRankings() {
   }
 
   const rankings = Array.from(byChannel.entries())
+    .filter(([ch]) => ch !== "_no_channel")
     .map(([ch, d]) => ({
       channel: ch,
       searches: d.searches,
@@ -69,7 +70,7 @@ export async function ChannelRankings() {
             {rankings.map((r, i) => (
               <tr key={r.channel} className="border-b border-white/[0.03]">
                 <td className="py-2 pr-4 text-gray-text/40">{i + 1}</td>
-                <td className="py-2 pr-4 font-medium text-cream">{r.channel}</td>
+                <td className="py-2 pr-4 font-medium text-cream">{formatChannelName(r.channel)}</td>
                 <td className="py-2 pr-4 text-cream">{r.searches}</td>
                 <td className="py-2 pr-4 text-cream">{r.uniqueUsers}</td>
                 <td className="py-2 pr-4 text-primary">{r.clicks}</td>

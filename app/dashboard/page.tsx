@@ -449,7 +449,7 @@ export default function DashboardPage() {
             <div className="mx-auto max-w-3xl space-y-5 px-6 py-6 md:px-12">
               {messages.map((msg, i) => (
                 <div key={i} className="animate-[fadeUp_0.3s_ease-out]">
-                  <ChatMessage role={msg.role} content={msg.content} sources={msg.sources} userAvatar={userAvatar} />
+                  <ChatMessage role={msg.role} content={msg.content} sources={msg.sources} userAvatar={userAvatar} channelId={selectedChannel ?? undefined} />
                 </div>
               ))}
               {loading && <TypingIndicator />}

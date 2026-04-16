@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { formatChannelName } from "./utils";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,7 +30,7 @@ export async function SearchIntelligence() {
     const existing = byHash.get(hash);
     if (existing) {
       existing.count++;
-      if (row.query_raw) existing.raw = row.query_raw;
+      if (row.query_raw && !existing.raw) existing.raw = row.query_raw;
       if (row.channel_id) existing.channels.add(row.channel_id);
       existing.totalResults += row.result_count ?? 0;
       if (row.result_count === 0) existing.zeroCount++;
@@ -37,7 +38,7 @@ export async function SearchIntelligence() {
       const channels = new Set<string>();
       if (row.channel_id) channels.add(row.channel_id);
       byHash.set(hash, {
-        raw: row.query_raw,
+        raw: row.query_raw ?? null,
         count: 1,
         channels,
         totalResults: row.result_count ?? 0,
@@ -92,11 +93,17 @@ export async function SearchIntelligence() {
                     className={`border-b border-white/[0.03] ${isZero ? "bg-red-500/[0.05]" : ""}`}
                   >
                     <td className="py-2 pr-4 text-cream">
-                      {d.raw ?? hash.slice(0, 12) + "..."}
+                      {d.raw ? (
+                        d.raw
+                      ) : (
+                        <span className="cursor-help text-gray-text/60" title={hash}>
+                          {hash.slice(0, 12)}&hellip;
+                        </span>
+                      )}
                     </td>
                     <td className="py-2 pr-4 text-cream">{d.count}</td>
                     <td className="py-2 pr-4 text-gray-text">
-                      {Array.from(d.channels).join(", ") || "-"}
+                      {Array.from(d.channels).map(formatChannelName).join(", ") || "-"}
                     </td>
                     <td className={`py-2 pr-4 ${avgResults === 0 ? "font-semibold text-red-400" : "text-cream"}`}>
                       {avgResults}
@@ -131,7 +138,7 @@ export async function SearchIntelligence() {
             <tbody>
               {noResultRanking.map((r) => (
                 <tr key={r.channel} className="border-b border-white/[0.03]">
-                  <td className="py-2 pr-4 text-cream">{r.channel}</td>
+                  <td className="py-2 pr-4 text-cream">{formatChannelName(r.channel)}</td>
                   <td className="py-2 pr-4 text-cream">{r.total}</td>
                   <td className="py-2 pr-4 text-red-400">{r.noResult}</td>
                   <td className={`py-2 pr-4 font-semibold ${r.rate > 25 ? "text-red-400" : r.rate > 15 ? "text-yellow-400" : "text-cream"}`}>

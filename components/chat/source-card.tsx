@@ -9,6 +9,7 @@ import { track } from "@/lib/analytics/tracker";
 interface SourceCardProps {
   source: Source;
   index: number;
+  channelId?: string;
 }
 
 function parseTimestamp(ts: string): number {
@@ -32,7 +33,7 @@ function getYouTubeEmbedUrl(source: Source): string {
   return `https://www.youtube.com/embed/${source.video_id}?start=${seconds}&rel=0`;
 }
 
-export function SourceCard({ source, index }: SourceCardProps) {
+export function SourceCard({ source, index, channelId }: SourceCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const thumbnailUrl = source.video_id
@@ -131,7 +132,7 @@ export function SourceCard({ source, index }: SourceCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             // analytics
-            onClick={() => track("timestamp_click", { metadata: { videoId: source.video_id } })}
+            onClick={() => track("timestamp_click", { channelId, metadata: { videoId: source.video_id } })}
             className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary/80 transition-colors hover:text-primary"
           >
             Open on YouTube

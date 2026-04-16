@@ -64,7 +64,7 @@ export async function ConversionFunnel() {
                     style={{ width: `${widthPct}%` }}
                   >
                     {step.count}
-                    {dropoff !== null && (
+                    {dropoff !== null && dropoff > 0 && dropoff < 100 && (
                       <span className="ml-2 text-xs font-normal text-red-400/70">
                         -{dropoff}%
                       </span>
