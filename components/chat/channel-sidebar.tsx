@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { LogOut, Menu, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight, ArrowRight, Zap } from "lucide-react";
+import { LogOut, Menu, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight, ArrowRight, Zap, FileText } from "lucide-react";
 import type { Collection } from "@/lib/api";
 import type { SubscriptionTier } from "@/lib/tiers";
 import { TIER_LIMITS } from "@/lib/tiers";
@@ -233,6 +233,34 @@ export function ChannelSidebar({
             </span>
           )}
         </button>
+      </div>
+
+      {/* Transcripts link */}
+      <div className="px-3 pb-1">
+        {limits.hasTranscripts ? (
+          <Link
+            href="/dashboard/transcripts"
+            onClick={() => setMobileOpen(false)}
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-gray-text/60 transition-all duration-200 hover:bg-white/[0.04] hover:text-cream"
+          >
+            <FileText className="h-3.5 w-3.5 text-primary/60" />
+            <span className="text-[11px] font-medium">Browse transcripts</span>
+          </Link>
+        ) : (
+          <button
+            onClick={() => {
+              track("upgrade_click", { metadata: { trigger: "transcripts", current_tier: tier } });
+              router.push("/pricing");
+            }}
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-gray-text/60 transition-all duration-200 hover:bg-white/[0.04] hover:text-cream"
+          >
+            <FileText className="h-3.5 w-3.5 text-gray-text/30" />
+            <span className="text-[11px] font-medium">Browse transcripts</span>
+            <span className="ml-auto shrink-0 rounded-full border border-primary/20 px-1.5 py-px text-[8px] font-medium text-primary/60">
+              PRO
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Question counter */}
