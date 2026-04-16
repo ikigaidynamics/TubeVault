@@ -26,7 +26,8 @@ const TRIAL_LIMIT = 3;
 const TYPING_SPEED = 40;
 const HUBERMAN_LOGO = "https://mindvault.ikigai-dynamics.com/static/andrew_huberman_avatar.jpg";
 
-const DEFAULT_QUESTION = "How do I get better sleep?";
+const DEFAULT_QUESTION_SHORT = "How do I get better sleep?";
+const DEFAULT_QUESTION_LONG = "How do I get better sleep according to Huberman?";
 
 const HUBERMAN_EXAMPLES = [
   "What are the benefits of cold exposure?",
@@ -87,6 +88,39 @@ const CACHED_RESPONSES: Record<
         snippet:
           "Get the proper sleep surface, get the temperature right, get your light exposure right, start timing your exercise at normal periods throughout the day.",
         text: "And when you start doing that by controlling your sleep environment\u2014right, get the proper sleep surface, get the proper pillow, get the temperature in the room right, get your light exposure right, start timing your exercise at normal periods or times throughout the day and week.",
+      },
+    ],
+  },
+  "How do I get better sleep according to Huberman?": {
+    answer:
+      "According to Andrew Huberman, getting better sleep involves several key strategies. He emphasizes the importance of understanding both sleep and wakefulness, as they are interconnected and govern mental and physical health. Key tips include: optimizing your sleep environment (dark, cool, quiet), establishing a consistent sleep schedule, managing light exposure in the evening to promote melatonin production, limiting caffeine in the hours before bedtime, and developing a calming pre-sleep routine.",
+    sources: [
+      {
+        title: "Master Your Sleep & Be More Alert When Awake",
+        video_id: "nm1TxQj9IsQ",
+        timestamp: "6:12",
+        url: "https://www.youtube.com/watch?v=nm1TxQj9IsQ&t=372",
+        snippet:
+          "Sleep and wakefulness are governed by two forces: adenosine buildup and the circadian clock.",
+        text: "So what determines how well we sleep and the quality of our wakeful state? Turns out, that's governed by two forces. The first force is a chemical force; it's called adenosine. Adenosine is a molecule in our nervous system and body that builds up the longer we are awake.",
+      },
+      {
+        title: "Master Your Sleep & Be More Alert When Awake",
+        video_id: "nm1TxQj9IsQ",
+        timestamp: "26:18",
+        url: "https://www.youtube.com/watch?v=nm1TxQj9IsQ&t=1578",
+        snippet:
+          "When we wake up, if we're in a dark room, there isn't enough light to trigger the correct cortisol-melatonin rhythm.",
+        text: "So let's think about what happens when we do this correctly and how to do it correctly. When we wake up, our eyes open. Now, if we're in a dark room, there isn't enough light to trigger the correct timing of this cortisol-melatonin rhythm.",
+      },
+      {
+        title: "Sleep Toolkit: Tools for Optimizing Sleep & Sleep-Wake Timing",
+        video_id: "h2aWYjSA1Jc",
+        timestamp: "16:29",
+        url: "https://www.youtube.com/watch?v=h2aWYjSA1Jc&t=989",
+        snippet:
+          "You want cortisol to reach its peak early in the day. Getting bright light in your eyes within 30\u201360 minutes of waking ensures this.",
+        text: "You do want cortisol to reach its peak early in the day, right about the time you wake up. One way that you can ensure that that cortisol peak occurs early in the day, right about the time you wake up, is to get bright light in your eyes, ideally from sunlight, within the first 30 to 60 minutes after waking.",
       },
     ],
   },
@@ -296,11 +330,21 @@ export function HeroLiveDemo() {
   const [remaining, setRemaining] = useState(TRIAL_LIMIT);
   const [expandedSource, setExpandedSource] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const widgetRef = useRef<HTMLDivElement>(null);
+
+  // Responsive question — long on desktop, short on mobile
+  const [defaultQuestion, setDefaultQuestion] = useState(DEFAULT_QUESTION_SHORT);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setDefaultQuestion(window.innerWidth >= 640 ? DEFAULT_QUESTION_LONG : DEFAULT_QUESTION_SHORT);
+    }
+  }, []);
 
   // Typing animation state
   const [typedText, setTypedText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [hasAutoSearched, setHasAutoSearched] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   // Fetch collections
   useEffect(() => {
@@ -323,27 +367,43 @@ export function HeroLiveDemo() {
       .catch(() => {});
   }, []);
 
-  // Start typing animation on mount
+  // Start typing only when widget scrolls into view
   useEffect(() => {
-    if (selectedChannel !== "andrew_huberman") return;
+    const el = widgetRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          obs.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.3 }
+    );
+    obs.observe(el);
+    return () => { if (el) obs.unobserve(el); };
+  }, []);
+
+  // Start typing after visible + delay
+  useEffect(() => {
+    if (!isVisible || selectedChannel !== "andrew_huberman") return;
     const startDelay = setTimeout(() => setIsTyping(true), 600);
     return () => clearTimeout(startDelay);
-  }, [selectedChannel]);
+  }, [isVisible, selectedChannel]);
 
-  // Character-by-character typing — types out the question but does NOT auto-submit
+  // Character-by-character typing
   useEffect(() => {
     if (!isTyping || hasAutoSearched) return;
-    if (typedText.length < DEFAULT_QUESTION.length) {
+    if (typedText.length < defaultQuestion.length) {
       const timeout = setTimeout(() => {
-        const next = DEFAULT_QUESTION.slice(0, typedText.length + 1);
+        const next = defaultQuestion.slice(0, typedText.length + 1);
         setTypedText(next);
         setQuestion(next);
       }, TYPING_SPEED);
       return () => clearTimeout(timeout);
     }
-    // Typing done — just mark as finished, don't submit
     setHasAutoSearched(true);
-  }, [typedText, isTyping, hasAutoSearched]);
+  }, [typedText, isTyping, hasAutoSearched, defaultQuestion]);
 
   const selectedCollection = collections.find(
     (c) => c.name === selectedChannel
@@ -469,10 +529,10 @@ export function HeroLiveDemo() {
         ];
 
   // Show cursor during typing animation
-  const showCursor = isTyping && !hasAutoSearched && typedText.length < DEFAULT_QUESTION.length;
+  const showCursor = isTyping && !hasAutoSearched && typedText.length < defaultQuestion.length;
 
   return (
-    <div className="relative mx-auto w-full max-w-[900px] overflow-hidden">
+    <div ref={widgetRef} className="relative mx-auto w-full max-w-[900px] overflow-hidden">
       {/* Glow backdrop — no blur on mobile (iOS Safari counts blur beyond overflow:hidden) */}
       <div className="pointer-events-none absolute inset-0 rounded-3xl bg-primary/[0.08] sm:blur-3xl" />
 
