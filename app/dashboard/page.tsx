@@ -356,7 +356,7 @@ export default function DashboardPage() {
                             setInput(creator.question);
                             setTimeout(() => inputRef.current?.focus(), 100);
                           }}
-                          className="group flex flex-col items-center gap-4 rounded-2xl border border-[#2E2F31] bg-[#1C1D1F] px-5 py-7 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_0_20px_rgba(101,174,76,0.08)]"
+                          className="group flex flex-col items-center gap-4 rounded-2xl border border-[#2E2F31] bg-[#0A0A0B] px-5 py-7 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_0_20px_rgba(101,174,76,0.08)]"
                         >
                           {logoUrl ? (
                             <Image
