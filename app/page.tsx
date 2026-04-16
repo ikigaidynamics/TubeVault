@@ -131,7 +131,7 @@ export default function Home() {
                     alt={c.name}
                     width={48}
                     height={48}
-                    className="h-12 w-12 rounded-full object-cover opacity-70 transition-opacity hover:opacity-100"
+                    className="h-12 w-12 shrink-0 rounded-full object-cover opacity-70 transition-opacity hover:opacity-100"
                     unoptimized
                   />
                   <span className="max-w-[72px] text-center text-[10px] leading-tight text-gray-text/60">
