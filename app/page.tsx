@@ -12,7 +12,6 @@ import {
 import { HeroLiveDemo } from "@/components/landing/hero-live-demo";
 import { AnimateOnScroll } from "@/components/landing/animate-on-scroll";
 import { Navbar } from "@/components/shared/navbar";
-import { DebugOverflow } from "@/components/debug-overflow";
 
 const STEPS = [
   {
@@ -41,7 +40,6 @@ const STEPS = [
 export default function Home() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-dark-bg">
-      <DebugOverflow />
       {/* Navigation */}
       <div className="fixed top-0 z-50 w-full">
         <Navbar />
