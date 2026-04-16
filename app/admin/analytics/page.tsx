@@ -58,13 +58,13 @@ export default async function AdminAnalyticsPage({
 
       {/* Content */}
       <main className="mx-auto max-w-7xl space-y-12 px-6 py-8">
-        {/* @ts-expect-error Async Server Component */}
+        {/* @ts-ignore */}
         <OverviewCards days={days} />
-        {/* @ts-expect-error Async Server Component */}
+        {/* @ts-ignore */}
         <SearchIntelligence />
-        {/* @ts-expect-error Async Server Component */}
+        {/* @ts-ignore */}
         <ChannelRankings />
-        {/* @ts-expect-error Async Server Component */}
+        {/* @ts-ignore */}
         <ConversionFunnel />
       </main>
     </div>
