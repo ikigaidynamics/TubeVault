@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { ChevronDown, ExternalLink, Clock } from "lucide-react";
 import type { Source } from "@/lib/api";
+import { track } from "@/lib/analytics/tracker";
 
 interface SourceCardProps {
   source: Source;
@@ -129,6 +130,8 @@ export function SourceCard({ source, index }: SourceCardProps) {
             href={getYouTubeUrl(source)}
             target="_blank"
             rel="noopener noreferrer"
+            // analytics
+            onClick={() => track("timestamp_click", { metadata: { videoId: source.video_id } })}
             className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary/80 transition-colors hover:text-primary"
           >
             Open on YouTube

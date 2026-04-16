@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Search, ArrowRight, Video } from "lucide-react";
 import { createClient } from "@/lib/supabase";
+import { track } from "@/lib/analytics/tracker";
 import { Navbar } from "@/components/shared/navbar";
 import { HeroDemo } from "@/components/landing/hero-demo";
 import {
@@ -61,6 +62,8 @@ export default function ChannelsPage() {
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
+    // analytics
+    track("channel_view", { metadata: { page: "channels_browse" } });
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       setLoggedIn(!!user);

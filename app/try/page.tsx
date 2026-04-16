@@ -8,6 +8,7 @@ import { queryCollection, type Collection, type HistoryMessage, type Source } fr
 import { ChatMessage } from "@/components/chat/chat-message";
 import { TypingIndicator } from "@/components/chat/typing-indicator";
 import { Navbar } from "@/components/shared/navbar";
+import { track } from "@/lib/analytics/tracker";
 
 interface Message {
   role: "user" | "assistant";
@@ -82,6 +83,8 @@ export default function TryPage() {
   async function submitQuestion(q: string) {
     if (!q.trim() || !selectedChannel || loading) return;
     if (limitReached || remaining <= 0) {
+      // analytics
+      track("upgrade_click", { metadata: { trigger: "search_limit", current_tier: "trial" } });
       window.location.href = "/signup?bonus=trial";
       return;
     }
@@ -93,6 +96,8 @@ export default function TryPage() {
     if (!input.trim() || !selectedChannel || loading) return;
 
     if (limitReached || remaining <= 0) {
+      // analytics
+      track("upgrade_click", { metadata: { trigger: "search_limit", current_tier: "trial" } });
       window.location.href = "/signup?bonus=trial";
       return;
     }
@@ -116,6 +121,8 @@ export default function TryPage() {
       });
 
       if (incRes.status === 429) {
+        // analytics
+        track("upgrade_click", { metadata: { trigger: "search_limit", current_tier: "trial" } });
         window.location.href = "/signup?bonus=trial";
         return;
       }
@@ -126,6 +133,8 @@ export default function TryPage() {
 
       const history = getHistory();
       const data = await queryCollection(selectedChannel!, question, history);
+      // analytics
+      track("search", { channelId: selectedChannel!, query: question, resultCount: data.sources?.length ?? 0 });
 
       setMessages((prev) => [
         ...prev,

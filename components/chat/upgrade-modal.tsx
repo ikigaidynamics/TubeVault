@@ -2,6 +2,7 @@
 
 import { X, Zap } from "lucide-react";
 import Link from "next/link";
+import { track } from "@/lib/analytics/tracker";
 
 interface UpgradeModalProps {
   open: boolean;
@@ -37,6 +38,8 @@ export function UpgradeModal({
           <p className="mt-2 text-sm text-gray-text">{message}</p>
           <Link
             href="/pricing"
+            // analytics
+            onClick={() => track("upgrade_click", { metadata: { trigger: "manual" } })}
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
           >
             View Plans

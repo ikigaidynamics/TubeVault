@@ -16,6 +16,7 @@ import {
   Quote,
 } from "lucide-react";
 import { queryCollection, type Source, type Collection } from "@/lib/api";
+import { track } from "@/lib/analytics/tracker";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -394,6 +395,8 @@ export function HeroLiveDemo() {
       setSources(cached.sources);
       setSearched(true);
       setLoading(false);
+      // analytics
+      track("search", { channelId: selectedChannel, query, resultCount: cached.sources.length });
       return;
     }
 
@@ -407,6 +410,8 @@ export function HeroLiveDemo() {
       });
 
       if (incRes.status === 429) {
+        // analytics
+        track("upgrade_click", { metadata: { trigger: "search_limit", current_tier: "trial" } });
         window.location.href = "/signup?bonus=trial";
         return;
       }
@@ -415,6 +420,8 @@ export function HeroLiveDemo() {
       setRemaining(incData.remaining);
 
       const data = await queryCollection(selectedChannel, query, []);
+      // analytics
+      track("search", { channelId: selectedChannel, query, resultCount: data.sources?.length ?? 0 });
       setAnswer(data.answer);
       setSources(data.sources?.slice(0, 5) || []);
       setSearched(true);
@@ -812,6 +819,7 @@ export function HeroLiveDemo() {
                             href={getYouTubeUrl(source)}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() => track("timestamp_click", { channelId: selectedChannel, metadata: { videoId: source.video_id } })}
                             className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary/80 transition-colors hover:text-primary"
                           >
                             Open on YouTube

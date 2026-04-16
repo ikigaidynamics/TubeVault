@@ -8,6 +8,7 @@ import { LogOut, Menu, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight,
 import type { Collection } from "@/lib/api";
 import type { SubscriptionTier } from "@/lib/tiers";
 import { TIER_LIMITS } from "@/lib/tiers";
+import { track } from "@/lib/analytics/tracker";
 
 interface ChannelSidebarProps {
   collections: Collection[];
@@ -211,6 +212,8 @@ export function ChannelSidebar({
               onSearchAll?.();
               setMobileOpen(false);
             } else {
+              // analytics
+              track("upgrade_click", { metadata: { trigger: "channel_limit", current_tier: tier } });
               router.push("/pricing");
             }
           }}
@@ -251,6 +254,8 @@ export function ChannelSidebar({
           {qRemaining <= 0 && (
             <Link
               href="/pricing"
+              // analytics
+              onClick={() => track("upgrade_click", { metadata: { trigger: "search_limit", current_tier: tier } })}
               className="mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-primary/10 py-1.5 text-[10px] font-medium text-primary transition-colors hover:bg-primary/20"
             >
               Upgrade for unlimited
@@ -265,6 +270,8 @@ export function ChannelSidebar({
         <div className="px-3 pb-2">
           <Link
             href="/pricing"
+            // analytics
+            onClick={() => track("upgrade_click", { metadata: { trigger: "manual", current_tier: "free" } })}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-[12px] font-semibold text-white transition-colors hover:bg-primary-hover"
           >
             <Zap className="h-3.5 w-3.5" />

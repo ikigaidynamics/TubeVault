@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Loader2, Mail, Lock, ShieldCheck, Gift } from "lucide-react";
 import { createClient } from "@/lib/supabase";
+import { track } from "@/lib/analytics/tracker";
 
 function GoogleIcon() {
   return (
@@ -90,6 +91,8 @@ function SignupForm() {
       return;
     }
 
+    // analytics
+    track("signup", { metadata: { method: "email" } });
     setSuccess(true);
     setLoading(false);
   }
@@ -110,6 +113,8 @@ function SignupForm() {
         redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       },
     });
+    // analytics
+    if (!authError) track("signup", { metadata: { method: "google" } });
 
     if (authError) {
       setError(authError.message);

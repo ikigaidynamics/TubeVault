@@ -13,6 +13,7 @@ import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { TypingIndicator } from "@/components/chat/typing-indicator";
 import { UpgradeModal } from "@/components/chat/upgrade-modal";
+import { track } from "@/lib/analytics/tracker";
 import { ChannelPickerModal } from "@/components/chat/channel-picker-modal";
 import { TIER_LIMITS, type SubscriptionTier } from "@/lib/tiers";
 
@@ -147,6 +148,8 @@ export default function DashboardPage() {
     if (!input.trim() || (!selectedChannel && !searchAllActive) || loading) return;
 
     if (questionsRemaining !== null && questionsRemaining <= 0) {
+      // analytics
+      track("upgrade_click", { metadata: { trigger: "search_limit", current_tier: "free" } });
       setUpgradeModal({ open: true, title: "Daily Limit Reached", message: "You've used all 3 free questions today. Upgrade to Starter for more questions." });
       return;
     }
@@ -164,6 +167,8 @@ export default function DashboardPage() {
           setMessages((prev) => prev.slice(0, -1));
           setInput(question);
           setQuestionsRemaining(0);
+          // analytics
+          track("upgrade_click", { metadata: { trigger: "search_limit", current_tier: "free" } });
           setUpgradeModal({ open: true, title: "Daily Limit Reached", message: "You've used all 3 free questions today. Upgrade to Starter for more questions." });
           setLoading(false);
           return;
@@ -174,6 +179,8 @@ export default function DashboardPage() {
 
       const channelName = searchAllActive ? "_all" : selectedChannel!;
       const data = await queryCollection(channelName, question, getHistory());
+      // analytics
+      track("search", { channelId: channelName, query: question, resultCount: data.sources?.length ?? 0 });
 
       setMessages((prev) => [...prev, { role: "assistant", content: data.answer, sources: data.sources }]);
     } catch {
