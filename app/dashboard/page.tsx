@@ -362,8 +362,13 @@ export default function DashboardPage() {
                   <p className="text-[13px] leading-relaxed text-gray-text/50">
                     {searchAllActive
                       ? "Get answers from all creators with source links."
-                      : `${selectedCollection?.video_count || "All"} videos indexed. Every answer linked to the source.`}
+                      : selectedCollection?.description || `${selectedCollection?.video_count || "All"} videos indexed.`}
                   </p>
+                  {!searchAllActive && selectedCollection?.video_count && (
+                    <p className="text-[11px] text-gray-text/30">
+                      {selectedCollection.video_count} videos indexed
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex w-full flex-[0_0_38.2%] flex-col gap-2.5 md:w-auto">
