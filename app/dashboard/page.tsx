@@ -16,6 +16,8 @@ import { TypingIndicator } from "@/components/chat/typing-indicator";
 import { UpgradeModal } from "@/components/chat/upgrade-modal";
 import { track } from "@/lib/analytics/tracker";
 import { ChannelPickerModal } from "@/components/chat/channel-picker-modal";
+import { TruncatedText } from "@/components/chat/truncated-text";
+import { cleanDescription } from "@/lib/clean-description";
 import { TIER_LIMITS, type SubscriptionTier } from "@/lib/tiers";
 
 interface Message {
@@ -359,13 +361,19 @@ export default function DashboardPage() {
                       <>Explore <span className="text-cream">{selectedCollection?.display_name}</span></>
                     )}
                   </h2>
-                  <p className="text-[13px] leading-relaxed text-gray-text/50">
-                    {searchAllActive
-                      ? "Get answers from all creators with source links."
-                      : selectedCollection?.description || `${selectedCollection?.video_count || "All"} videos indexed.`}
-                  </p>
+                  {searchAllActive ? (
+                    <p className="text-[13px] leading-relaxed text-gray-text/50">
+                      Get answers from all creators with source links.
+                    </p>
+                  ) : selectedCollection?.description ? (
+                    <TruncatedText
+                      text={cleanDescription(selectedCollection.name, selectedCollection.description)}
+                      maxLength={200}
+                      className="text-[13px] leading-relaxed text-gray-text/50"
+                    />
+                  ) : null}
                   {!searchAllActive && selectedCollection?.video_count && (
-                    <p className="text-[11px] text-gray-text/30">
+                    <p className="mt-1 text-[11px] text-gray-text/30">
                       {selectedCollection.video_count} videos indexed
                     </p>
                   )}
