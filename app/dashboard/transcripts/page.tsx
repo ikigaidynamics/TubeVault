@@ -51,6 +51,7 @@ interface TranscriptChunk {
   start_time: number;
   end_time: number;
   chunk_index: number;
+  translations?: Record<string, string>;
 }
 
 interface TranscriptData {
@@ -111,6 +112,7 @@ function TranscriptsContent() {
   const [mobileShowTranscript, setMobileShowTranscript] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [showLangPicker, setShowLangPicker] = useState(false);
+  const [activeLang, setActiveLang] = useState<string | null>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -159,6 +161,7 @@ function TranscriptsContent() {
     setSelectedVideo(null);
     setTranscript(null);
     setMobileShowTranscript(false);
+    setActiveLang(null);
     setVideosLoading(true);
     setSelectedPlaylist("All");
 
@@ -219,18 +222,31 @@ function TranscriptsContent() {
   }
 
   async function handleTranslate(lang: string) {
-    if (!selectedVideo || !selectedChannel || translating) return;
+    if (!selectedVideo || !selectedChannel) return;
+
+    // If already translated to this language, just toggle
+    const alreadyCached = transcript?.available_translations?.includes(lang);
+    if (alreadyCached && !translating) {
+      // Check if chunks already have the translation data
+      const hasData = transcript?.chunks?.[0]?.translations?.[lang];
+      if (hasData) {
+        setActiveLang(activeLang === lang ? null : lang);
+        return;
+      }
+    }
+
+    if (translating) return;
     const vid = selectedVideo;
     const ch = selectedChannel;
     setTranslating(true);
     setShowLangPicker(false);
 
-    // Abort if it takes longer than 120s
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 120_000);
 
     try {
-      const res = await fetch(
+      // Trigger translation (may already be cached server-side)
+      await fetch(
         `${API_BASE_URL}/transcript/${vid}/translate?collection=${ch}`,
         {
           method: "POST",
@@ -240,12 +256,15 @@ function TranscriptsContent() {
         }
       );
       clearTimeout(timeout);
-      // Only update if user is still on the same video
-      if (res.ok && selectedVideo === vid) {
+      // Refetch transcript with translation data
+      if (selectedVideo === vid) {
         const tRes = await fetch(`${API_BASE_URL}/transcript/${vid}?collection=${ch}`);
         if (tRes.ok) {
           const data = await tRes.json();
-          if (data?.chunks && selectedVideo === vid) setTranscript(data as TranscriptData);
+          if (data?.chunks && selectedVideo === vid) {
+            setTranscript(data as TranscriptData);
+            setActiveLang(lang);
+          }
         }
       }
     } catch {
@@ -528,36 +547,57 @@ function TranscriptsContent() {
                         )}
                       </div>
 
-                      {/* Translate button */}
-                      <div className="relative">
-                        <button
-                          onClick={() => setShowLangPicker(!showLangPicker)}
-                          disabled={translating}
-                          className="flex items-center gap-1.5 rounded-xl border border-[#2E2F31] bg-[#1C1D1F] px-3 py-2 text-xs font-medium text-gray-text/60 transition-colors hover:border-primary/20 hover:text-cream disabled:opacity-50"
-                        >
-                          {translating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Languages className="h-3.5 w-3.5" />}
-                          Translate
-                        </button>
-                        {showLangPicker && (
-                          <>
-                            <div className="fixed inset-0 z-10" onClick={() => setShowLangPicker(false)} />
-                            <div className="absolute right-0 top-full z-20 mt-1 max-h-60 w-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-[#1C1D1F] py-1 shadow-xl">
-                              {LANGUAGES.map((lang) => {
-                                const available = transcript.available_translations?.includes(lang.code);
-                                return (
-                                  <button
-                                    key={lang.code}
-                                    onClick={() => handleTranslate(lang.code)}
-                                    className="flex w-full items-center justify-between px-3 py-2 text-left text-xs text-gray-text/80 transition-colors hover:bg-white/[0.06] hover:text-cream"
-                                  >
-                                    {lang.label}
-                                    {available && <span className="text-[9px] text-primary/60">cached</span>}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </>
+                      {/* Translate button + toggle */}
+                      <div className="flex items-center gap-2">
+                        {activeLang && (
+                          <button
+                            onClick={() => setActiveLang(null)}
+                            className="rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary/10"
+                          >
+                            {LANGUAGES.find((l) => l.code === activeLang)?.label ?? activeLang} ✕
+                          </button>
                         )}
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowLangPicker(!showLangPicker)}
+                            disabled={translating}
+                            className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium transition-colors disabled:opacity-50 ${
+                              activeLang
+                                ? "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
+                                : "border-[#2E2F31] bg-[#1C1D1F] text-gray-text/60 hover:border-primary/20 hover:text-cream"
+                            }`}
+                          >
+                            {translating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Languages className="h-3.5 w-3.5" />}
+                            {translating ? "Translating..." : "Translate"}
+                          </button>
+                          {showLangPicker && (
+                            <>
+                              <div className="fixed inset-0 z-10" onClick={() => setShowLangPicker(false)} />
+                              <div className="absolute right-0 top-full z-20 mt-1 max-h-60 w-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-[#1C1D1F] py-1 shadow-xl">
+                                {LANGUAGES.map((lang) => {
+                                  const available = transcript.available_translations?.includes(lang.code);
+                                  const isActive = activeLang === lang.code;
+                                  return (
+                                    <button
+                                      key={lang.code}
+                                      onClick={() => handleTranslate(lang.code)}
+                                      className={`flex w-full items-center justify-between px-3 py-2 text-left text-xs transition-colors hover:bg-white/[0.06] hover:text-cream ${
+                                        isActive ? "bg-primary/5 text-primary" : "text-gray-text/80"
+                                      }`}
+                                    >
+                                      {lang.label}
+                                      {isActive ? (
+                                        <span className="text-[9px] font-medium text-primary">active</span>
+                                      ) : available ? (
+                                        <span className="text-[9px] text-primary/60">cached</span>
+                                      ) : null}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -654,17 +694,22 @@ function TranscriptsContent() {
                                   </button>
                                 </div>
                               </div>
-                            ) : (
-                              <p className="text-sm leading-relaxed text-cream/80">
-                                {searchQuery && isPreview
-                                  ? chunk.text.split(new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi")).map((part, j) =>
-                                      part.toLowerCase() === searchQuery.toLowerCase()
-                                        ? <mark key={j} className="rounded bg-primary/20 px-0.5 text-cream">{part}</mark>
-                                        : part
-                                    )
-                                  : chunk.text}
-                              </p>
-                            )}
+                            ) : (() => {
+                              const displayText = activeLang && chunk.translations?.[activeLang]
+                                ? chunk.translations[activeLang]
+                                : chunk.text;
+                              return (
+                                <p className="text-sm leading-relaxed text-cream/80">
+                                  {searchQuery && isPreview
+                                    ? displayText.split(new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi")).map((part, j) =>
+                                        part.toLowerCase() === searchQuery.toLowerCase()
+                                          ? <mark key={j} className="rounded bg-primary/20 px-0.5 text-cream">{part}</mark>
+                                          : part
+                                      )
+                                    : displayText}
+                                </p>
+                              );
+                            })()}
                           </div>
                         );
                       })}
