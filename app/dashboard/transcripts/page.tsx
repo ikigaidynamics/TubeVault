@@ -66,6 +66,7 @@ interface VideoItem {
   video_url?: string;
   duration_str?: string;
   upload_date?: string;
+  playlists?: string[];
 }
 
 function formatTime(seconds: number): string {
@@ -105,6 +106,7 @@ function TranscriptsContent() {
   const [userEmail, setUserEmail] = useState("");
   const [upgradeModal, setUpgradeModal] = useState({ open: false });
   const [pickedChannels, setPickedChannels] = useState<string[]>([]);
+  const [selectedPlaylist, setSelectedPlaylist] = useState<string>("All");
   const [mobileShowTranscript, setMobileShowTranscript] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [showLangPicker, setShowLangPicker] = useState(false);
@@ -155,6 +157,7 @@ function TranscriptsContent() {
     setTranscript(null);
     setMobileShowTranscript(false);
     setVideosLoading(true);
+    setSelectedPlaylist("All");
 
     fetch(`${API_BASE_URL}/all-videos?collection=${selectedChannel}`)
       .then((r) => r.json())
@@ -166,6 +169,7 @@ function TranscriptsContent() {
             video_url: v.video_url,
             duration_str: v.duration_str,
             upload_date: v.upload_date,
+            playlists: v.playlists,
           })));
         }
       })
@@ -258,9 +262,16 @@ function TranscriptsContent() {
     searchQuery ? c.text.toLowerCase().includes(searchQuery.toLowerCase()) : true
   );
 
-  const filteredVideos = videos.filter((v) =>
-    videoSearch ? v.title.toLowerCase().includes(videoSearch.toLowerCase()) : true
-  );
+  // Extract unique playlists from videos
+  const allPlaylists = Array.from(
+    new Set(videos.flatMap((v) => v.playlists ?? []))
+  ).sort();
+
+  const filteredVideos = videos.filter((v) => {
+    if (videoSearch && !v.title.toLowerCase().includes(videoSearch.toLowerCase())) return false;
+    if (selectedPlaylist !== "All" && !(v.playlists ?? []).includes(selectedPlaylist)) return false;
+    return true;
+  });
 
   const selectedCollection = collections.find((c) => c.name === selectedChannel);
 
@@ -278,7 +289,7 @@ function TranscriptsContent() {
         pickedChannels={pickedChannels}
         lockedUntil={null}
         canChange={false}
-        onSearchAll={() => {}}
+        onSearchAll={() => router.push("/dashboard")}
         searchAllActive={false}
         questionsRemaining={null}
         questionLimit={null}
@@ -339,10 +350,37 @@ function TranscriptsContent() {
                       className="flex-1 bg-transparent text-sm text-cream placeholder:text-gray-text/35 focus:outline-none"
                     />
                   </div>
+                  {!videosLoading && allPlaylists.length > 0 && (
+                    <div className="mt-2 flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+                      <button
+                        onClick={() => setSelectedPlaylist("All")}
+                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
+                          selectedPlaylist === "All"
+                            ? "bg-primary/10 text-primary"
+                            : "text-gray-text/40 hover:text-cream"
+                        }`}
+                      >
+                        All
+                      </button>
+                      {allPlaylists.map((pl) => (
+                        <button
+                          key={pl}
+                          onClick={() => setSelectedPlaylist(pl)}
+                          className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
+                            selectedPlaylist === pl
+                              ? "bg-primary/10 text-primary"
+                              : "text-gray-text/40 hover:text-cream"
+                          }`}
+                        >
+                          {pl}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   {!videosLoading && (
-                    <p className="mt-2 text-[10px] text-gray-text/30">
+                    <p className="mt-1.5 text-[10px] text-gray-text/30">
                       {filteredVideos.length} video{filteredVideos.length !== 1 ? "s" : ""}
-                      {selectedCollection ? ` in ${selectedCollection.display_name}` : ""}
+                      {selectedPlaylist !== "All" ? ` in "${selectedPlaylist}"` : selectedCollection ? ` in ${selectedCollection.display_name}` : ""}
                     </p>
                   )}
                 </div>
