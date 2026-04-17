@@ -23,7 +23,7 @@ const API_BASE_URL =
   "https://mindvault.ikigai-dynamics.com/api";
 
 const TRIAL_LIMIT = 3;
-const TYPING_SPEED = 40;
+const TYPING_SPEED = 55;
 const HUBERMAN_LOGO = "https://mindvault.ikigai-dynamics.com/static/andrew_huberman_avatar.jpg";
 
 const DEFAULT_QUESTION_SHORT = "How do I get better sleep?";
@@ -461,7 +461,7 @@ export function HeroLiveDemo() {
     const cached = currentChannel === "andrew_huberman" ? CACHED_RESPONSES[query] : undefined;
     if (cached) {
       setLoading(true);
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, 1200));
       setChatHistory((prev) => [...prev, {
         question: query, answer: cached.answer, sources: cached.sources,
         channel: currentChannel, channelDisplay: currentDisplayName,
