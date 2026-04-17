@@ -10,7 +10,6 @@ import {
   ArrowLeft,
   Search,
   FileText,
-  Lock,
   Pencil,
   Check,
   X,
@@ -25,6 +24,7 @@ import { type Collection } from "@/lib/api";
 import { type SubscriptionTier } from "@/lib/tiers";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { UpgradeModal } from "@/components/chat/upgrade-modal";
+import { TranscriptUpgradeWall } from "@/components/chat/transcript-upgrade-wall";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -323,17 +323,6 @@ function TranscriptsContent() {
             <div className="flex flex-1 items-center justify-center">
               <Loader2 className="h-6 w-6 animate-spin text-primary/50" />
             </div>
-          ) : !hasAccess ? (
-            <div className="flex flex-1 items-center justify-center px-6">
-              <div className="w-full max-w-md rounded-2xl border border-[#2E2F31] bg-[#141516] p-8 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                  <Lock className="h-7 w-7 text-primary" />
-                </div>
-                <h2 className="mt-5 text-xl font-semibold text-cream">Transcript Access</h2>
-                <p className="mt-2 text-sm text-gray-text">Browse full transcripts with search, timestamps, and translations. Available on Pro and above.</p>
-                <Link href="/pricing" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover">Upgrade to Pro</Link>
-              </div>
-            </div>
           ) : !selectedChannel ? (
             <div className="flex flex-1 items-center justify-center px-6">
               <div className="text-center">
@@ -555,70 +544,113 @@ function TranscriptsContent() {
                       </div>
                     </div>
 
-                    {/* Chunks */}
+                    {/* Chunks — tiered access */}
                     <div className="space-y-0.5">
-                      {filteredChunks.map((chunk) => (
-                        <div
-                          key={chunk.chunk_index}
-                          className="group border-b border-white/[0.03] py-3 transition-colors"
-                        >
-                          <div className="mb-1.5 flex items-center gap-2">
-                            <button
-                              onClick={() => seekTo(Math.floor(chunk.start_time))}
-                              className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary/20"
-                            >
-                              <Clock className="h-2.5 w-2.5" />
-                              {formatTime(chunk.start_time)}
-                            </button>
-                            <span className="text-[10px] text-gray-text/25">— {formatTime(chunk.end_time)}</span>
+                      {filteredChunks.map((chunk, idx) => {
+                        const isFree = !hasAccess;
+                        const isPreview = idx < 5 || !isFree;
+                        const isBlurring = isFree && idx >= 5 && idx < 8;
+                        const isHidden = isFree && idx >= 8;
 
-                            {isCreatorForChannel && editingChunk !== chunk.chunk_index && (
-                              <button
-                                onClick={() => { setEditingChunk(chunk.chunk_index); setEditText(chunk.text); }}
-                                className="ml-auto hidden items-center gap-1 rounded px-2 py-0.5 text-[10px] text-gray-text/40 transition-colors hover:bg-white/[0.06] hover:text-cream group-hover:flex"
-                              >
-                                <Pencil className="h-3 w-3" /> Edit
-                              </button>
-                            )}
-                          </div>
-
-                          {editingChunk === chunk.chunk_index ? (
-                            <div>
-                              <textarea
-                                value={editText}
-                                onChange={(e) => setEditText(e.target.value)}
-                                rows={4}
-                                className="w-full rounded-lg border border-primary/30 bg-[#1C1D1F] p-3 text-sm text-cream focus:outline-none"
+                        // Upgrade wall at position 8
+                        if (isHidden && idx === 8) {
+                          return (
+                            <div key="upgrade-wall">
+                              <TranscriptUpgradeWall
+                                totalChunks={transcript.chunks.length}
+                                channelName={selectedCollection?.display_name}
+                                videoTitle={transcript.video_title}
                               />
-                              <div className="mt-2 flex items-center gap-2">
-                                <button
-                                  onClick={() => handleSaveEdit(chunk.chunk_index)}
-                                  disabled={saving}
-                                  className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
-                                >
-                                  {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Save
-                                </button>
-                                <button
-                                  onClick={() => setEditingChunk(null)}
-                                  className="flex items-center gap-1 rounded-lg border border-[#2E2F31] px-3 py-1.5 text-xs text-gray-text transition-colors hover:text-cream"
-                                >
-                                  <X className="h-3 w-3" /> Cancel
-                                </button>
+                              {/* Blurred background content */}
+                              <div className="pointer-events-none relative mt-4 select-none">
+                                <div className="absolute inset-0 z-10 bg-gradient-to-b from-transparent to-[#0A0A0B]" />
+                                {filteredChunks.slice(8, 18).map((bg) => (
+                                  <div key={bg.chunk_index} className="border-b border-white/[0.02] py-3 opacity-30 blur-[6px]">
+                                    <div className="mb-1 flex items-center gap-2">
+                                      <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] text-primary">
+                                        {formatTime(bg.start_time)}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-cream/80">{bg.text}</p>
+                                  </div>
+                                ))}
                               </div>
                             </div>
-                          ) : (
-                            <p className="text-sm leading-relaxed text-cream/80">
-                              {searchQuery
-                                ? chunk.text.split(new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi")).map((part, j) =>
-                                    part.toLowerCase() === searchQuery.toLowerCase()
-                                      ? <mark key={j} className="rounded bg-primary/20 px-0.5 text-cream">{part}</mark>
-                                      : part
-                                  )
-                                : chunk.text}
-                            </p>
-                          )}
-                        </div>
-                      ))}
+                          );
+                        }
+
+                        // Skip chunks after upgrade wall (rendered as blurred background above)
+                        if (isHidden && idx > 8) return null;
+
+                        // Blur classes for transition zone
+                        const blurStyle = isBlurring
+                          ? { filter: `blur(${idx - 4}px)`, userSelect: "none" as const }
+                          : undefined;
+
+                        return (
+                          <div
+                            key={chunk.chunk_index}
+                            className={`group border-b border-white/[0.03] py-3 transition-colors ${isBlurring ? "pointer-events-none" : ""}`}
+                            style={blurStyle}
+                          >
+                            <div className="mb-1.5 flex items-center gap-2">
+                              <button
+                                onClick={() => seekTo(Math.floor(chunk.start_time))}
+                                className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary/20"
+                              >
+                                <Clock className="h-2.5 w-2.5" />
+                                {formatTime(chunk.start_time)}
+                              </button>
+                              <span className="text-[10px] text-gray-text/25">— {formatTime(chunk.end_time)}</span>
+
+                              {isPreview && isCreatorForChannel && editingChunk !== chunk.chunk_index && (
+                                <button
+                                  onClick={() => { setEditingChunk(chunk.chunk_index); setEditText(chunk.text); }}
+                                  className="ml-auto hidden items-center gap-1 rounded px-2 py-0.5 text-[10px] text-gray-text/40 transition-colors hover:bg-white/[0.06] hover:text-cream group-hover:flex"
+                                >
+                                  <Pencil className="h-3 w-3" /> Edit
+                                </button>
+                              )}
+                            </div>
+
+                            {isPreview && editingChunk === chunk.chunk_index ? (
+                              <div>
+                                <textarea
+                                  value={editText}
+                                  onChange={(e) => setEditText(e.target.value)}
+                                  rows={4}
+                                  className="w-full rounded-lg border border-primary/30 bg-[#1C1D1F] p-3 text-sm text-cream focus:outline-none"
+                                />
+                                <div className="mt-2 flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleSaveEdit(chunk.chunk_index)}
+                                    disabled={saving}
+                                    className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
+                                  >
+                                    {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Save
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingChunk(null)}
+                                    className="flex items-center gap-1 rounded-lg border border-[#2E2F31] px-3 py-1.5 text-xs text-gray-text transition-colors hover:text-cream"
+                                  >
+                                    <X className="h-3 w-3" /> Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-sm leading-relaxed text-cream/80">
+                                {searchQuery && isPreview
+                                  ? chunk.text.split(new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi")).map((part, j) =>
+                                      part.toLowerCase() === searchQuery.toLowerCase()
+                                        ? <mark key={j} className="rounded bg-primary/20 px-0.5 text-cream">{part}</mark>
+                                        : part
+                                    )
+                                  : chunk.text}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
 
                     {searchQuery && filteredChunks.length === 0 && (

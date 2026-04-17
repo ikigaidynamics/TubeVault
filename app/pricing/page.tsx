@@ -79,7 +79,7 @@ const tiers: Tier[] = [
       "Unlimited questions",
       "Chat search",
       "Full transcript access",
-      "Translation to 100+ languages",
+      "Translation to 10+ languages",
       "Forever search history",
       "Priority email support",
       "Request channels (priority)",
