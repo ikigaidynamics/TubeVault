@@ -767,7 +767,7 @@ export function HeroLiveDemo() {
                           {expandedSource === sKey && (
                             <div className="overflow-hidden border-t border-white/[0.06] px-3 pb-3 pt-3 animate-[fadeUp_0.3s_ease-out]">
                               {source.video_id && (
-                                <div className="mb-3 aspect-video w-full overflow-hidden rounded-lg">
+                                <div className="mb-3 aspect-video w-full max-w-sm overflow-hidden rounded-lg">
                                   <iframe src={getYouTubeEmbedUrl(source)} title={source.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="h-full w-full" />
                                 </div>
                               )}
