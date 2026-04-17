@@ -190,6 +190,7 @@ function TranscriptsContent() {
     const controller = new AbortController();
     setLoading(true);
     setTranscript(null);
+    setActiveLang(null);
 
     fetch(`${API_BASE_URL}/transcript/${selectedVideo}?collection=${selectedChannel}`, { signal: controller.signal })
       .then((r) => { if (!r.ok) throw new Error("Failed"); return r.json(); })
@@ -547,25 +548,41 @@ function TranscriptsContent() {
                         )}
                       </div>
 
-                      {/* Translate button + toggle */}
+                      {/* Language toggle + translate */}
                       <div className="flex items-center gap-2">
-                        {activeLang && (
-                          <button
-                            onClick={() => setActiveLang(null)}
-                            className="rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary/10"
-                          >
-                            {LANGUAGES.find((l) => l.code === activeLang)?.label ?? activeLang} ✕
-                          </button>
+                        {/* Toggle: English ↔ Translation */}
+                        {transcript.available_translations && transcript.available_translations.length > 0 && transcript.chunks?.[0]?.translations && (
+                          <div className="flex overflow-hidden rounded-lg border border-[#2E2F31]">
+                            <button
+                              onClick={() => setActiveLang(null)}
+                              className={`px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+                                !activeLang ? "bg-primary/10 text-primary" : "bg-[#1C1D1F] text-gray-text/50 hover:text-cream"
+                              }`}
+                            >
+                              English
+                            </button>
+                            {transcript.available_translations
+                              .filter((code) => transcript.chunks?.[0]?.translations?.[code])
+                              .map((code) => (
+                                <button
+                                  key={code}
+                                  onClick={() => setActiveLang(activeLang === code ? null : code)}
+                                  className={`border-l border-[#2E2F31] px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+                                    activeLang === code ? "bg-primary/10 text-primary" : "bg-[#1C1D1F] text-gray-text/50 hover:text-cream"
+                                  }`}
+                                >
+                                  {LANGUAGES.find((l) => l.code === code)?.label ?? code}
+                                </button>
+                              ))}
+                          </div>
                         )}
+
+                        {/* Add translation */}
                         <div className="relative">
                           <button
                             onClick={() => setShowLangPicker(!showLangPicker)}
                             disabled={translating}
-                            className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium transition-colors disabled:opacity-50 ${
-                              activeLang
-                                ? "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
-                                : "border-[#2E2F31] bg-[#1C1D1F] text-gray-text/60 hover:border-primary/20 hover:text-cream"
-                            }`}
+                            className="flex items-center gap-1.5 rounded-xl border border-[#2E2F31] bg-[#1C1D1F] px-3 py-2 text-xs font-medium text-gray-text/60 transition-colors hover:border-primary/20 hover:text-cream disabled:opacity-50"
                           >
                             {translating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Languages className="h-3.5 w-3.5" />}
                             {translating ? "Translating..." : "Translate"}
@@ -576,20 +593,20 @@ function TranscriptsContent() {
                               <div className="absolute right-0 top-full z-20 mt-1 max-h-60 w-48 overflow-y-auto rounded-xl border border-white/[0.08] bg-[#1C1D1F] py-1 shadow-xl">
                                 {LANGUAGES.map((lang) => {
                                   const available = transcript.available_translations?.includes(lang.code);
-                                  const isActive = activeLang === lang.code;
+                                  const hasData = transcript.chunks?.[0]?.translations?.[lang.code];
                                   return (
                                     <button
                                       key={lang.code}
                                       onClick={() => handleTranslate(lang.code)}
                                       className={`flex w-full items-center justify-between px-3 py-2 text-left text-xs transition-colors hover:bg-white/[0.06] hover:text-cream ${
-                                        isActive ? "bg-primary/5 text-primary" : "text-gray-text/80"
+                                        hasData ? "text-cream" : "text-gray-text/80"
                                       }`}
                                     >
                                       {lang.label}
-                                      {isActive ? (
-                                        <span className="text-[9px] font-medium text-primary">active</span>
+                                      {hasData ? (
+                                        <span className="text-[9px] text-primary/60">ready</span>
                                       ) : available ? (
-                                        <span className="text-[9px] text-primary/60">cached</span>
+                                        <span className="text-[9px] text-gray-text/40">cached</span>
                                       ) : null}
                                     </button>
                                   );
