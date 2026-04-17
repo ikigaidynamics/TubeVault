@@ -852,9 +852,13 @@ export function HeroLiveDemo() {
                               </>
                             )}
                           </div>
-                          {source.snippet && expandedSource !== i && (
+                          {(source.text || source.snippet) && expandedSource !== i && (
                             <p className="mt-1 break-words text-[11px] leading-relaxed text-gray-text/60">
-                              {source.snippet}
+                              {(() => {
+                                const preview = source.text || source.snippet || "";
+                                if (preview.length <= 120) return preview;
+                                return preview.slice(0, preview.lastIndexOf(" ", 120)) + "...";
+                              })()}
                             </p>
                           )}
                         </div>
