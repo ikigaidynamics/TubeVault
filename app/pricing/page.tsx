@@ -53,7 +53,7 @@ const tiers: Tier[] = [
     name: "Starter",
     slug: "starter",
     monthlyPrice: 9,
-    yearlyPrice: 90,
+    yearlyPrice: 69,
     description: "For curious minds who want more",
     features: [
       "10 channels accessible (locked 14 days)",
@@ -72,7 +72,7 @@ const tiers: Tier[] = [
     name: "Pro",
     slug: "pro",
     monthlyPrice: 19,
-    yearlyPrice: 190,
+    yearlyPrice: 149,
     description: "Full access for power users",
     features: [
       "All 30+ channels accessible",
@@ -93,7 +93,7 @@ const tiers: Tier[] = [
     name: "Premium",
     slug: "premium",
     monthlyPrice: 39,
-    yearlyPrice: 390,
+    yearlyPrice: 299,
     description: "Everything, plus exclusive features",
     features: [
       "Everything in Pro, plus:",
@@ -145,7 +145,7 @@ const faqs = [
   {
     question: "Do you offer discounts?",
     answer:
-      "Annual plans save you ~17% (2 months free). For students or non-profits, contact us.",
+      "Annual plans save you ~35% compared to monthly. For students or non-profits, contact us.",
   },
 ];
 
@@ -362,7 +362,7 @@ export default function PricingPage() {
                     : "bg-primary/10 text-primary"
                 }`}
               >
-                Save ~17%
+                Save ~35%
               </span>
             </button>
           </div>
