@@ -90,6 +90,7 @@ function TranscriptsContent() {
   const searchParams = useSearchParams();
 
   const [tier, setTier] = useState<SubscriptionTier>("free");
+  const [tierLoaded, setTierLoaded] = useState(false);
   const [creatorChannels, setCreatorChannels] = useState<string[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedChannel, setSelectedChannel] = useState<string | null>(searchParams.get("channel"));
@@ -131,6 +132,7 @@ function TranscriptsContent() {
             setTier(data.tier as SubscriptionTier);
             setCreatorChannels(data.creator_channels || []);
           }
+          setTierLoaded(true);
         });
     });
   }, [router]);
@@ -317,7 +319,11 @@ function TranscriptsContent() {
 
         {/* Main content */}
         <div className="flex flex-1 overflow-hidden">
-          {!hasAccess ? (
+          {!tierLoaded ? (
+            <div className="flex flex-1 items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-primary/50" />
+            </div>
+          ) : !hasAccess ? (
             <div className="flex flex-1 items-center justify-center px-6">
               <div className="w-full max-w-md rounded-2xl border border-[#2E2F31] bg-[#141516] p-8 text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
