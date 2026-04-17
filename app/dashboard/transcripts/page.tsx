@@ -204,6 +204,7 @@ function TranscriptsContent() {
         JSON.stringify({ event: "command", func: "seekTo", args: [seconds, true] }),
         "*"
       );
+      iframeRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }
 
