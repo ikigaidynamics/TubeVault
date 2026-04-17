@@ -468,7 +468,6 @@ export function HeroLiveDemo() {
       }]);
       setLoading(false);
       track("search", { channelId: currentChannel, query, resultCount: cached.sources.length });
-      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       return;
     }
 
@@ -496,7 +495,6 @@ export function HeroLiveDemo() {
         question: query, answer: data.answer, sources: data.sources?.slice(0, 5) || [],
         channel: currentChannel, channelDisplay: currentDisplayName,
       }]);
-      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -640,8 +638,50 @@ export function HeroLiveDemo() {
           )}
         </div>
 
-        {/* Chat area — scrollable when multiple Q&As */}
-        <div className="max-h-[600px] overflow-y-auto sm:max-h-[70vh]">
+        {/* Input area — at the top, or upgrade wall when exhausted */}
+        {remaining <= 0 && chatHistory.length > 0 ? (
+          <div className="border-b border-white/[0.06] px-3 py-5 sm:px-5 md:px-8">
+            <div className="rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/[0.05] to-transparent p-5">
+              <p className="text-sm font-semibold text-cream">You&apos;ve used your 3 free questions</p>
+              <p className="mt-1 text-xs text-gray-text">Create a free account for 3 daily questions, or go Pro for unlimited.</p>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <Link href="/signup" className="flex items-center justify-center gap-2 rounded-xl border border-primary/30 px-5 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10">
+                  Sign up free <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+                <Link href="/pricing" className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover">
+                  Go Pro &mdash; $19/mo <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+              <p className="mt-2 text-[10px] text-gray-text/40">No credit card needed for free plan</p>
+            </div>
+          </div>
+        ) : (
+          <div className="border-b border-white/[0.06] px-3 pt-4 pb-3 sm:px-5 md:px-8">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center">
+              <div className="relative flex flex-1 items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-3 transition-colors focus-within:border-primary/30 md:px-5 md:py-4">
+                <Search className="h-4 w-4 shrink-0 text-gray-text/60 md:h-5 md:w-5" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={question}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder={searched ? `Ask another question...` : `Ask ${channelDisplayName} anything...`}
+                  className="flex-1 bg-transparent text-base text-cream placeholder:text-gray-text/40 focus:outline-none"
+                />
+                {showCursor && (
+                  <span className="pointer-events-none absolute right-3 inline-block h-5 w-[2px] animate-pulse bg-primary md:right-5" />
+                )}
+              </div>
+              <button onClick={() => handleSearch()} disabled={loading || !question.trim() || remaining <= 0} className="h-14 shrink-0 rounded-xl bg-primary px-8 text-base font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:hover:bg-primary">
+                {loading ? "Searching..." : "Search"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Content area — examples before first search, then chat history */}
+        <div className="max-h-[500px] overflow-y-auto sm:max-h-[60vh]">
           {/* Example question cards — only before first search */}
           {!searched && !loading && (
             <div className="px-3 py-4 sm:px-5 md:px-8">
@@ -786,47 +826,6 @@ export function HeroLiveDemo() {
           <div ref={chatEndRef} />
         </div>
 
-        {/* Input area — or upgrade wall when exhausted */}
-        {remaining <= 0 && chatHistory.length > 0 ? (
-          <div className="border-t border-white/[0.06] px-3 py-5 sm:px-5 md:px-8">
-            <div className="rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/[0.05] to-transparent p-5">
-              <p className="text-sm font-semibold text-cream">You&apos;ve used your 3 free questions</p>
-              <p className="mt-1 text-xs text-gray-text">Create a free account for 3 daily questions, or go Pro for unlimited.</p>
-              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                <Link href="/signup" className="flex items-center justify-center gap-2 rounded-xl border border-primary/30 px-5 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10">
-                  Sign up free <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-                <Link href="/pricing" className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover">
-                  Go Pro &mdash; $19/mo <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-              <p className="mt-2 text-[10px] text-gray-text/40">No credit card needed for free plan</p>
-            </div>
-          </div>
-        ) : (
-          <div className="border-t border-white/[0.06] px-3 pt-4 pb-3 sm:px-5 md:px-8">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center">
-              <div className="relative flex flex-1 items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-3 transition-colors focus-within:border-primary/30 md:px-5 md:py-4">
-                <Search className="h-4 w-4 shrink-0 text-gray-text/60 md:h-5 md:w-5" />
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={question}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  placeholder={searched ? `Ask another question...` : `Ask ${channelDisplayName} anything...`}
-                  className="flex-1 bg-transparent text-base text-cream placeholder:text-gray-text/40 focus:outline-none"
-                />
-                {showCursor && (
-                  <span className="pointer-events-none absolute right-3 inline-block h-5 w-[2px] animate-pulse bg-primary md:right-5" />
-                )}
-              </div>
-              <button onClick={() => handleSearch()} disabled={loading || !question.trim() || remaining <= 0} className="h-14 shrink-0 rounded-xl bg-primary px-8 text-base font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:hover:bg-primary">
-                {loading ? "Searching..." : "Search"}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
