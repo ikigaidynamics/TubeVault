@@ -151,9 +151,10 @@ function TranscriptsContent() {
       .catch(() => {});
   }, []);
 
-  // Fetch videos
+  // Fetch videos — abort on channel change
   useEffect(() => {
     if (!selectedChannel) return;
+    const controller = new AbortController();
     setVideos([]);
     setSelectedVideo(null);
     setTranscript(null);
@@ -161,7 +162,7 @@ function TranscriptsContent() {
     setVideosLoading(true);
     setSelectedPlaylist("All");
 
-    fetch(`${API_BASE_URL}/all-videos?collection=${selectedChannel}`)
+    fetch(`${API_BASE_URL}/all-videos?collection=${selectedChannel}`, { signal: controller.signal })
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -177,19 +178,22 @@ function TranscriptsContent() {
       })
       .catch(() => {})
       .finally(() => setVideosLoading(false));
+    return () => controller.abort();
   }, [selectedChannel]);
 
-  // Fetch transcript
+  // Fetch transcript — abort on video change
   useEffect(() => {
     if (!selectedVideo || !selectedChannel) return;
+    const controller = new AbortController();
     setLoading(true);
     setTranscript(null);
 
-    fetch(`${API_BASE_URL}/transcript/${selectedVideo}?collection=${selectedChannel}`)
+    fetch(`${API_BASE_URL}/transcript/${selectedVideo}?collection=${selectedChannel}`, { signal: controller.signal })
       .then((r) => { if (!r.ok) throw new Error("Failed"); return r.json(); })
       .then((data) => { if (data && data.chunks) setTranscript(data as TranscriptData); })
       .catch(() => {})
       .finally(() => setLoading(false));
+    return () => controller.abort();
   }, [selectedVideo, selectedChannel]);
 
   function handleSelectChannel(name: string) {
@@ -216,27 +220,40 @@ function TranscriptsContent() {
 
   async function handleTranslate(lang: string) {
     if (!selectedVideo || !selectedChannel || translating) return;
+    const vid = selectedVideo;
+    const ch = selectedChannel;
     setTranslating(true);
     setShowLangPicker(false);
+
+    // Abort if it takes longer than 120s
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 120_000);
+
     try {
       const res = await fetch(
-        `${API_BASE_URL}/transcript/${selectedVideo}/translate?collection=${selectedChannel}`,
+        `${API_BASE_URL}/transcript/${vid}/translate?collection=${ch}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ target_lang: lang }),
+          signal: controller.signal,
         }
       );
-      if (res.ok) {
-        // Refetch transcript to get translated chunks
-        const tRes = await fetch(`${API_BASE_URL}/transcript/${selectedVideo}?collection=${selectedChannel}`);
+      clearTimeout(timeout);
+      // Only update if user is still on the same video
+      if (res.ok && selectedVideo === vid) {
+        const tRes = await fetch(`${API_BASE_URL}/transcript/${vid}?collection=${ch}`);
         if (tRes.ok) {
           const data = await tRes.json();
-          if (data?.chunks) setTranscript(data as TranscriptData);
+          if (data?.chunks && selectedVideo === vid) setTranscript(data as TranscriptData);
         }
       }
-    } catch { /* silent */ }
-    finally { setTranslating(false); }
+    } catch {
+      // AbortError or network error — silent
+    } finally {
+      clearTimeout(timeout);
+      setTranslating(false);
+    }
   }
 
   const isCreatorForChannel = tier === "creator" && selectedChannel !== null && creatorChannels.includes(selectedChannel);
