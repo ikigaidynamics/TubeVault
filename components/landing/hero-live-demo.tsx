@@ -316,21 +316,28 @@ function getLogoUrl(col: Collection | undefined): string | null {
     : col.logo;
 }
 
+interface ChatEntry {
+  question: string;
+  answer: string;
+  sources: Source[];
+  channel: string;
+  channelDisplay: string;
+}
+
 export function HeroLiveDemo() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedChannel, setSelectedChannel] = useState("andrew_huberman");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState<string | null>(null);
-  const [sources, setSources] = useState<Source[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatEntry[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showAllSources, setShowAllSources] = useState(false);
   const [remaining, setRemaining] = useState(TRIAL_LIMIT);
-  const [expandedSource, setExpandedSource] = useState<number | null>(null);
+  const [expandedSource, setExpandedSource] = useState<string | null>(null);
+  const [nudgeDismissed, setNudgeDismissed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const widgetRef = useRef<HTMLDivElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Responsive question — long on desktop, short on mobile
   const [defaultQuestion, setDefaultQuestion] = useState(DEFAULT_QUESTION_SHORT);
@@ -407,10 +414,10 @@ export function HeroLiveDemo() {
     setHasAutoSearched(true);
   }, [typedText, isTyping, hasAutoSearched, defaultQuestion]);
 
-  // Auto-submit after typing completes — user sees an answer without clicking
+  // Auto-submit after typing completes
   const hasAutoSubmitted = useRef(false);
   useEffect(() => {
-    if (hasAutoSearched && !hasAutoSubmitted.current && !searched && !loading && !answer && selectedChannel === "andrew_huberman") {
+    if (hasAutoSearched && !hasAutoSubmitted.current && chatHistory.length === 0 && !loading && selectedChannel === "andrew_huberman") {
       hasAutoSubmitted.current = true;
       handleSearch(defaultQuestion);
     }
@@ -429,17 +436,12 @@ export function HeroLiveDemo() {
   function handleChannelChange(name: string) {
     setSelectedChannel(name);
     setDropdownOpen(false);
-    setAnswer(null);
-    setSources([]);
-    setSearched(false);
     setError(null);
     setQuestion("");
     setExpandedSource(null);
-    // Stop typing animation if channel changes
     setIsTyping(false);
     setTypedText("");
     setHasAutoSearched(true);
-    // Don't auto-focus on mobile — iOS Safari zooms into focused inputs
     if (window.innerWidth >= 640) {
       inputRef.current?.focus();
     }
@@ -447,28 +449,26 @@ export function HeroLiveDemo() {
 
   async function handleSearch(q?: string) {
     const query = (q || question).trim();
-    if (!query || loading) return;
+    if (!query || loading || remaining <= 0) return;
 
-    setQuestion(query);
+    const currentChannel = selectedChannel;
+    const currentDisplayName = channelDisplayName;
+    setQuestion("");
     setError(null);
-    setAnswer(null);
-    setSources([]);
-    setSearched(false);
-    setShowAllSources(false);
     setExpandedSource(null);
 
     // Check for cached response (Huberman demo queries)
-    const cached = selectedChannel === "andrew_huberman" ? CACHED_RESPONSES[query] : undefined;
+    const cached = currentChannel === "andrew_huberman" ? CACHED_RESPONSES[query] : undefined;
     if (cached) {
-      // Brief loading flash for realism
       setLoading(true);
       await new Promise((r) => setTimeout(r, 400));
-      setAnswer(cached.answer);
-      setSources(cached.sources);
-      setSearched(true);
+      setChatHistory((prev) => [...prev, {
+        question: query, answer: cached.answer, sources: cached.sources,
+        channel: currentChannel, channelDisplay: currentDisplayName,
+      }]);
       setLoading(false);
-      // analytics
-      track("search", { channelId: selectedChannel, query, resultCount: cached.sources.length });
+      track("search", { channelId: currentChannel, query, resultCount: cached.sources.length });
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       return;
     }
 
@@ -482,21 +482,21 @@ export function HeroLiveDemo() {
       });
 
       if (incRes.status === 429) {
-        // analytics
-        track("upgrade_click", { metadata: { trigger: "search_limit", current_tier: "trial" } });
-        window.location.href = "/signup?bonus=trial";
+        setRemaining(0);
+        setLoading(false);
         return;
       }
 
       const incData = await incRes.json();
       setRemaining(incData.remaining);
 
-      const data = await queryCollection(selectedChannel, query, []);
-      // analytics
-      track("search", { channelId: selectedChannel, query, resultCount: data.sources?.length ?? 0 });
-      setAnswer(data.answer);
-      setSources(data.sources?.slice(0, 5) || []);
-      setSearched(true);
+      const data = await queryCollection(currentChannel, query, []);
+      track("search", { channelId: currentChannel, query, resultCount: data.sources?.length ?? 0 });
+      setChatHistory((prev) => [...prev, {
+        question: query, answer: data.answer, sources: data.sources?.slice(0, 5) || [],
+        channel: currentChannel, channelDisplay: currentDisplayName,
+      }]);
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -525,11 +525,7 @@ export function HeroLiveDemo() {
     setQuestion(e.target.value);
   }
 
-  function toggleSource(i: number) {
-    setExpandedSource(expandedSource === i ? null : i);
-  }
-
-  const hasMoreSources = sources.length > 2 && !showAllSources;
+  const searched = chatHistory.length > 0;
 
   const exampleQuestions =
     selectedChannel === "andrew_huberman"
@@ -632,328 +628,202 @@ export function HeroLiveDemo() {
             </div>
           </div>
 
-          {/* Trial status */}
+          {/* Question counter */}
           {remaining > 0 ? (
-            <span className="text-xs font-medium text-gray-text/60">
-              {remaining}/{TRIAL_LIMIT} free questions remaining
+            <span className={`text-[11px] font-medium ${remaining === 1 ? "text-orange-400" : "text-gray-text/60"}`}>
+              {remaining} free question{remaining !== 1 ? "s" : ""} remaining
             </span>
           ) : (
-            <Link
-              href="/signup"
-              className="flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary-hover"
-            >
-              Sign up for unlimited questions
-              <ArrowRight className="h-3.5 w-3.5" />
+            <Link href="/signup" className="text-[11px] font-medium text-primary transition-colors hover:text-primary-hover">
+              Sign up for more &rarr;
             </Link>
           )}
         </div>
 
-        {/* Search input — bigger */}
-        <div className="px-3 pt-5 pb-4 sm:px-5 md:px-8">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <div className="relative flex flex-1 items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-3 transition-colors focus-within:border-primary/30 md:px-5 md:py-4">
-              <Search className="h-4 w-4 shrink-0 text-gray-text/60 md:h-5 md:w-5" />
-              <input
-                ref={inputRef}
-                type="text"
-                value={question}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                placeholder={`Ask ${channelDisplayName} anything...`}
-                className="flex-1 bg-transparent text-base text-cream placeholder:text-gray-text/40 focus:outline-none"
-              />
-              {showCursor && (
-                <span className="pointer-events-none absolute right-3 inline-block h-5 w-[2px] animate-pulse bg-primary md:right-5" />
-              )}
-            </div>
-            <button
-              onClick={() => handleSearch()}
-              disabled={loading || !question.trim()}
-              className="h-14 shrink-0 rounded-xl bg-primary px-8 text-base font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:hover:bg-primary"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg
-                    className="h-4 w-4 animate-spin"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                  Searching...
-                </span>
-              ) : (
-                "Search"
-              )}
-            </button>
-          </div>
-
-          {/* Benefit row */}
+        {/* Chat area — scrollable when multiple Q&As */}
+        <div className="max-h-[600px] overflow-y-auto sm:max-h-[70vh]">
+          {/* Example question cards — only before first search */}
           {!searched && !loading && (
-            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 md:flex md:items-center md:justify-center md:gap-6">
-              <span className="flex items-center gap-1.5 text-xs text-gray-text/60">
-                <Zap className="h-3 w-3 text-primary/60" /> 3-second answers
-              </span>
-              <span className="flex items-center gap-1.5 text-xs text-gray-text/60">
-                <MapPin className="h-3 w-3 text-primary/60" /> Exact timestamps
-              </span>
-              <span className="flex items-center gap-1.5 text-xs text-gray-text/60">
-                <Link2 className="h-3 w-3 text-primary/60" /> Direct video links
-              </span>
-              <span className="flex items-center gap-1.5 text-xs text-gray-text/60">
-                <Quote className="h-3 w-3 text-primary/60" /> Real quotes, verifiable
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Loading state — improved */}
-        {loading && (
-          <div className="px-3 pb-5 sm:px-5 md:px-8">
-            <div className="flex items-center gap-3 rounded-xl bg-white/[0.03] p-4">
-              <svg
-                className="h-4 w-4 animate-spin text-primary"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
-              </svg>
-              <span className="text-sm text-gray-text">
-                Finding the exact moment...
-              </span>
-            </div>
-            {/* Skeleton shimmer */}
-            <div className="mt-3 space-y-3">
-              <div className="h-4 w-3/4 animate-pulse rounded bg-white/[0.04]" />
-              <div className="h-4 w-full animate-pulse rounded bg-white/[0.04]" />
-              <div className="h-4 w-5/6 animate-pulse rounded bg-white/[0.04]" />
-            </div>
-          </div>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="px-3 pb-5 sm:px-5 md:px-8">
-            <div className="rounded-xl bg-red-500/10 p-4 text-sm text-red-400">
-              {error}
-            </div>
-          </div>
-        )}
-
-        {/* Result area */}
-        {searched && answer && (
-          <div className="animate-[fadeUp_0.5s_ease-out] overflow-hidden px-3 pb-6 sm:px-5 md:px-8">
-            {/* AI Answer */}
-            <div className="mb-4 overflow-hidden rounded-xl border border-primary/10 bg-white/[0.03] p-3 sm:p-5">
-              <div className="mb-3 flex items-center gap-2">
-                <Image
-                  src="/TubeVault_Logo_noBG.png"
-                  alt="TubeVault"
-                  width={22}
-                  height={22}
-                  className="h-[22px] w-[22px]"
-                />
-                <span className="text-xs font-semibold text-gray-text">
-                  Answer
+            <div className="px-3 py-4 sm:px-5 md:px-8">
+              <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 md:flex md:items-center md:justify-center md:gap-6">
+                <span className="flex items-center gap-1.5 text-xs text-gray-text/60">
+                  <Zap className="h-3 w-3 text-primary/60" /> 3-second answers
+                </span>
+                <span className="flex items-center gap-1.5 text-xs text-gray-text/60">
+                  <MapPin className="h-3 w-3 text-primary/60" /> Exact timestamps
+                </span>
+                <span className="flex items-center gap-1.5 text-xs text-gray-text/60">
+                  <Link2 className="h-3 w-3 text-primary/60" /> Direct video links
+                </span>
+                <span className="flex items-center gap-1.5 text-xs text-gray-text/60">
+                  <Quote className="h-3 w-3 text-primary/60" /> Real quotes, verifiable
                 </span>
               </div>
-              <div
-                className="prose-invert prose-sm max-w-none break-words text-sm leading-relaxed text-cream/90"
-                dangerouslySetInnerHTML={{
-                  __html: answer
-                    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                    .replace(/\n/g, "<br />"),
-                }}
-              />
-            </div>
-
-            {/* Sources */}
-            {sources.length > 0 && (
-              <div className="space-y-2">
-                <span className="text-[11px] font-medium uppercase tracking-wider text-gray-text/60">
-                  Sources
+              <div className="mt-4">
+                <span className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-gray-text/40">
+                  Examples
                 </span>
-                <div className="space-y-2">
-                  {sources.map((source, i) => (
-                    <div
-                      key={i}
-                      className={`rounded-lg border border-white/[0.06] bg-white/[0.02] transition-colors hover:border-primary/20 ${
-                        i >= 2 && !showAllSources ? "hidden md:block" : "block"
-                      }`}
-                    >
-                      {/* Source header — clickable */}
-                      <button
-                        onClick={() => toggleSource(i)}
-                        className="flex w-full items-start gap-2 p-2 text-left sm:gap-3 sm:p-3"
-                      >
-                        {/* Video thumbnail */}
-                        {source.video_id ? (
-                          <Image
-                            src={getThumbnailUrl(source.video_id)}
-                            alt=""
-                            width={120}
-                            height={68}
-                            className="h-[40px] w-[70px] shrink-0 rounded-md object-cover sm:h-[52px] sm:w-[92px]"
-                            unoptimized
-                          />
-                        ) : (
-                          <div className="flex h-[40px] w-[70px] shrink-0 items-center justify-center rounded-md bg-red-500/10 sm:h-[52px] sm:w-[92px]">
-                            <span className="text-red-400 text-xs">Video</span>
-                          </div>
-                        )}
-                        <div className="min-w-0 flex-1 overflow-hidden">
-                          <div className="flex items-center gap-2">
-                            <span className="truncate text-xs font-medium text-cream">
-                              {source.title}
-                            </span>
-                            <ChevronRight
-                              className={`h-3 w-3 shrink-0 text-gray-text/30 transition-transform ${
-                                expandedSource === i ? "rotate-90" : ""
-                              }`}
-                            />
-                          </div>
-                          <div className="mt-0.5 flex items-center gap-2">
-                            <span className="text-[11px] text-gray-text/70">
-                              {channelDisplayName}
-                            </span>
-                            {source.timestamp && (
-                              <>
-                                <span className="text-[11px] text-gray-text/30">
-                                  |
-                                </span>
-                                <span className="flex items-center gap-1 text-[11px] text-primary/70">
-                                  <Clock className="h-2.5 w-2.5" />
-                                  {source.timestamp}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                          {(source.text || source.snippet) && expandedSource !== i && (
-                            <p className="mt-1 break-words text-[11px] leading-relaxed text-gray-text/60">
-                              {(() => {
-                                const preview = source.text || source.snippet || "";
-                                if (preview.length <= 120) return preview;
-                                return preview.slice(0, preview.lastIndexOf(" ", 120)) + "...";
-                              })()}
-                            </p>
-                          )}
-                        </div>
-                      </button>
-
-                      {/* Expanded content */}
-                      {expandedSource === i && (
-                        <div className="overflow-hidden border-t border-white/[0.06] px-3 pb-3 pt-3 animate-[fadeUp_0.3s_ease-out]">
-                          {/* YouTube embed */}
-                          {source.video_id && (
-                            <div className="mb-3 aspect-video w-full overflow-hidden rounded-lg">
-                              <iframe
-                                src={getYouTubeEmbedUrl(source)}
-                                title={source.title}
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                                className="h-full w-full"
-                              />
-                            </div>
-                          )}
-                          {/* Transcript excerpt */}
-                          {source.text && (
-                            <div className="rounded-lg bg-white/[0.03] p-3">
-                              <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-gray-text/50">
-                                Transcript excerpt
-                              </span>
-                              <p className="break-words text-[12px] leading-relaxed text-cream/70 italic">
-                                &ldquo;{source.text}&rdquo;
-                              </p>
-                            </div>
-                          )}
-                          {/* Link to YouTube */}
-                          <a
-                            href={getYouTubeUrl(source)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => track("timestamp_click", { channelId: selectedChannel, metadata: { videoId: source.video_id } })}
-                            className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary/80 transition-colors hover:text-primary"
-                          >
-                            Open on YouTube
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </div>
-                      )}
-                    </div>
+                <div className="flex flex-col gap-2 md:flex-row md:gap-3">
+                  {exampleQuestions.map((q) => (
+                    <button key={q} onClick={() => handleExampleClick(q)} className="flex-1 rounded-xl border border-white/[0.06] bg-white/[0.04] px-4 py-3 text-left text-[13px] leading-relaxed text-gray-text/70 transition-colors duration-200 hover:border-primary/30 hover:text-cream">
+                      {q}
+                    </button>
                   ))}
                 </div>
-                {/* Mobile "Show more" button */}
-                {hasMoreSources && (
-                  <button
-                    onClick={() => setShowAllSources(true)}
-                    className="w-full rounded-lg border border-white/[0.06] py-2 text-center text-xs text-gray-text/60 transition-colors hover:border-primary/20 hover:text-cream md:hidden"
-                  >
-                    Show more sources ({sources.length - 2} more)
-                  </button>
+              </div>
+            </div>
+          )}
+
+          {/* Chat history */}
+          {chatHistory.map((entry, idx) => {
+            const sourceKey = `${idx}`;
+            return (
+              <div key={idx} className="animate-[fadeUp_0.4s_ease-out] border-t border-white/[0.04] px-3 py-4 sm:px-5 md:px-8">
+                {/* User question */}
+                <div className="mb-3 flex justify-end">
+                  <div className="max-w-[85%] rounded-2xl bg-primary/10 border border-primary/20 px-4 py-2.5 text-sm font-medium text-cream">
+                    {entry.question}
+                  </div>
+                </div>
+                {/* AI answer */}
+                <div className="mb-3 rounded-xl border border-[#1E1F21] bg-[#111213] p-3 sm:p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Image src="/TubeVault_Logo_noBG.png" alt="TubeVault" width={18} height={18} className="h-[18px] w-[18px]" />
+                    <span className="text-[10px] font-semibold text-gray-text/50">{entry.channelDisplay}</span>
+                  </div>
+                  <div className="prose-invert prose-sm max-w-none break-words text-sm leading-relaxed text-cream/90" dangerouslySetInnerHTML={{ __html: entry.answer.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br />") }} />
+                </div>
+                {/* Top 2 sources */}
+                {entry.sources.length > 0 && (
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-gray-text/40">Sources</span>
+                    {entry.sources.slice(0, 2).map((source, si) => {
+                      const sKey = `${sourceKey}-${si}`;
+                      return (
+                        <div key={si} className="rounded-lg border border-white/[0.06] bg-white/[0.02] transition-colors hover:border-primary/20">
+                          <button onClick={() => setExpandedSource(expandedSource === sKey ? null : sKey)} className="flex w-full items-start gap-2 p-2 text-left sm:gap-3 sm:p-3">
+                            {source.video_id && (
+                              <Image src={getThumbnailUrl(source.video_id)} alt="" width={120} height={68} className="h-[40px] w-[70px] shrink-0 rounded-md object-cover" unoptimized />
+                            )}
+                            <div className="min-w-0 flex-1 overflow-hidden">
+                              <div className="flex items-center gap-2">
+                                <span className="truncate text-xs font-medium text-cream">{source.title}</span>
+                                <ChevronRight className={`h-3 w-3 shrink-0 text-gray-text/30 transition-transform ${expandedSource === sKey ? "rotate-90" : ""}`} />
+                              </div>
+                              <div className="mt-0.5 flex items-center gap-2">
+                                {source.timestamp && (
+                                  <span className="flex items-center gap-1 text-[11px] text-primary/70">
+                                    <Clock className="h-2.5 w-2.5" />{source.timestamp}
+                                  </span>
+                                )}
+                              </div>
+                              {source.text && expandedSource !== sKey && (
+                                <p className="mt-1 break-words text-[11px] leading-relaxed text-gray-text/60">
+                                  {source.text.length <= 100 ? source.text : source.text.slice(0, source.text.lastIndexOf(" ", 100)) + "..."}
+                                </p>
+                              )}
+                            </div>
+                          </button>
+                          {expandedSource === sKey && (
+                            <div className="overflow-hidden border-t border-white/[0.06] px-3 pb-3 pt-3 animate-[fadeUp_0.3s_ease-out]">
+                              {source.video_id && (
+                                <div className="mb-3 aspect-video w-full overflow-hidden rounded-lg">
+                                  <iframe src={getYouTubeEmbedUrl(source)} title={source.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="h-full w-full" />
+                                </div>
+                              )}
+                              {source.text && (
+                                <div className="rounded-lg bg-white/[0.03] p-3">
+                                  <span className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-gray-text/50">Transcript excerpt</span>
+                                  <p className="break-words text-[12px] leading-relaxed text-cream/70 italic">&ldquo;{source.text}&rdquo;</p>
+                                </div>
+                              )}
+                              <a href={getYouTubeUrl(source)} target="_blank" rel="noopener noreferrer" onClick={() => track("timestamp_click", { channelId: entry.channel, metadata: { videoId: source.video_id } })} className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary/80 transition-colors hover:text-primary">
+                                Open on YouTube <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {/* Inline nudge after each answer */}
+                {!nudgeDismissed && remaining > 0 && idx === chatHistory.length - 1 && (
+                  <div className="mt-3 flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] p-3">
+                    <div>
+                      <p className="text-sm font-medium text-cream">That took 3 seconds</p>
+                      <p className={`text-xs ${remaining === 1 ? "text-orange-400" : "text-primary"}`}>
+                        {remaining} free question{remaining !== 1 ? "s" : ""} remaining
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Link href="/signup" className="text-xs font-medium text-primary transition-colors hover:text-primary-hover">Create free account &rarr;</Link>
+                      <button onClick={() => setNudgeDismissed(true)} className="text-gray-text/30 hover:text-cream"><span className="text-xs">&times;</span></button>
+                    </div>
+                  </div>
                 )}
               </div>
-            )}
+            );
+          })}
 
-            {/* CTAs after answer */}
-            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:gap-3">
-              <Link
-                href="/signup"
-                className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-xs font-semibold text-white transition-colors hover:bg-primary-hover sm:px-6 sm:text-sm"
-              >
-                Sign up for unlimited questions
-                <ArrowRight className="h-4 w-4 shrink-0" />
-              </Link>
-              <Link
-                href="/try"
-                className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] px-4 py-3 text-xs font-medium text-cream transition-colors hover:bg-white/[0.04] sm:px-6 sm:text-sm"
-              >
-                Try another question
-                <ArrowRight className="h-4 w-4 shrink-0" />
-              </Link>
+          {/* Loading */}
+          {loading && (
+            <div className="px-3 py-4 sm:px-5 md:px-8">
+              <div className="flex items-center gap-3 rounded-xl bg-white/[0.03] p-4">
+                <svg className="h-4 w-4 animate-spin text-primary" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                <span className="text-sm text-gray-text">TubeVault is searching...</span>
+              </div>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <div className="px-3 pb-4 sm:px-5 md:px-8">
+              <div className="rounded-xl bg-red-500/10 p-4 text-sm text-red-400">{error}</div>
+            </div>
+          )}
+
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* Input area — or upgrade wall when exhausted */}
+        {remaining <= 0 && chatHistory.length > 0 ? (
+          <div className="border-t border-white/[0.06] px-3 py-5 sm:px-5 md:px-8">
+            <div className="rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/[0.05] to-transparent p-5">
+              <p className="text-sm font-semibold text-cream">You&apos;ve used your 3 free questions</p>
+              <p className="mt-1 text-xs text-gray-text">Create a free account for 3 daily questions, or go Pro for unlimited.</p>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <Link href="/signup" className="flex items-center justify-center gap-2 rounded-xl border border-primary/30 px-5 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10">
+                  Sign up free <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+                <Link href="/pricing" className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover">
+                  Go Pro &mdash; $19/mo <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+              <p className="mt-2 text-[10px] text-gray-text/40">No credit card needed for free plan</p>
             </div>
           </div>
-        )}
-
-        {/* Example question cards — shown before first search */}
-        {!searched && !loading && (
-          <div className="px-3 pb-5 sm:px-5 md:px-8">
-            <span className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-gray-text/40">
-              Examples
-            </span>
-            <div className="flex flex-col gap-2 md:flex-row md:gap-3">
-            {exampleQuestions.map((q) => (
-              <button
-                key={q}
-                onClick={() => handleExampleClick(q)}
-                className="flex-1 rounded-xl border border-white/[0.06] bg-white/[0.04] px-4 py-3 text-left text-[13px] leading-relaxed text-gray-text/70 transition-colors duration-200 hover:border-primary/30 hover:text-cream"
-              >
-                {q}
+        ) : (
+          <div className="border-t border-white/[0.06] px-3 pt-4 pb-3 sm:px-5 md:px-8">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center">
+              <div className="relative flex flex-1 items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-3 transition-colors focus-within:border-primary/30 md:px-5 md:py-4">
+                <Search className="h-4 w-4 shrink-0 text-gray-text/60 md:h-5 md:w-5" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={question}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder={searched ? `Ask another question...` : `Ask ${channelDisplayName} anything...`}
+                  className="flex-1 bg-transparent text-base text-cream placeholder:text-gray-text/40 focus:outline-none"
+                />
+                {showCursor && (
+                  <span className="pointer-events-none absolute right-3 inline-block h-5 w-[2px] animate-pulse bg-primary md:right-5" />
+                )}
+              </div>
+              <button onClick={() => handleSearch()} disabled={loading || !question.trim() || remaining <= 0} className="h-14 shrink-0 rounded-xl bg-primary px-8 text-base font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:hover:bg-primary">
+                {loading ? "Searching..." : "Search"}
               </button>
-            ))}
             </div>
           </div>
         )}
