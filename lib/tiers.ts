@@ -34,7 +34,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
     maxQuestionsPerDay: Infinity,
     hasTranscripts: true,
     hasTranslation: true,
-    hasCrossChannelSearch: false,
+    hasCrossChannelSearch: true,
     hasPrioritySupport: false,
     hasTranscriptEditing: false,
   },

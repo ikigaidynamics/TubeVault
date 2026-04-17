@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS=--max-http-header-size=65536 next dev",
+    "dev": "cross-env NODE_OPTIONS=--max-http-header-size=131072 next dev",
     "build": "next build",
-    "start": "cross-env NODE_OPTIONS=--max-http-header-size=65536 next start",
+    "start": "cross-env NODE_OPTIONS=--max-http-header-size=131072 next start",
     "lint": "next lint"
   },
   "dependencies": {
@@ -26,6 +26,7 @@
     "next": "14.2.35",
     "react": "^18",
     "react-dom": "^18",
+    "recharts": "^3.8.1",
     "stripe": "^21.0.1",
     "tailwind-merge": "^3.5.0",
     "tailwindcss-animate": "^1.0.7"
