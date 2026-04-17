@@ -163,16 +163,23 @@ function TranscriptsContent() {
 
   // Fetch transcript when video selected
   useEffect(() => {
-    if (!selectedVideo) return;
+    if (!selectedVideo || !selectedChannel) return;
     setLoading(true);
     setTranscript(null);
 
-    fetch(`${API_BASE_URL}/transcript/${selectedVideo}`)
-      .then((r) => r.json())
-      .then((data: TranscriptData) => setTranscript(data))
+    fetch(`${API_BASE_URL}/transcript/${selectedVideo}?collection=${selectedChannel}`)
+      .then((r) => {
+        if (!r.ok) throw new Error("Failed");
+        return r.json();
+      })
+      .then((data) => {
+        if (data && data.chunks) {
+          setTranscript(data as TranscriptData);
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [selectedVideo]);
+  }, [selectedVideo, selectedChannel]);
 
   function handleSelectChannel(name: string) {
     setSelectedChannel(name);
@@ -207,7 +214,7 @@ function TranscriptsContent() {
     } catch { /* silent */ } finally { setSaving(false); }
   }
 
-  const filteredChunks = transcript?.chunks.filter((c) =>
+  const filteredChunks = (transcript?.chunks ?? []).filter((c) =>
     searchQuery ? c.text.toLowerCase().includes(searchQuery.toLowerCase()) : true
   );
 
@@ -504,7 +511,7 @@ function TranscriptsContent() {
                         ))}
                     </div>
 
-                    {filteredChunks?.length === 0 && (
+                    {searchQuery && filteredChunks.length === 0 && (
                       <p className="py-8 text-center text-sm text-gray-text/50">
                         No matches for &ldquo;{searchQuery}&rdquo;
                       </p>
