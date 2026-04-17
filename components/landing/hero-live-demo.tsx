@@ -407,6 +407,16 @@ export function HeroLiveDemo() {
     setHasAutoSearched(true);
   }, [typedText, isTyping, hasAutoSearched, defaultQuestion]);
 
+  // Auto-submit after typing completes — user sees an answer without clicking
+  const hasAutoSubmitted = useRef(false);
+  useEffect(() => {
+    if (hasAutoSearched && !hasAutoSubmitted.current && !searched && !loading && !answer && selectedChannel === "andrew_huberman") {
+      hasAutoSubmitted.current = true;
+      handleSearch(defaultQuestion);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasAutoSearched]);
+
   const selectedCollection = collections.find(
     (c) => c.name === selectedChannel
   );

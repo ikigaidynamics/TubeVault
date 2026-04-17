@@ -14,6 +14,7 @@ import { WelcomeScreen } from "@/components/chat/welcome-screen";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { TypingIndicator } from "@/components/chat/typing-indicator";
 import { UpgradeModal } from "@/components/chat/upgrade-modal";
+import { InlineUpgradeWall } from "@/components/chat/inline-upgrade-wall";
 import { track } from "@/lib/analytics/tracker";
 import { ChannelPickerModal } from "@/components/chat/channel-picker-modal";
 import { TruncatedText } from "@/components/chat/truncated-text";
@@ -56,6 +57,7 @@ export default function DashboardPage() {
   const [questionLimit, setQuestionLimit] = useState<number | null>(null);
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; title?: string; message?: string }>({ open: false });
   const [searchAllActive, setSearchAllActive] = useState(false);
+  const [showLimitWall, setShowLimitWall] = useState(false);
 
   const [pickedChannels, setPickedChannels] = useState<string[]>([]);
   const [lockedUntil, setLockedUntil] = useState<string | null>(null);
@@ -171,7 +173,7 @@ export default function DashboardPage() {
     if (questionsRemaining !== null && questionsRemaining <= 0) {
       // analytics
       track("upgrade_click", { metadata: { trigger: "search_limit", current_tier: "free" } });
-      setUpgradeModal({ open: true, title: "Daily Limit Reached", message: "You've used all 3 free questions today. Upgrade to Starter for more questions." });
+      setShowLimitWall(true);
       return;
     }
 
@@ -190,7 +192,7 @@ export default function DashboardPage() {
           setQuestionsRemaining(0);
           // analytics
           track("upgrade_click", { metadata: { trigger: "search_limit", current_tier: "free" } });
-          setUpgradeModal({ open: true, title: "Daily Limit Reached", message: "You've used all 3 free questions today. Upgrade to Starter for more questions." });
+          setShowLimitWall(true);
           setLoading(false);
           return;
         }
@@ -436,6 +438,9 @@ export default function DashboardPage() {
                 </div>
               ))}
               {loading && <TypingIndicator />}
+              {showLimitWall && (
+                <InlineUpgradeWall context="daily_limit" onDismiss={() => setShowLimitWall(false)} />
+              )}
               <div ref={chatEndRef} />
             </div>
           )}
