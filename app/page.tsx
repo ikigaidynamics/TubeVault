@@ -46,15 +46,29 @@ export default function Home() {
       </div>
 
       {/* Hero */}
-      <section className="hero-gradient grid-pattern relative flex min-h-[calc(100vh-3.5rem)] flex-col overflow-hidden pb-10 pt-24 md:justify-center md:pb-16 md:pt-28">
+      <section className="hero-gradient grid-pattern relative flex min-h-[calc(100vh-3.5rem)] flex-col overflow-hidden pb-10 pt-20 sm:pt-24 md:pb-16">
         <div className="pointer-events-none absolute left-1/2 top-[20%] hidden h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-primary/[0.04] blur-[140px] sm:block" />
 
         <div className="relative mx-auto w-full max-w-7xl px-6">
-          <AnimateOnScroll delay={150}>
-            <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.25em] text-[#65ae4c]">
+          {/* Pre-headline */}
+          <AnimateOnScroll delay={100}>
+            <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.25em] text-[#65ae4c]">
               Finally: Searchable YouTube.
             </p>
-            <h1 className="mx-auto max-w-4xl text-center text-3xl font-bold leading-[1.08] tracking-tight text-cream sm:text-4xl md:text-5xl lg:text-6xl">
+            <h2 className="mb-4 text-center text-lg font-bold text-cream sm:mb-6 sm:text-2xl md:text-3xl">
+              Try it here.{" "}
+              <span className="text-gray-text">No Signup.</span>
+            </h2>
+          </AnimateOnScroll>
+
+          {/* Demo widget — first thing visitors interact with */}
+          <AnimateOnScroll delay={200}>
+            <HeroLiveDemo />
+          </AnimateOnScroll>
+
+          {/* Headline + subtitle + CTAs below the demo */}
+          <AnimateOnScroll delay={400}>
+            <h1 className="mx-auto mt-10 max-w-4xl text-center text-2xl font-bold leading-[1.12] tracking-tight text-cream sm:mt-12 sm:text-3xl md:text-4xl lg:text-5xl">
               Find the exact answer from your favorite creators —{" "}
               <span className="bg-gradient-to-r from-primary to-[#7bc361] bg-clip-text text-transparent">
                 without hours of searching.
@@ -62,17 +76,17 @@ export default function Home() {
             </h1>
           </AnimateOnScroll>
 
-          <div className="mx-auto mt-6 max-w-2xl text-center">
-            <AnimateOnScroll delay={300}>
-              <p className="text-base leading-relaxed text-gray-text md:text-lg">
+          <div className="mx-auto mt-4 max-w-2xl text-center sm:mt-6">
+            <AnimateOnScroll delay={500}>
+              <p className="text-sm leading-relaxed text-gray-text sm:text-base md:text-lg">
                 No more &ldquo;where did they say that?&rdquo; — TubeVault searches
                 30+ trusted experts and gives you the exact quote, the exact
                 moment, and the exact source.
               </p>
             </AnimateOnScroll>
 
-            <AnimateOnScroll delay={400}>
-              <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+            <AnimateOnScroll delay={600}>
+              <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:mt-6 sm:flex-row sm:gap-4">
                 <Link
                   href="/try"
                   className="glow-pulse inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover sm:w-auto"
@@ -89,16 +103,6 @@ export default function Home() {
               </div>
             </AnimateOnScroll>
           </div>
-
-          <AnimateOnScroll delay={500}>
-            <div className="mt-16 md:mt-20">
-              <h2 className="mb-6 text-center text-2xl font-bold text-cream md:text-3xl">
-                Try it here.{" "}
-                <span className="text-gray-text">No Signup.</span>
-              </h2>
-              <HeroLiveDemo />
-            </div>
-          </AnimateOnScroll>
         </div>
       </section>
 
