@@ -49,6 +49,9 @@ interface VideoItem {
   video_id: string;
   title: string;
   video_url?: string;
+  duration_str?: string;
+  upload_date?: string;
+  playlists?: string[];
 }
 
 function formatTime(seconds: number): string {
@@ -138,22 +141,21 @@ function TranscriptsContent() {
     setMobileShowTranscript(false);
     setVideosLoading(true);
 
-    fetch(`${API_BASE_URL}/search/${selectedChannel}?q=*&limit=200`)
+    fetch(`${API_BASE_URL}/all-videos?collection=${selectedChannel}`)
       .then((r) => r.json())
       .then((data) => {
-        const videoMap = new Map<string, VideoItem>();
         if (Array.isArray(data)) {
-          for (const item of data) {
-            if (item.video_id && !videoMap.has(item.video_id)) {
-              videoMap.set(item.video_id, {
-                video_id: item.video_id,
-                title: item.video_title || item.video_id,
-                video_url: item.video_url,
-              });
-            }
-          }
+          setVideos(
+            data.map((v) => ({
+              video_id: v.video_id,
+              title: v.video_title || v.video_id,
+              video_url: v.video_url,
+              duration_str: v.duration_str,
+              upload_date: v.upload_date,
+              playlists: v.playlists,
+            }))
+          );
         }
-        setVideos(Array.from(videoMap.values()));
       })
       .catch(() => {})
       .finally(() => setVideosLoading(false));
@@ -347,6 +349,14 @@ function TranscriptsContent() {
                             <p className={`line-clamp-2 text-xs font-medium leading-relaxed ${active ? "text-cream" : "text-gray-text/80"}`}>
                               {v.title}
                             </p>
+                            <div className="mt-1 flex items-center gap-2 text-[10px] text-gray-text/40">
+                              {v.duration_str && <span>{v.duration_str}</span>}
+                              {v.upload_date && (
+                                <span>
+                                  {v.upload_date.slice(0, 4)}-{v.upload_date.slice(4, 6)}-{v.upload_date.slice(6, 8)}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </button>
                       );
