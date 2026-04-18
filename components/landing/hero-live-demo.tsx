@@ -523,9 +523,13 @@ export function HeroLiveDemo() {
   function handleChannelChange(name: string) {
     setSelectedChannel(name);
     setDropdownOpen(false);
+    setChatHistory([]);
+    setPendingQuestion(null);
     setError(null);
     setQuestion("");
     setExpandedSource(null);
+    setExpandedSources(new Set());
+    setNudgeDismissed(false);
     setIsTyping(false);
     setTypedText("");
     setHasAutoSearched(true);
