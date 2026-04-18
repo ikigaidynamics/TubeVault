@@ -413,6 +413,7 @@ export function HeroLiveDemo() {
   const [expandedSource, setExpandedSource] = useState<string | null>(null);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
   const [expandedSources, setExpandedSources] = useState<Set<number>>(new Set());
+  const [buttonPressed, setButtonPressed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const widgetRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -489,7 +490,15 @@ export function HeroLiveDemo() {
       }, TYPING_SPEED);
       return () => clearTimeout(timeout);
     }
-    setHasAutoSearched(true);
+    // Typing done — wait 1s, animate button press, then submit
+    const timeout = setTimeout(() => {
+      setButtonPressed(true);
+      setTimeout(() => {
+        setButtonPressed(false);
+        setHasAutoSearched(true);
+      }, 200);
+    }, 1000);
+    return () => clearTimeout(timeout);
   }, [typedText, isTyping, hasAutoSearched, defaultQuestion]);
 
   // Auto-submit after typing completes
@@ -763,7 +772,7 @@ export function HeroLiveDemo() {
                   <span className="pointer-events-none absolute right-3 inline-block h-5 w-[2px] animate-pulse bg-primary md:right-5" />
                 )}
               </div>
-              <button onClick={() => handleSearch()} disabled={loading || !question.trim() || remaining <= 0} className="h-14 shrink-0 rounded-xl bg-primary px-8 text-base font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:hover:bg-primary">
+              <button onClick={() => handleSearch()} disabled={loading || !question.trim() || remaining <= 0} className={`h-14 shrink-0 rounded-xl bg-primary px-8 text-base font-semibold text-white transition-all hover:bg-primary-hover disabled:opacity-50 disabled:hover:bg-primary ${buttonPressed ? "scale-95 brightness-110 shadow-[0_0_16px_rgba(101,174,76,0.4)]" : ""}`}>
                 {loading ? "Searching..." : "Search"}
               </button>
             </div>
@@ -899,6 +908,29 @@ export function HeroLiveDemo() {
                     <div className="flex items-center gap-2">
                       <Link href="/signup" className="text-xs font-medium text-primary transition-colors hover:text-primary-hover">Create free account &rarr;</Link>
                       <button onClick={() => setNudgeDismissed(true)} className="text-gray-text/30 hover:text-cream"><span className="text-xs">&times;</span></button>
+                    </div>
+                  </div>
+                )}
+                {/* Inline input after last answer so user doesn't have to scroll up */}
+                {idx === chatHistory.length - 1 && remaining > 0 && !loading && (
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5 transition-colors focus-within:border-primary/30">
+                      <Search className="h-4 w-4 shrink-0 text-gray-text/40" />
+                      <input
+                        type="text"
+                        value={question}
+                        onChange={handleInputChange}
+                        onKeyDown={handleKeyDown}
+                        placeholder={`Ask ${channelDisplayName} anything...`}
+                        className="flex-1 bg-transparent text-sm text-cream placeholder:text-gray-text/40 focus:outline-none"
+                      />
+                      <button
+                        onClick={() => handleSearch()}
+                        disabled={loading || !question.trim()}
+                        className="shrink-0 rounded-lg bg-primary px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-40"
+                      >
+                        Search
+                      </button>
                     </div>
                   </div>
                 )}
