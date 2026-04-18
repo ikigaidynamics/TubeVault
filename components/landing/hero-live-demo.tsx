@@ -331,6 +331,7 @@ export function HeroLiveDemo() {
   const [question, setQuestion] = useState("");
   const [chatHistory, setChatHistory] = useState<ChatEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [remaining, setRemaining] = useState(TRIAL_LIMIT);
   const [expandedSource, setExpandedSource] = useState<string | null>(null);
@@ -456,12 +457,15 @@ export function HeroLiveDemo() {
     setQuestion("");
     setError(null);
     setExpandedSource(null);
+    setPendingQuestion(query);
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
 
     // Check for cached response (Huberman demo queries)
     const cached = currentChannel === "andrew_huberman" ? CACHED_RESPONSES[query] : undefined;
     if (cached) {
       setLoading(true);
       await new Promise((r) => setTimeout(r, 1200));
+      setPendingQuestion(null);
       setChatHistory((prev) => [...prev, {
         question: query, answer: cached.answer, sources: cached.sources,
         channel: currentChannel, channelDisplay: currentDisplayName,
@@ -491,11 +495,13 @@ export function HeroLiveDemo() {
 
       const data = await queryCollection(currentChannel, query, []);
       track("search", { channelId: currentChannel, query, resultCount: data.sources?.length ?? 0 });
+      setPendingQuestion(null);
       setChatHistory((prev) => [...prev, {
         question: query, answer: data.answer, sources: data.sources?.slice(0, 5) || [],
         channel: currentChannel, channelDisplay: currentDisplayName,
       }]);
     } catch {
+      setPendingQuestion(null);
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -808,13 +814,20 @@ export function HeroLiveDemo() {
             );
           })}
 
-          {/* Loading */}
-          {loading && (
-            <div className="px-3 py-4 sm:px-5 md:px-8">
-              <div className="flex items-center gap-3 rounded-xl bg-white/[0.03] p-4">
-                <svg className="h-4 w-4 animate-spin text-primary" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                <span className="text-sm text-gray-text">TubeVault is searching...</span>
+          {/* Pending question + loading */}
+          {pendingQuestion && (
+            <div className="animate-[fadeUp_0.3s_ease-out] border-t border-white/[0.04] px-3 py-4 sm:px-5 md:px-8">
+              <div className="mb-3 flex justify-end">
+                <div className="max-w-[85%] rounded-2xl bg-primary/10 border border-primary/20 px-4 py-2.5 text-sm font-medium text-cream">
+                  {pendingQuestion}
+                </div>
               </div>
+              {loading && (
+                <div className="flex items-center gap-3 rounded-xl bg-white/[0.03] p-4">
+                  <svg className="h-4 w-4 animate-spin text-primary" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                  <span className="text-sm text-gray-text">TubeVault is searching...</span>
+                </div>
+              )}
             </div>
           )}
 
