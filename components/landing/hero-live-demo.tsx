@@ -336,6 +336,7 @@ export function HeroLiveDemo() {
   const [remaining, setRemaining] = useState(TRIAL_LIMIT);
   const [expandedSource, setExpandedSource] = useState<string | null>(null);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
+  const [expandedSources, setExpandedSources] = useState<Set<number>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
   const widgetRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -450,7 +451,11 @@ export function HeroLiveDemo() {
 
   async function handleSearch(q?: string) {
     const query = (q || question).trim();
-    if (!query || loading || remaining <= 0) return;
+    if (!query || loading) return;
+
+    // Allow cached responses even when trial exhausted (demo animation)
+    const isCached = selectedChannel === "andrew_huberman" && !!CACHED_RESPONSES[query];
+    if (remaining <= 0 && !isCached) return;
 
     const currentChannel = selectedChannel;
     const currentDisplayName = channelDisplayName;
@@ -742,11 +747,11 @@ export function HeroLiveDemo() {
                   </div>
                   <div className="prose-invert prose-sm max-w-none break-words text-sm leading-relaxed text-cream/90" dangerouslySetInnerHTML={{ __html: entry.answer.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br />") }} />
                 </div>
-                {/* Top 2 sources */}
+                {/* Sources — 2 visible, rest behind "+X more" */}
                 {entry.sources.length > 0 && (
                   <div className="space-y-1.5">
                     <span className="text-[10px] font-medium uppercase tracking-wider text-gray-text/40">Sources</span>
-                    {entry.sources.slice(0, 2).map((source, si) => {
+                    {(expandedSources.has(idx) ? entry.sources : entry.sources.slice(0, 2)).map((source, si) => {
                       const sKey = `${sourceKey}-${si}`;
                       return (
                         <div key={si} className="rounded-lg border border-white/[0.06] bg-white/[0.02] transition-colors hover:border-primary/20">
@@ -796,6 +801,14 @@ export function HeroLiveDemo() {
                         </div>
                       );
                     })}
+                    {entry.sources.length > 2 && !expandedSources.has(idx) && (
+                      <button
+                        onClick={() => setExpandedSources((prev) => new Set(prev).add(idx))}
+                        className="w-full rounded-lg border border-white/[0.06] py-2 text-center text-xs text-gray-text/50 transition-colors hover:border-primary/20 hover:text-cream"
+                      >
+                        +{entry.sources.length - 2} more sources
+                      </button>
+                    )}
                   </div>
                 )}
                 {/* Inline nudge after each answer */}
