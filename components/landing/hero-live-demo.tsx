@@ -36,10 +36,61 @@ const HUBERMAN_EXAMPLES = [
 ];
 
 // Pre-cached responses — real transcript excerpts from indexed Huberman episodes
+const UNCHARTEDX_ANSWER = {
+  answer:
+    "Uncharted X presents several pieces of evidence for high technology in ancient Egypt, focusing on:\n\n1. **Precision Machining**: Remarkable precision in ancient artifacts \u2014 stone boxes, statues, and vases \u2014 suggesting advanced machining techniques not attributed to the tools in the archaeological record.\n\n2. **Construction Methodologies**: Engineering logistics required for monumental structures indicate sophisticated techniques far beyond what\u2019s conventionally accepted.\n\n3. **Megalithic Architecture**: Large, precision-carved stone boxes weighing up to a hundred tons, polished so well they still reflect light after millennia.\n\n4. **The Serapeum of Saqqara**: One of the most compelling sites \u2014 24 precision-carved single-piece stone boxes housed in underground tunnels, challenging conventional historical narratives about ancient Egyptian capabilities.",
+  sources: [
+    {
+      title: "Precision! - Evidence for Ancient High Technology, part 2",
+      video_id: "YZFN29FdCM0",
+      timestamp: "00:27",
+      url: "https://www.youtube.com/watch?v=YZFN29FdCM0&t=27",
+      snippet: "The nature of precision bears some explanation. Our entire modern world is built on precision.",
+      text: "Hello everyone and welcome to Uncharted X. My name is Ben, and this is part two of my series looking at the evidence for forms of ancient high technology. In that video, we set up some of the context around these claims for ancient high technology, how they correlate to the story of history as we know it, and then we dived into the evidence for ancient machining and polishing. In this video, we're going to look at another category of evidence for ancient high technology\u2014the one that I think is the most convincing: that of precision. The nature of precision bears some explanation. Our entire modern world is built on precision.",
+    },
+    {
+      title: "Evidence of a lost Ancient Civilization at the Serapeum of Saqqara - Chapter 5",
+      video_id: "qLrTCYMFUbg",
+      timestamp: "01:05",
+      url: "https://www.youtube.com/watch?v=qLrTCYMFUbg&t=65",
+      snippet: "24 precision-carved, single-piece stone boxes weighing up to a hundred tons, still reflecting light after millennia.",
+      text: "You immediately recognize the sheer scope of the undertaking, and the mystery only deepens when you see what the tunnels lead you to: 24 mighty, precision-carved, single-piece stone boxes and matching gigantic lids, combined weighing up to a hundred tons, most of which are finished and polished so well that they are still reflecting light after millennia in the dust. All housed in sunken alcoves, like the engines and generators of some vast underground machine.",
+    },
+    {
+      title: "Quarrying and Moving Ancient Monuments! Evidence for Ancient High Technology, Part 3!",
+      video_id: "rQwWtEHE5FE",
+      timestamp: "00:27",
+      url: "https://www.youtube.com/watch?v=rQwWtEHE5FE&t=27",
+      snippet: "We've explored the significant evidence for ancient forms of machining and the use of large and powerful tools.",
+      text: "Hello all, my name is Ben, and this is Uncharted X. This video is part three of my series on the evidence for ancient advanced technology. In it, we're going to examine some of the construction and engineering methodologies and logistics that were required for some of history's grandest and most enigmatic achievements so far.",
+    },
+    {
+      title: "Proof of Ancient High Technology at the Serapeum of Saqqara, Egypt. Chapter 1!",
+      video_id: "VGtDAHRK8s0",
+      timestamp: "02:43",
+      url: "https://www.youtube.com/watch?v=VGtDAHRK8s0&t=163",
+      snippet: "The Serapeum contains some of the most in-your-face evidence of highly advanced technology in the deep and distant past.",
+      text: "The Serapeum of Saqqara is truly an astonishing place. Out of all the megalithic sites in Egypt and frankly around the world, it contains some of the most in-your-face evidence of highly advanced technology that simply must have been present at some point in the deep and distant past. And I'm not talking about reports of technology like some historical figure talking about sunken cities or convoluted conjecture and theories.",
+    },
+    {
+      title: "A Megalithic Precision Box with an Inner Precision Box? The Ancient Relics of Abu Sir in Egypt!",
+      video_id: "_JLrpiQT9cs",
+      timestamp: "00:04",
+      url: "https://www.youtube.com/watch?v=_JLrpiQT9cs&t=4",
+      snippet: "There is one place where indicators of ancient advanced technology are really not very hard to find at all.",
+      text: "When you're walking around and looking at ancient sites, trying to find the specific signs of ancient high technology, it can be quite a difficult endeavor. However, there is one place where these indicators of ancient advanced technology are really not very hard to find at all, where they seem to pop out at you from almost anywhere you look.",
+    },
+  ],
+};
+
 const CACHED_RESPONSES: Record<
   string,
   { answer: string; sources: Source[] }
 > = {
+  // UnchartedX cached responses (channel-keyed)
+  "unchartedx:Ancient high tech in Egypt?": UNCHARTEDX_ANSWER,
+  "unchartedx:What evidence does UnchartedX present for high technology in ancient Egypt?": UNCHARTEDX_ANSWER,
+  // Huberman cached responses
   "Magnesium for sleep?": {
     answer:
       "Huberman discusses magnesium, particularly magnesium threonate, as a beneficial supplement for improving sleep. He notes that magnesium can increase the depth of sleep and reduce the time it takes to fall asleep. Magnesium threonate is highlighted as a more bioavailable form that is preferentially transported to the brain, engaging the GABA pathway, which helps to quiet certain areas of the forebrain and facilitate sleep.\n\nHe recommends taking magnesium threonate 30 to 60 minutes before bedtime to encourage sleep. While he mentions that magnesium bisglycinate is another effective option for promoting sleep, he emphasizes that individual responses can vary, and some people may experience gastrointestinal discomfort from magnesium supplements. Huberman also suggests that combining magnesium with other substances like apigenin and theanine can enhance its sleep-promoting effects. Overall, he advises consulting with a physician before starting any supplement regimen.",
@@ -400,9 +451,19 @@ interface ChatEntry {
   channelDisplay: string;
 }
 
-export function HeroLiveDemo() {
+interface HeroLiveDemoProps {
+  defaultChannel?: string;
+  defaultQuestionShort?: string;
+  defaultQuestionLong?: string;
+}
+
+export function HeroLiveDemo({
+  defaultChannel = "andrew_huberman",
+  defaultQuestionShort: propQuestionShort,
+  defaultQuestionLong: propQuestionLong,
+}: HeroLiveDemoProps = {}) {
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [selectedChannel, setSelectedChannel] = useState("andrew_huberman");
+  const [selectedChannel, setSelectedChannel] = useState(defaultChannel);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [question, setQuestion] = useState("");
   const [chatHistory, setChatHistory] = useState<ChatEntry[]>([]);
@@ -419,12 +480,14 @@ export function HeroLiveDemo() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Responsive question — long on desktop, short on mobile
-  const [defaultQuestion, setDefaultQuestion] = useState(DEFAULT_QUESTION_SHORT);
+  const qShort = propQuestionShort || DEFAULT_QUESTION_SHORT;
+  const qLong = propQuestionLong || DEFAULT_QUESTION_LONG;
+  const [defaultQuestion, setDefaultQuestion] = useState(qShort);
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setDefaultQuestion(window.innerWidth >= 640 ? DEFAULT_QUESTION_LONG : DEFAULT_QUESTION_SHORT);
+      setDefaultQuestion(window.innerWidth >= 640 ? qLong : qShort);
     }
-  }, []);
+  }, [qShort, qLong]);
 
   // Typing animation state
   const [typedText, setTypedText] = useState("");
@@ -474,7 +537,7 @@ export function HeroLiveDemo() {
 
   // Start typing after visible + delay
   useEffect(() => {
-    if (!isVisible || selectedChannel !== "andrew_huberman") return;
+    if (!isVisible || selectedChannel !== defaultChannel) return;
     const startDelay = setTimeout(() => setIsTyping(true), 600);
     return () => clearTimeout(startDelay);
   }, [isVisible, selectedChannel]);
@@ -504,7 +567,7 @@ export function HeroLiveDemo() {
   // Auto-submit after typing completes
   const hasAutoSubmitted = useRef(false);
   useEffect(() => {
-    if (hasAutoSearched && !hasAutoSubmitted.current && chatHistory.length === 0 && !loading && selectedChannel === "andrew_huberman") {
+    if (hasAutoSearched && !hasAutoSubmitted.current && chatHistory.length === 0 && !loading && selectedChannel === defaultChannel) {
       hasAutoSubmitted.current = true;
       handleSearch(defaultQuestion);
     }
@@ -516,7 +579,8 @@ export function HeroLiveDemo() {
   );
   const logoUrl =
     getLogoUrl(selectedCollection) ||
-    (selectedChannel === "andrew_huberman" ? HUBERMAN_LOGO : null);
+    (selectedChannel === "andrew_huberman" ? HUBERMAN_LOGO : null) ||
+    (selectedChannel === "unchartedx" ? "https://mindvault.ikigai-dynamics.com/static/UnchartedX.jpg" : null);
   const channelDisplayName =
     selectedCollection?.display_name || "Andrew Huberman";
 
@@ -543,7 +607,7 @@ export function HeroLiveDemo() {
     if (!query || loading) return;
 
     // Allow cached responses even when trial exhausted (demo animation)
-    const isCached = selectedChannel === "andrew_huberman" && !!CACHED_RESPONSES[query];
+    const isCached = !!CACHED_RESPONSES[`${selectedChannel}:${query}`] || (selectedChannel === "andrew_huberman" && !!CACHED_RESPONSES[query]);
     if (remaining <= 0 && !isCached) return;
 
     const currentChannel = selectedChannel;
@@ -558,7 +622,7 @@ export function HeroLiveDemo() {
     }
 
     // Check for cached response (Huberman demo queries)
-    const cached = currentChannel === "andrew_huberman" ? CACHED_RESPONSES[query] : undefined;
+    const cached = CACHED_RESPONSES[`${currentChannel}:${query}`] || (currentChannel === "andrew_huberman" ? CACHED_RESPONSES[query] : undefined);
     if (cached) {
       setLoading(true);
       await new Promise((r) => setTimeout(r, 1200));
