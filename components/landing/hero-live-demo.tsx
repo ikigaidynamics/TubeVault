@@ -26,8 +26,8 @@ const TRIAL_LIMIT = 3;
 const TYPING_SPEED = 55;
 const HUBERMAN_LOGO = "https://mindvault.ikigai-dynamics.com/static/andrew_huberman_avatar.jpg";
 
-const DEFAULT_QUESTION_SHORT = "How do I get better sleep?";
-const DEFAULT_QUESTION_LONG = "How do I get better sleep according to Huberman?";
+const DEFAULT_QUESTION_SHORT = "Magnesium for sleep?";
+const DEFAULT_QUESTION_LONG = "What does Huberman say about magnesium for sleep?";
 
 const HUBERMAN_EXAMPLES = [
   "What are the benefits of cold exposure?",
@@ -40,6 +40,82 @@ const CACHED_RESPONSES: Record<
   string,
   { answer: string; sources: Source[] }
 > = {
+  "Magnesium for sleep?": {
+    answer:
+      "Huberman discusses magnesium, particularly magnesium threonate, as a beneficial supplement for improving sleep. He notes that magnesium can increase the depth of sleep and reduce the time it takes to fall asleep. Magnesium threonate is highlighted as a more bioavailable form that is preferentially transported to the brain, engaging the GABA pathway, which helps to quiet certain areas of the forebrain and facilitate sleep.\n\nHe recommends taking magnesium threonate 30 to 60 minutes before bedtime to encourage sleep. While he mentions that magnesium bisglycinate is another effective option for promoting sleep, he emphasizes that individual responses can vary, and some people may experience gastrointestinal discomfort from magnesium supplements. Huberman also suggests that combining magnesium with other substances like apigenin and theanine can enhance its sleep-promoting effects. Overall, he advises consulting with a physician before starting any supplement regimen.",
+    sources: [
+      {
+        title: "How to Defeat Jet Lag, Shift Work & Sleeplessness",
+        video_id: "NAATB55oxeQ",
+        timestamp: "96:33",
+        url: "https://www.youtube.com/watch?v=NAATB55oxeQ&t=5793",
+        snippet: "Magnesium threonate seems to be the more bioavailable form, shuttled preferentially to the brain via the GABA pathway.",
+        text: "I'm more of, here's what you might want to do or not do and then think about what you might want to take or not take. But personal preference and it's a free country, so you can do what you like. Magnesium. So magnesium has been shown to increase the depth of sleep and has been shown to decrease the amount of time it takes to access sleep, to fall asleep. It comes in various forms. I've talked a bunch of times about magnesium threonate, T-H-R-E-O-N-A-T-E, threonate, which seems to be the more bioavailable form of magnesium. And magnesium threonate seems to be shuttled preferentially to the brain, which is where you want it. And there's certain transporters, it actually engages the GABA pathway, which tends to turn off certain areas of the forebrain and allows you to kind of fall asleep.",
+      },
+      {
+        title: "Using Salt to Optimize Mental & Physical Performance",
+        video_id: "azb3Ih68awQ",
+        timestamp: "85:48",
+        url: "https://www.youtube.com/watch?v=azb3Ih68awQ&t=5148",
+        snippet: "Magnesium threonate is taken 30 to 60 minutes before bedtime. Magnesium bisglycinate is an alternative, also promoting sleep depth.",
+        text: "Typically, magnesium threonate is taken 30 to 60 minutes before bedtime in order to encourage sleep. You can go to our neural network newsletter and look for the one on sleep, and you can see the recommendations, or I should say, the options for that because, again, you should always check with your physician. Those aren't strict across-the-board recommendations, and then, there are other forms of magnesium: magnesium bisglycinate, which is a somewhat of an alternative to threonate, not known to have cognitive enhancing effects, but seems, at least on par with magnesium threonate in terms of promoting transition into and depth of sleep.",
+      },
+      {
+        title: "Master Your Sleep & Be More Alert When Awake",
+        video_id: "nm1TxQj9IsQ",
+        timestamp: "75:11",
+        url: "https://www.youtube.com/watch?v=nm1TxQj9IsQ&t=4511",
+        snippet: "Magnesium threonate increases GABA, turning off the DMN and making it easier to fall asleep.",
+        text: "There are many forms of magnesium, but certain forms of magnesium can have positive effects on sleepiness and the ability to stay asleep, mainly by way of increasing neurotransmitters like GABA, which help turn off the DMN\u2014the kind of thinking about the future, duration, path-outcome analysis\u2014and make one's mind kind of drift in space and time, making it easier to fall asleep. There are a lot of forms of magnesium out there, but in particular, magnesium threonate, T-H-R-E-O-N-A-T-E, which you have to check to see if this is right for you\u2014check with your doctor\u2014but magnesium threonate is associated with transporters in the body that bring more of it into cells, which allows people to feel this kind of drowsiness and helps them fall asleep.",
+      },
+      {
+        title: "Maximizing Productivity, Physical & Mental Health with Daily Tools",
+        video_id: "aXvDEmo6uS4",
+        timestamp: "111:47",
+        url: "https://www.youtube.com/watch?v=aXvDEmo6uS4&t=6707",
+        snippet: "300-400mg magnesium threonate or bisglycinate 30-60 min before sleep, combined with apigenin and theanine for a sleep cocktail.",
+        text: "It doesn't shut it off completely, but it essentially shuts down thinking, rumination, planning, and in what we call \"executive function.\" So for many people, taking 300 to 400 milligrams of magnesium bisglycinate or magnesium threonate, and there I'm referring to the elemental magnesium for you aficionados, many people find that doing that 30 to 60 minutes before sleep can aid them in falling asleep, can really help them fall asleep faster and stay asleep. Some people, however, experience some gastrointestinal discomfort from magnesium and therefore should avoid it.",
+      },
+      {
+        title: "Using Science to Optimize Sleep, Learning & Metabolism",
+        video_id: "nwSkFq4tyC0",
+        timestamp: "60:54",
+        url: "https://www.youtube.com/watch?v=nwSkFq4tyC0&t=3654",
+        snippet: "Magnesium threonate should be taken 30-60 minutes before sleep. Some people may experience stomach issues.",
+        text: "I'm not recommending anything directly; I'm just saying if you're exploring supplements, magnesium threonate seems among the magnesiums to be one of the more bioavailable and useful for sleep. I recommended it actually to a good friend of mine. He took it at a very low dose; he had stomach issues with it. He just had to simply stop taking it. So there's variability there. It gave him some stomach cramping and just didn't feel good on it. Other people take magnesium threonate and feel great.",
+      },
+    ],
+  },
+  "What does Huberman say about magnesium for sleep?": {
+    answer:
+      "Huberman discusses magnesium, particularly magnesium threonate, as a beneficial supplement for improving sleep. He notes that magnesium can increase the depth of sleep and reduce the time it takes to fall asleep. Magnesium threonate is highlighted as a more bioavailable form that is preferentially transported to the brain, engaging the GABA pathway, which helps to quiet certain areas of the forebrain and facilitate sleep.\n\nHe recommends taking magnesium threonate 30 to 60 minutes before bedtime to encourage sleep. While he mentions that magnesium bisglycinate is another effective option for promoting sleep, he emphasizes that individual responses can vary, and some people may experience gastrointestinal discomfort from magnesium supplements. Huberman also suggests that combining magnesium with other substances like apigenin and theanine can enhance its sleep-promoting effects. Overall, he advises consulting with a physician before starting any supplement regimen.",
+    sources: [
+      {
+        title: "How to Defeat Jet Lag, Shift Work & Sleeplessness",
+        video_id: "NAATB55oxeQ",
+        timestamp: "96:33",
+        url: "https://www.youtube.com/watch?v=NAATB55oxeQ&t=5793",
+        snippet: "Magnesium threonate seems to be the more bioavailable form, shuttled preferentially to the brain via the GABA pathway.",
+        text: "I'm more of, here's what you might want to do or not do and then think about what you might want to take or not take. But personal preference and it's a free country, so you can do what you like. Magnesium. So magnesium has been shown to increase the depth of sleep and has been shown to decrease the amount of time it takes to access sleep, to fall asleep. It comes in various forms. I've talked a bunch of times about magnesium threonate, T-H-R-E-O-N-A-T-E, threonate, which seems to be the more bioavailable form of magnesium. And magnesium threonate seems to be shuttled preferentially to the brain, which is where you want it. And there's certain transporters, it actually engages the GABA pathway, which tends to turn off certain areas of the forebrain and allows you to kind of fall asleep.",
+      },
+      {
+        title: "Master Your Sleep & Be More Alert When Awake",
+        video_id: "nm1TxQj9IsQ",
+        timestamp: "75:11",
+        url: "https://www.youtube.com/watch?v=nm1TxQj9IsQ&t=4511",
+        snippet: "Magnesium threonate increases GABA, turning off the DMN and making it easier to fall asleep.",
+        text: "There are many forms of magnesium, but certain forms of magnesium can have positive effects on sleepiness and the ability to stay asleep, mainly by way of increasing neurotransmitters like GABA, which help turn off the DMN\u2014the kind of thinking about the future, duration, path-outcome analysis\u2014and make one's mind kind of drift in space and time, making it easier to fall asleep.",
+      },
+      {
+        title: "Maximizing Productivity, Physical & Mental Health with Daily Tools",
+        video_id: "aXvDEmo6uS4",
+        timestamp: "111:47",
+        url: "https://www.youtube.com/watch?v=aXvDEmo6uS4&t=6707",
+        snippet: "300-400mg magnesium threonate or bisglycinate 30-60 min before sleep, combined with apigenin and theanine for a sleep cocktail.",
+        text: "It doesn't shut it off completely, but it essentially shuts down thinking, rumination, planning, and in what we call \"executive function.\" So for many people, taking 300 to 400 milligrams of magnesium bisglycinate or magnesium threonate, and there I'm referring to the elemental magnesium for you aficionados, many people find that doing that 30 to 60 minutes before sleep can aid them in falling asleep, can really help them fall asleep faster and stay asleep.",
+      },
+    ],
+  },
   "How do I get better sleep?": {
     answer:
       "According to Andrew Huberman, getting better sleep involves several key strategies. He emphasizes the importance of understanding both sleep and wakefulness, as they are interconnected and govern mental and physical health. Key tips include: optimizing your sleep environment (dark, cool, quiet), establishing a consistent sleep schedule, managing light exposure in the evening to promote melatonin production, limiting caffeine in the hours before bedtime, and developing a calming pre-sleep routine.",
