@@ -29,11 +29,18 @@ const HUBERMAN_LOGO = "https://mindvault.ikigai-dynamics.com/static/andrew_huber
 const DEFAULT_QUESTION_SHORT = "Magnesium for sleep?";
 const DEFAULT_QUESTION_LONG = "What does Huberman say about magnesium for sleep?";
 
-const HUBERMAN_EXAMPLES = [
-  "What are the benefits of cold exposure?",
-  "What\u2019s Huberman\u2019s morning routine?",
-  "What does Huberman say about caffeine timing?",
-];
+const CHANNEL_EXAMPLES: Record<string, string[]> = {
+  andrew_huberman: [
+    "What are the benefits of cold exposure?",
+    "What\u2019s Huberman\u2019s morning routine?",
+    "What does Huberman say about caffeine timing?",
+  ],
+  unchartedx: [
+    "What evidence exists for ancient precision machining?",
+    "What did UnchartedX find at the Serapeum?",
+    "How were the ancient granite vases made?",
+  ],
+};
 
 // Pre-cached responses — real transcript excerpts from indexed Huberman episodes
 const UNCHARTEDX_ANSWER = {
@@ -582,7 +589,7 @@ export function HeroLiveDemo({
     (selectedChannel === "andrew_huberman" ? HUBERMAN_LOGO : null) ||
     (selectedChannel === "unchartedx" ? "https://mindvault.ikigai-dynamics.com/static/UnchartedX.jpg" : null);
   const channelDisplayName =
-    selectedCollection?.display_name || "Andrew Huberman";
+    selectedCollection?.display_name || selectedChannel.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
   function handleChannelChange(name: string) {
     setSelectedChannel(name);
@@ -693,13 +700,11 @@ export function HeroLiveDemo({
   const searched = chatHistory.length > 0;
 
   const exampleQuestions =
-    selectedChannel === "andrew_huberman"
-      ? HUBERMAN_EXAMPLES
-      : [
-          `What are the main topics ${channelDisplayName} covers?`,
-          `What\u2019s the most important insight from ${channelDisplayName}?`,
-          `What does ${channelDisplayName} recommend?`,
-        ];
+    CHANNEL_EXAMPLES[selectedChannel] || [
+      `What are the main topics ${channelDisplayName} covers?`,
+      `What\u2019s the most important insight from ${channelDisplayName}?`,
+      `What does ${channelDisplayName} recommend?`,
+    ];
 
   // Show cursor during typing animation
   const showCursor = isTyping && !hasAutoSearched && typedText.length < defaultQuestion.length;
