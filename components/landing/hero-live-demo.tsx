@@ -766,17 +766,19 @@ export function HeroLiveDemo() {
                           </button>
                           {expandedSource === sKey && (
                             <div className="overflow-hidden border-t border-white/[0.06] px-3 pb-3 pt-3 animate-[fadeUp_0.3s_ease-out]">
-                              {source.video_id && (
-                                <div className="mb-3 aspect-video w-full max-w-sm overflow-hidden rounded-lg">
-                                  <iframe src={getYouTubeEmbedUrl(source)} title={source.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="h-full w-full" />
-                                </div>
-                              )}
-                              {source.text && (
-                                <div className="rounded-lg bg-white/[0.03] p-3">
-                                  <span className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-gray-text/50">Transcript excerpt</span>
-                                  <p className="break-words text-[12px] leading-relaxed text-cream/70 italic">&ldquo;{source.text}&rdquo;</p>
-                                </div>
-                              )}
+                              <div className="flex flex-col gap-3 sm:flex-row">
+                                {source.video_id && (
+                                  <div className="aspect-video w-full overflow-hidden rounded-lg sm:w-1/2 sm:shrink-0">
+                                    <iframe src={getYouTubeEmbedUrl(source)} title={source.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="h-full w-full" />
+                                  </div>
+                                )}
+                                {source.text && (
+                                  <div className="flex-1 rounded-lg bg-white/[0.03] p-3">
+                                    <span className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-gray-text/50">Transcript excerpt</span>
+                                    <p className="break-words text-[12px] leading-relaxed text-cream/70 italic">&ldquo;{source.text}&rdquo;</p>
+                                  </div>
+                                )}
+                              </div>
                               <a href={getYouTubeUrl(source)} target="_blank" rel="noopener noreferrer" onClick={() => track("timestamp_click", { channelId: entry.channel, metadata: { videoId: source.video_id } })} className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary/80 transition-colors hover:text-primary">
                                 Open on YouTube <ExternalLink className="h-3 w-3" />
                               </a>
