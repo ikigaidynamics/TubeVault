@@ -458,7 +458,10 @@ export function HeroLiveDemo() {
     setError(null);
     setExpandedSource(null);
     setPendingQuestion(query);
-    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    // Only scroll on manual questions (not the auto-submitted first one)
+    if (chatHistory.length > 0) {
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
+    }
 
     // Check for cached response (Huberman demo queries)
     const cached = currentChannel === "andrew_huberman" ? CACHED_RESPONSES[query] : undefined;
