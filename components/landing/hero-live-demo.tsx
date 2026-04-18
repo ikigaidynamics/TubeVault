@@ -766,16 +766,16 @@ export function HeroLiveDemo() {
                           </button>
                           {expandedSource === sKey && (
                             <div className="overflow-hidden border-t border-white/[0.06] px-3 pb-3 pt-3 animate-[fadeUp_0.3s_ease-out]">
-                              <div className="flex flex-col gap-3 sm:flex-row">
+                              <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
                                 {source.video_id && (
-                                  <div className="aspect-video w-full overflow-hidden rounded-lg sm:w-1/2 sm:shrink-0">
+                                  <div className="aspect-video w-full overflow-hidden rounded-lg sm:w-[38%] sm:shrink-0">
                                     <iframe src={getYouTubeEmbedUrl(source)} title={source.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="h-full w-full" />
                                   </div>
                                 )}
                                 {source.text && (
-                                  <div className="flex-1 rounded-lg bg-white/[0.03] p-3">
-                                    <span className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-gray-text/50">Transcript excerpt</span>
-                                    <p className="break-words text-[12px] leading-relaxed text-cream/70 italic">&ldquo;{source.text}&rdquo;</p>
+                                  <div className="flex flex-1 flex-col rounded-lg bg-white/[0.03] p-3">
+                                    <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-gray-text/50">Transcript excerpt</span>
+                                    <p className="flex-1 break-words text-[12px] leading-[1.7] text-cream/70 italic">&ldquo;{source.text}&rdquo;</p>
                                   </div>
                                 )}
                               </div>
