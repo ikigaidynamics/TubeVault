@@ -92,6 +92,9 @@ export async function SearchIntelligence() {
                     key={hash}
                     className={`border-b border-white/[0.03] ${isZero ? "bg-red-500/[0.05]" : ""}`}
                   >
+                    {/* TODO: Privacy review needed — decide whether to store query_raw
+                        for anonymous users. Currently only authenticated user queries
+                        have raw text; anonymous queries show as SHA-256 hashes. */}
                     <td className="py-2 pr-4 text-cream">
                       {d.raw ? (
                         d.raw

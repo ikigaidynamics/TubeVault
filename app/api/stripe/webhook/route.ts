@@ -112,6 +112,40 @@ export async function POST(request: Request) {
 
   switch (event.type) {
     case "customer.subscription.created":
+      await handleSubscriptionChange(
+        event.data.object as Stripe.Subscription
+      );
+      // Attribution: track subscription_started
+      try {
+        const sub = event.data.object as Stripe.Subscription;
+        const custId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
+        const customer = (await getStripeServer().customers.retrieve(custId)) as Stripe.Customer;
+        const uid = customer.metadata?.supabase_user_id;
+        if (uid) {
+          // Get variant_slug from user's earliest page_view
+          const { data: firstView } = await supabaseAdmin
+            .from("landing_attribution")
+            .select("variant_slug, session_id")
+            .eq("user_id", uid)
+            .eq("event_type", "page_view")
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .single();
+
+          await supabaseAdmin.from("landing_attribution").insert({
+            user_id: uid,
+            session_id: firstView?.session_id || "webhook",
+            variant_slug: firstView?.variant_slug || "unknown",
+            landing_path: "/",
+            event_type: "subscription_started",
+            event_metadata: {
+              plan: getTierFromPriceId(sub.items.data[0]?.price.id),
+              stripe_session_id: sub.id,
+            },
+          });
+        }
+      } catch { /* don't let attribution tracking break the webhook */ }
+      break;
     case "customer.subscription.updated":
       await handleSubscriptionChange(
         event.data.object as Stripe.Subscription

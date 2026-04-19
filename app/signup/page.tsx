@@ -7,6 +7,7 @@ import Image from "next/image";
 import { ArrowRight, Loader2, Mail, Lock, ShieldCheck, Gift } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { track } from "@/lib/analytics/tracker";
+import { trackEvent as trackAttribution } from "@/lib/attribution";
 
 function GoogleIcon() {
   return (
@@ -93,6 +94,7 @@ function SignupForm() {
 
     // analytics
     track("signup", { metadata: { method: "email" } });
+    trackAttribution("signup_completed", { method: "email" });
     setSuccess(true);
     setLoading(false);
   }
@@ -114,7 +116,10 @@ function SignupForm() {
       },
     });
     // analytics
-    if (!authError) track("signup", { metadata: { method: "google" } });
+    if (!authError) {
+      track("signup", { metadata: { method: "google" } });
+      trackAttribution("signup_completed", { method: "google" });
+    }
 
     if (authError) {
       setError(authError.message);

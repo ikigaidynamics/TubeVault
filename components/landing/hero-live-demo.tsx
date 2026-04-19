@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { queryCollection, type Source, type Collection } from "@/lib/api";
 import { track } from "@/lib/analytics/tracker";
+import { trackEvent as trackAttribution } from "@/lib/attribution";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -640,6 +641,10 @@ export function HeroLiveDemo({
       }]);
       setLoading(false);
       track("search", { channelId: currentChannel, query, resultCount: cached.sources.length });
+      // Track demo_question for manual searches only (not auto-submitted demo)
+      if (chatHistory.length > 0) {
+        trackAttribution("demo_question", { question: query, channel: currentChannel, was_cached: true });
+      }
       return;
     }
 
@@ -663,6 +668,8 @@ export function HeroLiveDemo({
 
       const data = await queryCollection(currentChannel, query, []);
       track("search", { channelId: currentChannel, query, resultCount: data.sources?.length ?? 0 });
+      // Track demo_question for manual searches only
+      trackAttribution("demo_question", { question: query, channel: currentChannel, was_cached: false });
       setPendingQuestion(null);
       setChatHistory((prev) => [...prev, {
         question: query, answer: data.answer, sources: data.sources?.slice(0, 5) || [],

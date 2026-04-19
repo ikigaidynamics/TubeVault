@@ -2,18 +2,32 @@ import { redirect } from "next/navigation";
 import Image from "next/image";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { OverviewCards } from "@/components/admin/analytics/OverviewCards";
+import { SearchVolume } from "@/components/admin/analytics/SearchVolume";
+import { Attribution } from "@/components/admin/analytics/Attribution";
+import { DeviceGeo } from "@/components/admin/analytics/DeviceGeo";
 import { SearchIntelligence } from "@/components/admin/analytics/SearchIntelligence";
 import { ChannelRankings } from "@/components/admin/analytics/ChannelRankings";
+import { Retention } from "@/components/admin/analytics/Retention";
 import { ConversionFunnel } from "@/components/admin/analytics/ConversionFunnel";
 
 export const dynamic = "force-dynamic";
+
+const NAV_ITEMS = [
+  { label: "Overview", href: "#overview" },
+  { label: "Volume", href: "#volume" },
+  { label: "Attribution", href: "#attribution" },
+  { label: "Devices", href: "#devices" },
+  { label: "Search", href: "#search" },
+  { label: "Channels", href: "#channels" },
+  { label: "Retention", href: "#retention" },
+  { label: "Funnel", href: "#funnel" },
+];
 
 export default async function AdminAnalyticsPage({
   searchParams,
 }: {
   searchParams: { days?: string };
 }) {
-  // Server-side admin check
   const supabase = createServerSupabaseClient();
   const {
     data: { user },
@@ -84,6 +98,21 @@ export default async function AdminAnalyticsPage({
         </div>
       </header>
 
+      {/* Sticky sub-nav */}
+      <nav className="sticky top-0 z-40 border-b border-white/[0.04] bg-[#151515]/95 px-6 py-2 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto">
+          {NAV_ITEMS.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="shrink-0 rounded-md px-2.5 py-1 text-[11px] font-medium text-gray-text/60 transition-colors hover:bg-white/[0.04] hover:text-cream"
+            >
+              {item.label}
+            </a>
+          ))}
+        </div>
+      </nav>
+
       {/* Last updated */}
       <div className="mx-auto max-w-7xl px-6 pt-4">
         <p className="text-[11px] text-gray-text/40">
@@ -93,14 +122,45 @@ export default async function AdminAnalyticsPage({
 
       {/* Content */}
       <main className="mx-auto max-w-7xl space-y-12 px-6 py-6">
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        {(OverviewCards as any)({ days })}
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        {(SearchIntelligence as any)()}
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        {(ChannelRankings as any)()}
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        {(ConversionFunnel as any)()}
+        <div id="overview">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {(OverviewCards as any)({ days })}
+        </div>
+
+        <div id="volume">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {(SearchVolume as any)()}
+        </div>
+
+        <div id="attribution">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {(Attribution as any)({ days })}
+        </div>
+
+        <div id="devices">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {(DeviceGeo as any)()}
+        </div>
+
+        <div id="search">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {(SearchIntelligence as any)()}
+        </div>
+
+        <div id="channels">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {(ChannelRankings as any)()}
+        </div>
+
+        <div id="retention">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {(Retention as any)()}
+        </div>
+
+        <div id="funnel">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {(ConversionFunnel as any)()}
+        </div>
       </main>
     </div>
   );
