@@ -78,7 +78,7 @@ function SignupForm() {
     setLoading(true);
 
     const supabase = createClient();
-    const { error: authError } = await supabase.auth.signUp({
+    const { data: signupData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -92,9 +92,10 @@ function SignupForm() {
       return;
     }
 
-    // analytics
+    // analytics — pass user_id explicitly for backfill (cookie may not be set yet)
+    const newUserId = signupData?.user?.id;
     track("signup", { metadata: { method: "email" } });
-    trackAttribution("signup_completed", { method: "email" });
+    trackAttribution("signup_completed", { method: "email" }, { userId: newUserId });
     setSuccess(true);
     setLoading(false);
   }
@@ -115,7 +116,12 @@ function SignupForm() {
         redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       },
     });
-    // analytics
+    // TODO: OAuth attribution is broken. signup_completed fires here with no
+    // user_id (OAuth redirects away before we can resolve it). The backfill
+    // never runs because user_id=null. When OAuth is re-enabled, move this
+    // tracking to app/auth/callback/route.ts where the cookie is set and
+    // user_id can be resolved server-side via getAuthUserId().
+    // See corresponding TODO in app/auth/callback/route.ts.
     if (!authError) {
       track("signup", { metadata: { method: "google" } });
       trackAttribution("signup_completed", { method: "google" });

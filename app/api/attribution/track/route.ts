@@ -39,11 +39,15 @@ export async function POST(request: Request) {
     const eventType = body.event_type;
     if (!eventType || !ALLOWED_EVENTS.has(eventType)) return OK;
 
-    const userId = await getAuthUserId();
+    // Resolve user_id: prefer explicit from body (signup_completed), fall back to auth cookie
+    const cookieUserId = await getAuthUserId();
+    const userId = body.user_id || cookieUserId || null;
+
+    const sessionId = body.session_id || "unknown";
 
     const row = {
       user_id: userId,
-      session_id: body.session_id || "unknown",
+      session_id: sessionId,
       variant_slug: body.variant_slug || "default",
       landing_path: body.landing_path || "/",
       referrer: body.referrer || null,
@@ -62,12 +66,12 @@ export async function POST(request: Request) {
 
     if (error) console.warn("attribution insert error:", error.message);
 
-    // On signup_completed, backfill user_id onto earlier rows for this session
-    if (eventType === "signup_completed" && userId && body.session_id) {
+    // On signup_completed, backfill user_id onto earlier anonymous rows for this session
+    if (eventType === "signup_completed" && userId && sessionId !== "unknown") {
       await supabaseAdmin
         .from("landing_attribution")
         .update({ user_id: userId })
-        .eq("session_id", body.session_id)
+        .eq("session_id", sessionId)
         .is("user_id", null);
     }
   } catch {

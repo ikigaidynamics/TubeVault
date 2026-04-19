@@ -94,10 +94,12 @@ export function captureAttribution(variantSlug: string): void {
 /**
  * Fire-and-forget attribution event.
  * Pulls variant + UTMs from stored attribution automatically.
+ * Pass userId explicitly for signup_completed (cookie may not be set yet).
  */
 export function trackEvent(
   eventType: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
+  options?: { userId?: string }
 ): void {
   if (typeof window === "undefined") return;
 
@@ -105,7 +107,7 @@ export function trackEvent(
     const sessionId = getOrCreateSessionId();
     const attr = getStoredAttribution();
 
-    const body = {
+    const body: Record<string, unknown> = {
       session_id: sessionId,
       variant_slug: attr?.variant_slug || "default",
       landing_path: attr?.landing_path || window.location.pathname,
@@ -118,6 +120,11 @@ export function trackEvent(
       event_type: eventType,
       event_metadata: metadata || null,
     };
+
+    // Pass user_id explicitly when provided (e.g. signup_completed before cookie is set)
+    if (options?.userId) {
+      body.user_id = options.userId;
+    }
 
     fetch("/api/attribution/track", {
       method: "POST",

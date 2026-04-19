@@ -42,6 +42,14 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      // TODO: When Google OAuth is re-enabled, fire attribution tracking here.
+      // At this point the session is established and user_id is resolvable.
+      // Call: supabaseAdmin.from("landing_attribution").insert({ ... event_type: "signup_completed" })
+      // Then run the backfill: UPDATE landing_attribution SET user_id = <uid>
+      //   WHERE session_id = <from cookie/header> AND user_id IS NULL
+      // The session_id needs to come from a cookie or header set by the client
+      // before the OAuth redirect. See corresponding TODO in app/signup/page.tsx.
+
       // Build redirect response and set cookies via response headers
       // This avoids the Next.js cookies() header size limitation
       const response = NextResponse.redirect(`${origin}${next}`);
