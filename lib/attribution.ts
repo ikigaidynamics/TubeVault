@@ -4,6 +4,11 @@
  * Uses its OWN persistent session_id (localStorage UUID) — completely
  * independent from the daily-rotating analytics_events session_id.
  * These are two separate tracking systems by design.
+ *
+ * OAuth flow: because OAuth redirects away from the app, localStorage is
+ * inaccessible in the server-side /auth/callback route. Before triggering
+ * OAuth, call setSessionCookieForOAuth() to bridge the session_id via a
+ * short-lived cookie that the callback route can read.
  */
 
 const SESSION_KEY = "tv_session_id";
@@ -86,6 +91,22 @@ export function captureAttribution(variantSlug: string): void {
 
     // Fire page_view on every visit
     trackEvent("page_view", { path: window.location.pathname });
+  } catch {
+    // Silent
+  }
+}
+
+/**
+ * Set tv_session_id as a cookie before OAuth redirect so
+ * /auth/callback can correlate the session server-side.
+ * Cookie is short-lived (10 min) and cleared after use.
+ */
+export function setSessionCookieForOAuth(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const sessionId = getOrCreateSessionId();
+    const secure = window.location.protocol === "https:";
+    document.cookie = `tv_session_id=${sessionId}; path=/; max-age=600; SameSite=Lax${secure ? "; Secure" : ""}`;
   } catch {
     // Silent
   }

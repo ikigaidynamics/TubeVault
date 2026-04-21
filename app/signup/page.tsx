@@ -7,7 +7,7 @@ import Image from "next/image";
 import { ArrowRight, Loader2, Mail, Lock, ShieldCheck, Gift } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { track } from "@/lib/analytics/tracker";
-import { trackEvent as trackAttribution } from "@/lib/attribution";
+import { trackEvent as trackAttribution, setSessionCookieForOAuth } from "@/lib/attribution";
 
 function GoogleIcon() {
   return (
@@ -109,23 +109,20 @@ function SignupForm() {
     setError("");
     setGoogleLoading(true);
 
+    // Set session cookie so /auth/callback can correlate attribution
+    setSessionCookieForOAuth();
+
     const supabase = createClient();
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        queryParams: {
+          prompt: "select_account",
+        },
       },
     });
-    // TODO: OAuth attribution is broken. signup_completed fires here with no
-    // user_id (OAuth redirects away before we can resolve it). The backfill
-    // never runs because user_id=null. When OAuth is re-enabled, move this
-    // tracking to app/auth/callback/route.ts where the cookie is set and
-    // user_id can be resolved server-side via getAuthUserId().
-    // See corresponding TODO in app/auth/callback/route.ts.
-    if (!authError) {
-      track("signup", { metadata: { method: "google" } });
-      trackAttribution("signup_completed", { method: "google" });
-    }
+    // OAuth attribution is tracked server-side in /auth/callback after redirect
 
     if (authError) {
       setError(authError.message);

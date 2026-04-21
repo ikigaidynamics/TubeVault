@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Loader2, Mail, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase";
+import { setSessionCookieForOAuth } from "@/lib/attribution";
 
 function GoogleIcon() {
   return (
@@ -78,11 +79,17 @@ function LoginForm() {
     setError("");
     setGoogleLoading(true);
 
+    // Set session cookie so /auth/callback can correlate attribution
+    setSessionCookieForOAuth();
+
     const supabase = createClient();
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
+        queryParams: {
+          prompt: "select_account",
+        },
       },
     });
 

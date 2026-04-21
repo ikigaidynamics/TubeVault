@@ -1,6 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -42,17 +48,62 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // TODO: When Google OAuth is re-enabled, fire attribution tracking here.
-      // At this point the session is established and user_id is resolvable.
-      // Call: supabaseAdmin.from("landing_attribution").insert({ ... event_type: "signup_completed" })
-      // Then run the backfill: UPDATE landing_attribution SET user_id = <uid>
-      //   WHERE session_id = <from cookie/header> AND user_id IS NULL
-      // The session_id needs to come from a cookie or header set by the client
-      // before the OAuth redirect. See corresponding TODO in app/signup/page.tsx.
+      // --- OAuth attribution tracking ---
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const tvSessionId = cookieStore.get("tv_session_id")?.value;
+
+        if (user?.id && tvSessionId) {
+          // New signup = user created within last 60 seconds
+          const isNewSignup =
+            Date.now() - new Date(user.created_at).getTime() < 60_000;
+
+          if (isNewSignup) {
+            // Look up the earliest page_view for this session
+            const { data: pageView } = await supabaseAdmin
+              .from("landing_attribution")
+              .select("variant_slug, landing_path, utm_source, utm_medium, utm_campaign, utm_content, utm_term, referrer")
+              .eq("session_id", tvSessionId)
+              .eq("event_type", "page_view")
+              .order("created_at", { ascending: true })
+              .limit(1)
+              .maybeSingle();
+
+            // Insert signup_completed event
+            await supabaseAdmin.from("landing_attribution").insert({
+              user_id: user.id,
+              session_id: tvSessionId,
+              variant_slug: pageView?.variant_slug || "unknown",
+              landing_path: pageView?.landing_path || "/",
+              referrer: pageView?.referrer || null,
+              utm_source: pageView?.utm_source || null,
+              utm_medium: pageView?.utm_medium || null,
+              utm_campaign: pageView?.utm_campaign || null,
+              utm_content: pageView?.utm_content || null,
+              utm_term: pageView?.utm_term || null,
+              event_type: "signup_completed",
+              event_metadata: { method: "google" },
+            });
+
+            // Backfill user_id on earlier anonymous rows for this session
+            await supabaseAdmin
+              .from("landing_attribution")
+              .update({ user_id: user.id })
+              .eq("session_id", tvSessionId)
+              .is("user_id", null);
+          }
+        }
+      } catch (e) {
+        // Attribution must NEVER break the auth callback
+        console.warn("OAuth attribution error:", e);
+      }
 
       // Build redirect response and set cookies via response headers
       // This avoids the Next.js cookies() header size limitation
       const response = NextResponse.redirect(`${origin}${next}`);
+
+      // Clear the tv_session_id cookie (no longer needed)
+      response.cookies.set("tv_session_id", "", { maxAge: 0, path: "/" });
 
       // Clean up stale auth-token chunks
       const freshNames = new Set(pendingCookies.map(({ name }) => name));
