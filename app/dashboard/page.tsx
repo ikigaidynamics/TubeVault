@@ -283,6 +283,7 @@ export default function DashboardPage() {
         selectedChannel={selectedChannel}
         onSelectChannel={handleSelectChannel}
         userEmail={userEmail}
+        userAvatar={userAvatar}
         onLogout={handleLogout}
         tier={tier}
         pickedChannels={pickedChannels}

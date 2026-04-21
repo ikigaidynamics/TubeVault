@@ -15,6 +15,7 @@ interface ChannelSidebarProps {
   selectedChannel: string | null;
   onSelectChannel: (name: string) => void;
   userEmail: string;
+  userAvatar?: string | null;
   onLogout: () => void;
   tier: SubscriptionTier;
   pickedChannels: string[];
@@ -65,6 +66,7 @@ export function ChannelSidebar({
   selectedChannel,
   onSelectChannel,
   userEmail,
+  userAvatar,
   onLogout,
   tier,
   pickedChannels,
@@ -78,6 +80,7 @@ export function ChannelSidebar({
 }: ChannelSidebarProps) {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
 
   const limits = TIER_LIMITS[tier];
   const canCrossSearch = limits.hasCrossChannelSearch;
@@ -313,10 +316,24 @@ export function ChannelSidebar({
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard/settings"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/[0.05] text-[10px] font-bold text-gray-text/70 transition-colors hover:bg-white/[0.1]"
+            className="shrink-0"
             title="Account settings"
           >
-            {userEmail[0]?.toUpperCase() || "?"}
+            {userAvatar && !avatarError ? (
+              <Image
+                src={userAvatar}
+                alt="You"
+                width={28}
+                height={28}
+                className="h-7 w-7 rounded-full object-cover ring-1 ring-white/[0.08]"
+                unoptimized
+                onError={() => setAvatarError(true)}
+              />
+            ) : (
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.05] text-[10px] font-bold text-gray-text/70 transition-colors hover:bg-white/[0.1]">
+                {userEmail[0]?.toUpperCase() || "?"}
+              </div>
+            )}
           </Link>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[11px] leading-tight text-gray-text/70">

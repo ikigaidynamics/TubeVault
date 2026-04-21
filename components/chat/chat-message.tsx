@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { SourceCard } from "./source-card";
 import type { Source } from "@/lib/api";
@@ -13,13 +14,15 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ role, content, sources, userAvatar, channelId }: ChatMessageProps) {
+  const [avatarError, setAvatarError] = useState(false);
+
   return (
     <div
       className={`flex gap-3 ${role === "user" ? "flex-row-reverse" : "flex-row"}`}
     >
       {/* Avatar */}
       {role === "user" ? (
-        userAvatar ? (
+        userAvatar && !avatarError ? (
           <Image
             src={userAvatar}
             alt="You"
@@ -27,6 +30,7 @@ export function ChatMessage({ role, content, sources, userAvatar, channelId }: C
             height={32}
             className="h-8 w-8 shrink-0 rounded-[10px] object-cover ring-1 ring-white/[0.08]"
             unoptimized
+            onError={() => setAvatarError(true)}
           />
         ) : (
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] border border-white/[0.08] bg-dark-surface text-xs font-bold text-gray-text">

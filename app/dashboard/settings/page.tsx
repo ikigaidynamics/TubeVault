@@ -111,6 +111,7 @@ export default function SettingsPage() {
     setSaving(false);
     if (!error) {
       setSaved(true);
+      router.refresh();
       setTimeout(() => setSaved(false), 2000);
     }
   }
@@ -137,6 +138,7 @@ export default function SettingsPage() {
         });
         setAvatarUrl(dataUrl);
         setUploadingAvatar(false);
+        router.refresh();
       };
       reader.readAsDataURL(file);
       return;
@@ -154,6 +156,7 @@ export default function SettingsPage() {
 
     setAvatarUrl(publicUrl);
     setUploadingAvatar(false);
+    router.refresh();
   }
 
   async function handleRemoveAvatar() {
@@ -161,6 +164,7 @@ export default function SettingsPage() {
       data: { avatar_url: null },
     });
     setAvatarUrl(null);
+    router.refresh();
   }
 
   const pickedCollections = collections.filter((c) =>
