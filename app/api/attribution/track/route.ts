@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { decodeCookie } from "@/lib/consent";
 
 const ALLOWED_EVENTS = new Set([
   "page_view",
@@ -30,14 +31,25 @@ async function getAuthUserId(): Promise<string | null> {
   }
 }
 
-const OK = NextResponse.json({ ok: true });
-
 export async function POST(request: Request) {
   try {
+    // Server-side consent check: reject if no attribution consent cookie
+    const cookieStore = cookies();
+    const consentRaw = cookieStore.get("tv_consent")?.value;
+    if (!consentRaw) {
+      return NextResponse.json({ ok: true, tracked: false, reason: "no_consent" });
+    }
+    const consent = decodeCookie(decodeURIComponent(consentRaw));
+    if (!consent?.attribution) {
+      return NextResponse.json({ ok: true, tracked: false, reason: "no_consent" });
+    }
+
     const body = await request.json();
 
     const eventType = body.event_type;
-    if (!eventType || !ALLOWED_EVENTS.has(eventType)) return OK;
+    if (!eventType || !ALLOWED_EVENTS.has(eventType)) {
+      return NextResponse.json({ ok: true, tracked: false, reason: "invalid_event" });
+    }
 
     // Resolve user_id: prefer explicit from body (signup_completed), fall back to auth cookie
     const cookieUserId = await getAuthUserId();
@@ -78,5 +90,5 @@ export async function POST(request: Request) {
     // Never expose errors
   }
 
-  return OK;
+  return NextResponse.json({ ok: true });
 }

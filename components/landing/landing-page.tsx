@@ -13,6 +13,7 @@ import { HeroLiveDemo } from "@/components/landing/hero-live-demo";
 import { AnimateOnScroll } from "@/components/landing/animate-on-scroll";
 import { Navbar } from "@/components/shared/navbar";
 import { AttributionTracker } from "@/components/landing/attribution-tracker";
+import { CookieSettingsButton } from "@/components/consent/cookie-settings-button";
 import type { LandingVariant } from "@/lib/landing-variants";
 
 const STEPS = [
@@ -361,6 +362,7 @@ export function LandingPage({ variant }: Props) {
               <ul className="mt-4 space-y-2.5">
                 <li><Link href="/terms" className="text-sm text-gray-text transition-colors hover:text-cream">Terms of Service</Link></li>
                 <li><Link href="/privacy" className="text-sm text-gray-text transition-colors hover:text-cream">Privacy</Link></li>
+                <li><CookieSettingsButton /></li>
               </ul>
             </div>
           </div>

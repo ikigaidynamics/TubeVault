@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { decodeCookie } from "@/lib/consent";
 
 const ALLOWED_EVENTS = new Set([
   "search",
@@ -68,17 +69,30 @@ async function getAuthUserId(): Promise<string | null> {
   }
 }
 
-const OK = NextResponse.json({ ok: true });
-
 export async function POST(request: Request) {
   try {
+    // Server-side consent check: reject if no analytics consent cookie
+    const cookieStore = cookies();
+    const consentRaw = cookieStore.get("tv_consent")?.value;
+    if (!consentRaw) {
+      return NextResponse.json({ ok: true, tracked: false, reason: "no_consent" });
+    }
+    const consent = decodeCookie(decodeURIComponent(consentRaw));
+    if (!consent?.analytics) {
+      return NextResponse.json({ ok: true, tracked: false, reason: "no_consent" });
+    }
+
     const body = await request.json();
 
     const eventType = body.event_type;
-    if (!eventType || !ALLOWED_EVENTS.has(eventType)) return OK;
+    if (!eventType || !ALLOWED_EVENTS.has(eventType)) {
+      return NextResponse.json({ ok: true, tracked: false, reason: "invalid_event" });
+    }
 
     const sessionId = body.session_id || "unknown";
-    if (!checkRateLimit(sessionId)) return OK;
+    if (!checkRateLimit(sessionId)) {
+      return NextResponse.json({ ok: true, tracked: false, reason: "rate_limited" });
+    }
 
     const userId = await getAuthUserId();
 
@@ -111,5 +125,5 @@ export async function POST(request: Request) {
     // Never expose errors to client
   }
 
-  return OK;
+  return NextResponse.json({ ok: true });
 }

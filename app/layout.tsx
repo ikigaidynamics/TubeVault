@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Alice } from "next/font/google";
+import { CookieBanner } from "@/components/consent/cookie-banner";
 import "./globals.css";
 
 const inter = Inter({
@@ -31,7 +32,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} ${alice.variable} antialiased`} suppressHydrationWarning>{children}</body>
+      <body className={`${inter.className} ${alice.variable} antialiased`} suppressHydrationWarning>
+        {children}
+        <CookieBanner />
+      </body>
     </html>
   );
 }

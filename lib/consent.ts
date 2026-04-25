@@ -164,5 +164,26 @@ export function getConsentMethod(cats: ConsentCategories): ConsentMethod {
   return "custom_settings";
 }
 
+/**
+ * Persistent audit session ID for consent logging.
+ * Classified as technically necessary (audit compliance) — NO consent gate.
+ * Only written to localStorage when a consent decision is recorded.
+ */
+const AUDIT_SESSION_KEY = "tv_audit_session_id";
+
+export function getOrCreateAuditSessionId(): string {
+  if (!isClient()) return "server";
+  try {
+    let id = localStorage.getItem(AUDIT_SESSION_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(AUDIT_SESSION_KEY, id);
+    }
+    return id;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
+
 /** Current policy version — bump when privacy policy changes materially. */
 export { POLICY_VERSION };
