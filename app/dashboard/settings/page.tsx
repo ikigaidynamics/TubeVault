@@ -40,6 +40,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [tier, setTier] = useState<SubscriptionTier>("free");
@@ -120,27 +121,37 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
 
-    setUploadingAvatar(true);
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      setAvatarError("Only JPEG, PNG, WebP, and GIF images are allowed.");
+      return;
+    }
 
-    const ext = file.name.split(".").pop();
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError("Image must be under 2 MB.");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    setAvatarError(null);
+
+    const ext = file.name.split(".").pop() || "jpg";
     const filePath = `avatars/${userId}.${ext}`;
 
+    // Upload to Supabase Storage — NEVER fall back to base64 data URLs.
+    // Base64 in user_metadata bloats JWTs/cookies and causes 502 errors.
     const { error: uploadError } = await supabase.storage
       .from("avatars")
       .upload(filePath, file, { upsert: true });
 
     if (uploadError) {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const dataUrl = reader.result as string;
-        await supabase.auth.updateUser({
-          data: { avatar_url: dataUrl },
-        });
-        setAvatarUrl(dataUrl);
-        setUploadingAvatar(false);
-        router.refresh();
-      };
-      reader.readAsDataURL(file);
+      console.error("Avatar upload failed:", uploadError.message);
+      setAvatarError(
+        uploadError.message.includes("Bucket not found")
+          ? "Avatar storage is not configured yet. Please contact support."
+          : `Upload failed: ${uploadError.message}`
+      );
+      setUploadingAvatar(false);
       return;
     }
 
@@ -160,6 +171,18 @@ export default function SettingsPage() {
   }
 
   async function handleRemoveAvatar() {
+    if (userId) {
+      // Try to remove the file from storage (best-effort, ignore errors)
+      const { data: files } = await supabase.storage
+        .from("avatars")
+        .list("avatars", { search: userId });
+      if (files?.length) {
+        await supabase.storage
+          .from("avatars")
+          .remove(files.map((f) => `avatars/${f.name}`));
+      }
+    }
+
     await supabase.auth.updateUser({
       data: { avatar_url: null },
     });
@@ -250,6 +273,9 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
+              {avatarError && (
+                <p className="text-xs text-red-400">{avatarError}</p>
+              )}
 
               {/* Display Name */}
               <div>
