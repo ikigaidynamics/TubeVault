@@ -1,3 +1,5 @@
+import { hasAnalyticsConsent } from "@/lib/consent";
+
 export type AnalyticsEvent =
   | "search"
   | "search_no_result"
@@ -42,6 +44,9 @@ export async function track(
   event: AnalyticsEvent,
   options: TrackOptions = {}
 ): Promise<void> {
+  // GDPR/TTDSG: no tracking without explicit analytics consent
+  if (!hasAnalyticsConsent()) return;
+
   try {
     const queryHash = options.query ? await sha256(options.query) : undefined;
 

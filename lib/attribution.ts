@@ -5,11 +5,17 @@
  * independent from the daily-rotating analytics_events session_id.
  * These are two separate tracking systems by design.
  *
+ * GDPR/TTDSG: ALL tracking functions check for attribution consent
+ * before writing to localStorage or firing API requests.
+ * Without consent → silent no-op, no localStorage writes, no requests.
+ *
  * OAuth flow: because OAuth redirects away from the app, localStorage is
  * inaccessible in the server-side /auth/callback route. Before triggering
  * OAuth, call setSessionCookieForOAuth() to bridge the session_id via a
  * short-lived cookie that the callback route can read.
  */
+
+import { hasAttributionConsent } from "@/lib/consent";
 
 const SESSION_KEY = "tv_session_id";
 const ATTR_KEY = "tv_attribution";
@@ -27,9 +33,13 @@ export interface AttributionData {
   captured_at: number; // timestamp ms
 }
 
-/** Persistent session ID — survives across days, stored in localStorage */
-export function getOrCreateSessionId(): string {
-  if (typeof window === "undefined") return "server";
+/**
+ * Persistent session ID — survives across days, stored in localStorage.
+ * Returns null if attribution consent has not been granted.
+ */
+export function getOrCreateSessionId(): string | null {
+  if (typeof window === "undefined") return null;
+  if (!hasAttributionConsent()) return null;
   try {
     let id = localStorage.getItem(SESSION_KEY);
     if (!id) {
@@ -38,13 +48,14 @@ export function getOrCreateSessionId(): string {
     }
     return id;
   } catch {
-    return crypto.randomUUID();
+    return null;
   }
 }
 
-/** Read stored attribution (SSR-safe) */
+/** Read stored attribution (SSR-safe). Returns null without consent. */
 export function getStoredAttribution(): AttributionData | null {
   if (typeof window === "undefined") return null;
+  if (!hasAttributionConsent()) return null;
   try {
     const raw = localStorage.getItem(ATTR_KEY);
     if (!raw) return null;
@@ -64,9 +75,12 @@ export function getStoredAttribution(): AttributionData | null {
  * First-touch attribution capture.
  * Stores UTM params + referrer on first visit (or after expiry).
  * Fires a page_view event every visit.
+ *
+ * No-op without attribution consent.
  */
 export function captureAttribution(variantSlug: string): void {
   if (typeof window === "undefined") return;
+  if (!hasAttributionConsent()) return;
 
   try {
     const params = new URLSearchParams(window.location.search);
@@ -100,11 +114,15 @@ export function captureAttribution(variantSlug: string): void {
  * Set tv_session_id as a cookie before OAuth redirect so
  * /auth/callback can correlate the session server-side.
  * Cookie is short-lived (10 min) and cleared after use.
+ *
+ * No-op without attribution consent.
  */
 export function setSessionCookieForOAuth(): void {
   if (typeof window === "undefined") return;
+  if (!hasAttributionConsent()) return;
   try {
     const sessionId = getOrCreateSessionId();
+    if (!sessionId) return;
     const secure = window.location.protocol === "https:";
     document.cookie = `tv_session_id=${sessionId}; path=/; max-age=600; SameSite=Lax${secure ? "; Secure" : ""}`;
   } catch {
@@ -116,6 +134,8 @@ export function setSessionCookieForOAuth(): void {
  * Fire-and-forget attribution event.
  * Pulls variant + UTMs from stored attribution automatically.
  * Pass userId explicitly for signup_completed (cookie may not be set yet).
+ *
+ * No-op without attribution consent.
  */
 export function trackEvent(
   eventType: string,
@@ -123,9 +143,11 @@ export function trackEvent(
   options?: { userId?: string }
 ): void {
   if (typeof window === "undefined") return;
+  if (!hasAttributionConsent()) return;
 
   try {
     const sessionId = getOrCreateSessionId();
+    if (!sessionId) return;
     const attr = getStoredAttribution();
 
     const body: Record<string, unknown> = {
