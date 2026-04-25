@@ -191,8 +191,6 @@ function PricingCard({
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const price = yearly ? tier.yearlyPrice : tier.monthlyPrice;
-  const period = tier.monthlyPrice === 0 ? "" : yearly ? "/year" : "/mo";
 
   async function handleClick() {
     if (tier.slug === "free") {
