@@ -69,7 +69,7 @@ function logConsent(
 // Legal pages where the banner should never appear
 // ---------------------------------------------------------------------------
 
-const HIDDEN_PATHS = new Set(["/privacy", "/terms", "/impressum", "/datenschutz"]);
+const HIDDEN_PATHS = new Set(["/privacy", "/privacy/data-request", "/terms", "/impressum", "/datenschutz"]);
 
 // ---------------------------------------------------------------------------
 // Component

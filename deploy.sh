@@ -4,8 +4,8 @@
 
 set -e
 
-SSH="/c/Windows/System32/OpenSSH/ssh.exe"
-SCP="/c/Windows/System32/OpenSSH/scp.exe"
+SSH="ssh"
+SCP="scp"
 SERVER="root@46.225.139.82"
 REMOTE_DIR="/opt/tubevault"
 

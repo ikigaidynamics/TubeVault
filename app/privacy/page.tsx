@@ -491,6 +491,12 @@ export default function PrivacyPage() {
               </a>
             </p>
             <p className="mt-1">We respond to requests within 30 days as required by Art. 12(3) GDPR.</p>
+            <p className="mt-3">
+              You can also submit GDPR requests directly via our online form:{" "}
+              <Link href="/privacy/data-request" className="text-primary hover:text-primary-hover">
+                Submit a Data Request &rarr;
+              </Link>
+            </p>
           </section>
         </div>
 

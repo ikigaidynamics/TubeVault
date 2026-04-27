@@ -504,6 +504,12 @@ export default function DatenschutzPage() {
               </a>
             </p>
             <p className="mt-1">Wir beantworten Anfragen innerhalb von 30 Tagen gem&auml;&szlig; Art. 12 Abs. 3 DSGVO.</p>
+            <p className="mt-3">
+              Sie k&ouml;nnen DSGVO-Anfragen auch direkt &uuml;ber unser Online-Formular stellen:{" "}
+              <Link href="/privacy/data-request" className="text-primary hover:text-primary-hover">
+                Anfrage stellen &rarr;
+              </Link>
+            </p>
           </section>
         </div>
 
