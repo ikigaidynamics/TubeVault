@@ -45,19 +45,24 @@ export async function Attribution({ days }: Props) {
   }
   const variantRows = Array.from(variants.entries()).sort((a, b) => b[1].views - a[1].views);
 
-  // (b) UTM breakdown
-  const utmMap = new Map<string, { views: number; signups: number }>();
+  // (b) UTM breakdown — separate columns per parameter
+  const utmKey = (s: string, m: string, c: string) => `${s}||${m}||${c}`;
+  const utmMap = new Map<string, { source: string; medium: string; campaign: string; views: number; signups: number }>();
   for (const e of events) {
     if (!e.utm_source) continue;
-    const key = [e.utm_source, e.utm_medium || "\u2013", e.utm_campaign || "\u2013"].join(" / ");
-    const u = utmMap.get(key) || { views: 0, signups: 0 };
+    const source = e.utm_source;
+    const medium = e.utm_medium || "";
+    const campaign = e.utm_campaign || "";
+    const key = utmKey(source, medium, campaign);
+    const u = utmMap.get(key) || { source, medium, campaign, views: 0, signups: 0 };
     if (e.event_type === "page_view") u.views++;
     if (e.event_type === "signup_completed") u.signups++;
     utmMap.set(key, u);
   }
-  const utmRows = Array.from(utmMap.entries())
-    .sort((a, b) => b[1].views - a[1].views)
+  const utmRows = Array.from(utmMap.values())
+    .sort((a, b) => b.views - a.views)
     .slice(0, 20);
+  const utmAllBasic = utmRows.length > 0 && utmRows.every((r) => !r.medium && !r.campaign);
 
   // (c) Top referrers
   const refMap = new Map<string, { views: number; signups: number }>();
@@ -153,15 +158,27 @@ export async function Attribution({ days }: Props) {
         <div>
           <h3 className="text-sm font-medium text-cream">UTM Breakdown</h3>
           <p className="mt-1 mb-3 text-xs text-gray-text/60">
-            Inbound traffic grouped by UTM parameters. Only sessions with at least one UTM parameter set.
+            UTM parameters are tags appended to URLs (like ?utm_source=reddit) to track marketing
+            sources. The values shown are set by you when creating campaign links &mdash; only
+            sessions with at least one UTM parameter set appear here.
           </p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06] text-left text-xs text-gray-text/50">
                   <th className="pb-2 pr-4">
-                    <span className="inline-flex items-center gap-1" title="Read as 'utm_source / utm_medium / utm_campaign'. Dash means parameter not set.">
-                      Source / Medium / Campaign <Info size={14} className="text-gray-text/60" />
+                    <span className="inline-flex items-center gap-1" title="Where the traffic originated (e.g. 'reddit', 'youtube', 'newsletter').">
+                      Source <Info size={14} className="text-gray-text/60" />
+                    </span>
+                  </th>
+                  <th className="pb-2 pr-4">
+                    <span className="inline-flex items-center gap-1" title="Type of marketing channel (e.g. 'post', 'email', 'social').">
+                      Medium <Info size={14} className="text-gray-text/60" />
+                    </span>
+                  </th>
+                  <th className="pb-2 pr-4">
+                    <span className="inline-flex items-center gap-1" title="Specific campaign name (e.g. 'launch', 'creator-outreach').">
+                      Campaign <Info size={14} className="text-gray-text/60" />
                     </span>
                   </th>
                   <th className="pb-2 pr-4">Page Views</th>
@@ -169,16 +186,29 @@ export async function Attribution({ days }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {utmRows.map(([key, d]) => (
-                  <tr key={key} className="border-b border-white/[0.03]">
-                    <td className="py-2 pr-4 text-cream">{key}</td>
-                    <td className="py-2 pr-4 text-cream">{d.views}</td>
-                    <td className="py-2 pr-4 text-cream">{d.signups}</td>
+                {utmRows.map((r) => (
+                  <tr key={`${r.source}|${r.medium}|${r.campaign}`} className="border-b border-white/[0.03]">
+                    <td className="py-2 pr-4 text-cream">{r.source}</td>
+                    <td className="py-2 pr-4">
+                      {r.medium ? <span className="text-cream">{r.medium}</span> : <span className="text-gray-text/40">{"\u2014"}</span>}
+                    </td>
+                    <td className="py-2 pr-4">
+                      {r.campaign ? <span className="text-cream">{r.campaign}</span> : <span className="text-gray-text/40">{"\u2014"}</span>}
+                    </td>
+                    <td className="py-2 pr-4 text-cream">{r.views}</td>
+                    <td className="py-2 pr-4 text-cream">{r.signups}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          {utmAllBasic && (
+            <p className="mt-3 text-xs text-gray-text/40">
+              No marketing campaigns tracked yet. Add UTM parameters to your promotional links
+              (e.g. tubevault.io?utm_source=reddit&amp;utm_medium=post&amp;utm_campaign=launch)
+              to see traffic attribution here.
+            </p>
+          )}
         </div>
       )}
 
@@ -214,17 +244,39 @@ export async function Attribution({ days }: Props) {
       <div>
         <h3 className="text-sm font-medium text-cream">First-Touch Attribution Sources</h3>
         <p className="mt-1 mb-3 text-xs text-gray-text/60">
-          Which channel brought users that ended up signing up.
+          Where each user first arrived from. If they later returned directly or via different
+          sources, they are still credited to their first touch. This shows which marketing
+          channels actually bring converting users.
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06] text-left text-xs text-gray-text/50">
-                <th className="pb-2 pr-4">Source</th>
-                <th className="pb-2 pr-4">Page Views</th>
-                <th className="pb-2 pr-4">Signups</th>
-                <th className="pb-2 pr-4">Conv. Rate</th>
-                <th className="pb-2 pr-4">Paid</th>
+                <th className="pb-2 pr-4">
+                  <span className="inline-flex items-center gap-1" title="First marketing source the user encountered (or 'direct' if none).">
+                    Source <Info size={14} className="text-gray-text/60" />
+                  </span>
+                </th>
+                <th className="pb-2 pr-4">
+                  <span className="inline-flex items-center gap-1" title="Total visits from this source.">
+                    Page Views <Info size={14} className="text-gray-text/60" />
+                  </span>
+                </th>
+                <th className="pb-2 pr-4">
+                  <span className="inline-flex items-center gap-1" title="Signups attributed to this source via first-touch.">
+                    Signups <Info size={14} className="text-gray-text/60" />
+                  </span>
+                </th>
+                <th className="pb-2 pr-4">
+                  <span className="inline-flex items-center gap-1" title="Signups divided by Page Views for this source.">
+                    Conv. Rate <Info size={14} className="text-gray-text/60" />
+                  </span>
+                </th>
+                <th className="pb-2 pr-4">
+                  <span className="inline-flex items-center gap-1" title="Paid subscriptions attributed to this source.">
+                    Paid <Info size={14} className="text-gray-text/60" />
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody>

@@ -50,8 +50,9 @@ export async function OverviewCards({ days }: Props) {
     : "\u2014";
 
   const demoQuestions = (attrEvents ?? []).length;
+  const demoToSignupRaw = demoQuestions > 0 ? signups.length / demoQuestions : 0;
   const demoToSignup = demoQuestions > 0
-    ? `${Math.round((signups.length / demoQuestions) * 100)}%`
+    ? `${Math.min(100, Math.round(demoToSignupRaw * 100))}%`
     : "\u2014";
 
   const cards: {
@@ -78,7 +79,9 @@ export async function OverviewCards({ days }: Props) {
     {
       label: "Demo-to-Signup Rate",
       value: demoToSignup,
-      tip: "Share of visitors who, after asking a demo question, went on to sign up. Strongest conversion signal.",
+      tip: demoQuestions > 0
+        ? `${signups.length} signups / ${demoQuestions} demo questions. Capped at 100%. This metric needs more demo traffic to be meaningful.`
+        : "Share of visitors who signed up after asking a demo question. No demo questions tracked yet.",
     },
   ];
 
