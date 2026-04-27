@@ -8,7 +8,7 @@ export function CookieSettingsButton() {
       onClick={openCookieBanner}
       className="text-sm text-gray-text transition-colors hover:text-cream"
     >
-      Cookie-Einstellungen
+      Cookie settings
     </button>
   );
 }

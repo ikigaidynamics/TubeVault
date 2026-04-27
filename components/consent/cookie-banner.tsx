@@ -106,7 +106,7 @@ export function CookieBanner() {
     }
   }, [visible]);
 
-  // --- Listen for footer "Cookie-Einstellungen" link --------------------
+  // --- Listen for footer "Cookie settings" link --------------------------
   useEffect(() => {
     function handleOpen() {
       // Defensive: cancel any in-flight slide-out timer so slide-in starts clean
@@ -150,7 +150,7 @@ export function CookieBanner() {
     setConsent(cats);
     logConsent(cats, "accept_all");
 
-    // Nachholende Attribution für die laufende Session
+    // Retroactive attribution for the current session
     captureAttribution(getVariantSlug(pathname));
 
     closeBanner();
@@ -199,13 +199,13 @@ export function CookieBanner() {
           /* ── Main view: info text + 3 buttons ── */
           <>
             <p className="text-sm leading-relaxed text-cream/80">
-              Wir nutzen Cookies und lokalen Speicher f&uuml;r Analyse und
-              Attribution.{" "}
+              We use cookies and local storage for analytics and
+              attribution.{" "}
               <Link
                 href="/privacy"
                 className="text-primary underline underline-offset-2 hover:text-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-[#1a1a1b]"
               >
-                Datenschutzerkl&auml;rung
+                Privacy Policy
               </Link>
             </p>
 
@@ -214,13 +214,13 @@ export function CookieBanner() {
                 onClick={handleAcceptAll}
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-[#1a1a1b]"
               >
-                Alle akzeptieren
+                Accept all
               </button>
               <button
                 onClick={handleNecessaryOnly}
                 className="rounded-lg border border-white/[0.12] px-4 py-2 text-sm font-medium text-cream transition-colors hover:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-[#1a1a1b]"
               >
-                Nur Notwendige
+                Necessary only
               </button>
               <button
                 onClick={() => {
@@ -230,7 +230,7 @@ export function CookieBanner() {
                 }}
                 className="text-sm text-gray-text underline underline-offset-2 transition-colors hover:text-cream focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-[#1a1a1b]"
               >
-                Einstellungen
+                Settings
               </button>
             </div>
           </>
@@ -238,20 +238,20 @@ export function CookieBanner() {
           /* ── Settings panel: category toggles ── */
           <>
             <h3 className="text-sm font-semibold text-cream">
-              Cookie-Einstellungen
+              Cookie settings
             </h3>
 
             <div className="mt-3 space-y-3">
               {/* Necessary — always on */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-cream">Notwendig</p>
+                  <p className="text-sm font-medium text-cream">Necessary</p>
                   <p className="text-xs text-gray-text/60">
-                    Authentifizierung und Consent-Speicherung.
+                    Authentication and consent storage.
                   </p>
                 </div>
                 <span className="text-xs font-medium text-gray-text/40">
-                  immer aktiv
+                  always on
                 </span>
               </div>
 
@@ -260,7 +260,7 @@ export function CookieBanner() {
                 <div>
                   <p className="text-sm font-medium text-cream">Analytics</p>
                   <p className="text-xs text-gray-text/60">
-                    Pseudonymisierte Nutzungsstatistiken.
+                    Pseudonymized usage statistics.
                   </p>
                 </div>
                 <button
@@ -284,7 +284,7 @@ export function CookieBanner() {
                 <div>
                   <p className="text-sm font-medium text-cream">Attribution</p>
                   <p className="text-xs text-gray-text/60">
-                    Herkunft und Conversion-Tracking.
+                    Source and conversion tracking.
                   </p>
                 </div>
                 <button
@@ -309,13 +309,13 @@ export function CookieBanner() {
                 onClick={handleSaveSettings}
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-[#1a1a1b]"
               >
-                Auswahl speichern
+                Save choices
               </button>
               <button
                 onClick={() => setShowSettings(false)}
                 className="text-sm text-gray-text underline underline-offset-2 transition-colors hover:text-cream focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-[#1a1a1b]"
               >
-                Zur&uuml;ck
+                Back
               </button>
             </div>
           </>
