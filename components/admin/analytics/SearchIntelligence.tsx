@@ -1,5 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
+import { Info } from "lucide-react";
 import { formatChannelName } from "./utils";
+
+/** Detect if a string looks like a SHA-256 hash rather than a human query */
+function isHash(s: string): boolean {
+  return /^[a-f0-9]{8,}$/.test(s) && !s.includes(" ");
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -92,15 +98,16 @@ export async function SearchIntelligence() {
                     key={hash}
                     className={`border-b border-white/[0.03] ${isZero ? "bg-red-500/[0.05]" : ""}`}
                   >
-                    {/* TODO: Privacy review needed — decide whether to store query_raw
-                        for anonymous users. Currently only authenticated user queries
-                        have raw text; anonymous queries show as SHA-256 hashes. */}
                     <td className="py-2 pr-4 text-cream">
-                      {d.raw ? (
+                      {d.raw && !isHash(d.raw) ? (
                         d.raw
                       ) : (
-                        <span className="cursor-help text-gray-text/60" title={hash}>
-                          {hash.slice(0, 12)}&hellip;
+                        <span
+                          className="inline-flex items-center gap-1 text-gray-text/60"
+                          title="Search queries from anonymous users are stored as cryptographic hashes for privacy. Only the count and channel are visible."
+                        >
+                          <em>(anonymous query)</em>
+                          <Info size={14} className="text-gray-text/60" />
                         </span>
                       )}
                     </td>

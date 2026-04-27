@@ -9,12 +9,14 @@ import { SearchIntelligence } from "@/components/admin/analytics/SearchIntellige
 import { ChannelRankings } from "@/components/admin/analytics/ChannelRankings";
 import { Retention } from "@/components/admin/analytics/Retention";
 import { ConversionFunnel } from "@/components/admin/analytics/ConversionFunnel";
+import { DailyTrends } from "@/components/admin/analytics/DailyTrends";
 
 export const dynamic = "force-dynamic";
 
 const NAV_ITEMS = [
   { label: "Overview", href: "#overview" },
   { label: "Volume", href: "#volume" },
+  { label: "Trends", href: "#trends" },
   { label: "Attribution", href: "#attribution" },
   { label: "Devices", href: "#devices" },
   { label: "Search", href: "#search" },
@@ -130,6 +132,11 @@ export default async function AdminAnalyticsPage({
         <div id="volume">
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {(SearchVolume as any)()}
+        </div>
+
+        <div id="trends">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {(DailyTrends as any)()}
         </div>
 
         <div id="attribution">

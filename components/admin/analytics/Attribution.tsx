@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { Info } from "lucide-react";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,7 +49,7 @@ export async function Attribution({ days }: Props) {
   const utmMap = new Map<string, { views: number; signups: number }>();
   for (const e of events) {
     if (!e.utm_source) continue;
-    const key = [e.utm_source, e.utm_medium || "-", e.utm_campaign || "-"].join(" / ");
+    const key = [e.utm_source, e.utm_medium || "\u2013", e.utm_campaign || "\u2013"].join(" / ");
     const u = utmMap.get(key) || { views: 0, signups: 0 };
     if (e.event_type === "page_view") u.views++;
     if (e.event_type === "signup_completed") u.signups++;
@@ -74,25 +75,59 @@ export async function Attribution({ days }: Props) {
     .sort((a, b) => b[1].views - a[1].views)
     .slice(0, 10);
 
+  // (d) First-touch attribution sources
+  const sourceMap = new Map<string, { views: number; signups: number; paid: number }>();
+  for (const e of events) {
+    let source = "direct";
+    if (e.utm_source) {
+      source = e.utm_source;
+    } else if (e.referrer) {
+      try { source = new URL(e.referrer).hostname.replace("www.", ""); } catch { source = e.referrer; }
+    }
+    const s = sourceMap.get(source) || { views: 0, signups: 0, paid: 0 };
+    if (e.event_type === "page_view") s.views++;
+    if (e.event_type === "signup_completed") s.signups++;
+    if (e.event_type === "subscription_started") s.paid++;
+    sourceMap.set(source, s);
+  }
+  const sourceRows = Array.from(sourceMap.entries())
+    .sort((a, b) => b[1].signups - a[1].signups)
+    .slice(0, 15);
+
   return (
     <div className="space-y-10" id="attribution">
       <h2 className="text-lg font-semibold text-cream">Attribution ({days}d)</h2>
 
       {/* (a) Funnel by variant */}
       <div>
-        <h3 className="mb-3 text-sm font-medium text-cream">Funnel by Variant</h3>
+        <h3 className="text-sm font-medium text-cream">Funnel by Variant</h3>
+        <p className="mt-1 mb-3 text-xs text-gray-text/60">
+          Conversion through the funnel, broken down by which landing page variant the user first saw.
+        </p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06] text-left text-xs text-gray-text/50">
-                <th className="pb-2 pr-4">Variant</th>
+                <th className="pb-2 pr-4">Landing Variant</th>
                 <th className="pb-2 pr-4">Page Views</th>
-                <th className="pb-2 pr-4">Demo Qs</th>
+                <th className="pb-2 pr-4">Demo Questions</th>
                 <th className="pb-2 pr-4">Signups</th>
-                <th className="pb-2 pr-4">Paid</th>
-                <th className="pb-2 pr-4">Engagement</th>
-                <th className="pb-2 pr-4">Signup Rate</th>
-                <th className="pb-2 pr-4">Paid Rate</th>
+                <th className="pb-2 pr-4">Paid Conversions</th>
+                <th className="pb-2 pr-4">
+                  <span className="inline-flex items-center gap-1" title="Share of visitors who interacted with the demo (asked their own question).">
+                    Engagement % <Info size={14} className="text-gray-text/60" />
+                  </span>
+                </th>
+                <th className="pb-2 pr-4">
+                  <span className="inline-flex items-center gap-1" title="Signups divided by Page Views.">
+                    Signup Rate <Info size={14} className="text-gray-text/60" />
+                  </span>
+                </th>
+                <th className="pb-2 pr-4">
+                  <span className="inline-flex items-center gap-1" title="Paid conversions divided by Page Views.">
+                    Paid Rate <Info size={14} className="text-gray-text/60" />
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -105,7 +140,7 @@ export async function Attribution({ days }: Props) {
                   <td className="py-2 pr-4 text-primary">{v.paid}</td>
                   <td className="py-2 pr-4 text-gray-text">{v.views > 0 ? Math.round((v.demos / v.views) * 100) : 0}%</td>
                   <td className="py-2 pr-4 text-gray-text">{v.views > 0 ? Math.round((v.signups / v.views) * 100) : 0}%</td>
-                  <td className="py-2 pr-4 text-gray-text">{v.signups > 0 ? Math.round((v.paid / v.signups) * 100) : 0}%</td>
+                  <td className="py-2 pr-4 text-gray-text">{v.views > 0 ? Math.round((v.paid / v.views) * 100) : 0}%</td>
                 </tr>
               ))}
             </tbody>
@@ -116,12 +151,19 @@ export async function Attribution({ days }: Props) {
       {/* (b) UTM breakdown */}
       {utmRows.length > 0 && (
         <div>
-          <h3 className="mb-3 text-sm font-medium text-cream">UTM Breakdown</h3>
+          <h3 className="text-sm font-medium text-cream">UTM Breakdown</h3>
+          <p className="mt-1 mb-3 text-xs text-gray-text/60">
+            Inbound traffic grouped by UTM parameters. Only sessions with at least one UTM parameter set.
+          </p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06] text-left text-xs text-gray-text/50">
-                  <th className="pb-2 pr-4">Source / Medium / Campaign</th>
+                  <th className="pb-2 pr-4">
+                    <span className="inline-flex items-center gap-1" title="Read as 'utm_source / utm_medium / utm_campaign'. Dash means parameter not set.">
+                      Source / Medium / Campaign <Info size={14} className="text-gray-text/60" />
+                    </span>
+                  </th>
                   <th className="pb-2 pr-4">Page Views</th>
                   <th className="pb-2 pr-4">Signups</th>
                 </tr>
@@ -142,7 +184,10 @@ export async function Attribution({ days }: Props) {
 
       {/* (c) Top referrers */}
       <div>
-        <h3 className="mb-3 text-sm font-medium text-cream">Top Referrers</h3>
+        <h3 className="text-sm font-medium text-cream">Top Referrers</h3>
+        <p className="mt-1 mb-3 text-xs text-gray-text/60">
+          External domains that linked to TubeVault. {"\u201C"}Direct{"\u201D"} means no referrer (typed URL, bookmark, or referrer blocked by browser).
+        </p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -160,6 +205,45 @@ export async function Attribution({ days }: Props) {
                   <td className="py-2 pr-4 text-cream">{d.signups}</td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* (d) First-Touch Attribution Sources */}
+      <div>
+        <h3 className="text-sm font-medium text-cream">First-Touch Attribution Sources</h3>
+        <p className="mt-1 mb-3 text-xs text-gray-text/60">
+          Which channel brought users that ended up signing up.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/[0.06] text-left text-xs text-gray-text/50">
+                <th className="pb-2 pr-4">Source</th>
+                <th className="pb-2 pr-4">Page Views</th>
+                <th className="pb-2 pr-4">Signups</th>
+                <th className="pb-2 pr-4">Conv. Rate</th>
+                <th className="pb-2 pr-4">Paid</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sourceRows.map(([source, d]) => (
+                <tr key={source} className="border-b border-white/[0.03]">
+                  <td className="py-2 pr-4 font-medium text-cream">{source}</td>
+                  <td className="py-2 pr-4 text-cream">{d.views}</td>
+                  <td className="py-2 pr-4 text-cream">{d.signups}</td>
+                  <td className="py-2 pr-4 text-gray-text">{d.views > 0 ? Math.round((d.signups / d.views) * 100) : 0}%</td>
+                  <td className="py-2 pr-4 text-primary">{d.paid}</td>
+                </tr>
+              ))}
+              {sourceRows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-4 text-center text-gray-text/40">
+                    No attribution data yet
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

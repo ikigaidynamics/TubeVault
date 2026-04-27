@@ -1,9 +1,45 @@
 import { createClient } from "@supabase/supabase-js";
+import { Info } from "lucide-react";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// ---------------------------------------------------------------------------
+// Human-readable labels for upgrade triggers
+// ---------------------------------------------------------------------------
+
+const TRIGGER_LABELS: Record<string, { label: string; tip: string }> = {
+  transcripts: {
+    label: "Transcript view limit",
+    tip: "User wanted to see full transcript, hit the paywall.",
+  },
+  channel_limit: {
+    label: "Channel selection limit",
+    tip: "User tried to add a channel beyond their tier\u2019s limit.",
+  },
+  search_limit: {
+    label: "Daily search limit",
+    tip: "User exhausted their daily question quota.",
+  },
+  manual: {
+    label: "Direct pricing visit",
+    tip: "User clicked an Upgrade button without triggering a wall.",
+  },
+  direct: {
+    label: "Direct /pricing URL",
+    tip: "User navigated to /pricing directly.",
+  },
+};
+
+function triggerLabel(key: string): { label: string; tip: string } {
+  return TRIGGER_LABELS[key] ?? { label: key, tip: "" };
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export async function ConversionFunnel() {
   const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
@@ -23,11 +59,15 @@ export async function ConversionFunnel() {
   const upgradeClicks = rows.filter((e) => e.event_type === "upgrade_click").length;
   const subscriptions = rows.filter((e) => e.event_type === "subscription_start").length;
 
-  const registeredSteps = [
+  const registeredSteps: FunnelStep[] = [
     { label: "Signups", count: signups },
-    { label: "Searches", count: searchCount },
-    { label: "Upgrade Clicks", count: upgradeClicks },
-    { label: "Subscriptions", count: subscriptions },
+    { label: "Total Searches", count: searchCount },
+    {
+      label: "Upgrade Clicks",
+      count: upgradeClicks,
+      tip: "Clicks on any \u2018Upgrade\u2019 button \u2014 see trigger breakdown below for context.",
+    },
+    { label: "Paid Subscriptions", count: subscriptions },
   ];
 
   // Anonymous trial funnel
@@ -57,10 +97,14 @@ export async function ConversionFunnel() {
     }
   }
 
-  const anonSteps = [
+  const anonSteps: FunnelStep[] = [
     { label: "Anonymous sessions", count: anonSessions.size },
-    { label: "Hit trial limit", count: limitHitSessions.size },
-    { label: "Signed up (within 24h)", count: convertedFromLimit },
+    { label: "Hit trial limit (3 questions)", count: limitHitSessions.size },
+    {
+      label: "Signed up (within 24 h)",
+      count: convertedFromLimit,
+      tip: "Anonymous users who created an account within 24 hours of their first session.",
+    },
   ];
 
   // Upgrade trigger breakdown
@@ -98,48 +142,26 @@ export async function ConversionFunnel() {
   }
   const requestRanking = Array.from(byUrl.entries()).sort((a, b) => b[1] - a[1]);
 
-  function renderFunnel(steps: { label: string; count: number }[], title: string) {
-    const max = steps.length > 0 ? Math.max(...steps.map((s) => s.count), 1) : 1;
-    return (
-      <div>
-        <h3 className="mb-3 text-sm font-medium text-cream">{title}</h3>
-        <div className="space-y-2">
-          {steps.map((step, i) => {
-            const prevCount = i > 0 ? steps[i - 1].count : step.count;
-            const dropoff = prevCount > 0 && i > 0
-              ? Math.round(((prevCount - step.count) / prevCount) * 100)
-              : null;
-            const widthPct = Math.max(8, Math.round((step.count / max) * 100));
-
-            return (
-              <div key={step.label} className="flex items-center gap-4">
-                <div className="w-40 shrink-0 text-right text-xs text-gray-text">{step.label}</div>
-                <div className="flex-1">
-                  <div
-                    className="flex h-9 items-center rounded-lg bg-primary/20 px-3 text-sm font-semibold text-cream"
-                    style={{ width: `${widthPct}%` }}
-                  >
-                    {step.count}
-                    {dropoff !== null && dropoff > 0 && dropoff < 100 && (
-                      <span className="ml-2 text-xs font-normal text-red-400/70">-{dropoff}%</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-8" id="funnel">
-      <h2 className="text-lg font-semibold text-cream">Conversion Funnel (30d)</h2>
+      <div>
+        <h2 className="text-lg font-semibold text-cream">Conversion Funnel (30d)</h2>
+        <p className="mt-1 text-xs text-gray-text/60">
+          Aggregate funnel for all users in the last 30 days.
+        </p>
+      </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        {renderFunnel(registeredSteps, "Registered Users")}
-        {renderFunnel(anonSteps, "Anonymous Trial Users")}
+        {renderFunnel(
+          registeredSteps,
+          "Registered Users",
+          "Users who completed signup.",
+        )}
+        {renderFunnel(
+          anonSteps,
+          "Anonymous Trial Users",
+          "Visitors using the free demo without signing up.",
+        )}
       </div>
 
       {/* Extra metrics */}
@@ -151,14 +173,29 @@ export async function ConversionFunnel() {
           </div>
         )}
         {triggers.length > 0 && (
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-            <p className="mb-2 text-xs text-gray-text/60">Upgrade trigger breakdown</p>
-            {triggers.map(([trigger, count]) => (
-              <div key={trigger} className="flex items-center justify-between text-xs">
-                <span className="text-cream">{trigger}</span>
-                <span className="text-gray-text">{count}</span>
-              </div>
-            ))}
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 sm:col-span-2 lg:col-span-2">
+            <p className="text-xs font-medium text-cream">What triggered upgrade clicks</p>
+            <p className="mt-0.5 mb-3 text-[11px] text-gray-text/50">
+              Which friction point caused the user to click {"\u201C"}Upgrade{"\u201D"}? Higher = stronger conversion driver.
+            </p>
+            <div className="space-y-1.5">
+              {triggers.map(([key, count]) => {
+                const { label, tip } = triggerLabel(key);
+                return (
+                  <div key={key} className="flex items-center justify-between text-xs">
+                    <span className="inline-flex items-center gap-1 text-cream">
+                      {label}
+                      {tip && (
+                        <span title={tip}>
+                          <Info size={14} className="text-gray-text/60" />
+                        </span>
+                      )}
+                    </span>
+                    <span className="font-semibold text-cream">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -188,6 +225,63 @@ export async function ConversionFunnel() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Funnel renderer
+// ---------------------------------------------------------------------------
+
+interface FunnelStep {
+  label: string;
+  count: number;
+  tip?: string;
+}
+
+function renderFunnel(steps: FunnelStep[], title: string, titleTip: string) {
+  const max = steps.length > 0 ? Math.max(...steps.map((s) => s.count), 1) : 1;
+  return (
+    <div>
+      <h3 className="mb-3 text-sm font-medium text-cream">
+        <span className="inline-flex items-center gap-1" title={titleTip}>
+          {title} <Info size={14} className="text-gray-text/60" />
+        </span>
+      </h3>
+      <div className="space-y-2">
+        {steps.map((step, i) => {
+          const prevCount = i > 0 ? steps[i - 1].count : step.count;
+          const dropoff = prevCount > 0 && i > 0
+            ? Math.round(((prevCount - step.count) / prevCount) * 100)
+            : null;
+          const widthPct = Math.max(8, Math.round((step.count / max) * 100));
+
+          return (
+            <div key={step.label} className="flex items-center gap-4">
+              <div className="w-48 shrink-0 text-right text-xs text-gray-text">
+                {step.tip ? (
+                  <span className="inline-flex items-center justify-end gap-1" title={step.tip}>
+                    {step.label} <Info size={12} className="text-gray-text/60" />
+                  </span>
+                ) : (
+                  step.label
+                )}
+              </div>
+              <div className="flex-1">
+                <div
+                  className="flex h-9 items-center rounded-lg bg-primary/20 px-3 text-sm font-semibold text-cream"
+                  style={{ width: `${widthPct}%` }}
+                >
+                  {step.count}
+                  {dropoff !== null && dropoff > 0 && dropoff < 100 && (
+                    <span className="ml-2 text-xs font-normal text-red-400/70">-{dropoff}%</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
