@@ -10,7 +10,7 @@ export default function TermsPage() {
         <p className="mt-2 text-sm text-gray-text">
           TubeVault &middot; tubevault.io
           <br />
-          Effective date: June 2025 &middot; Operator: Robin Jost, Cottbus, Germany
+          Effective date: April 27, 2026 &middot; Operator: Robin Jost, Cottbus, Germany
         </p>
 
         <div className="mt-10 space-y-8 text-sm leading-relaxed text-cream/80">
@@ -20,11 +20,16 @@ export default function TermsPage() {
             <p>TubeVault (tubevault.io) is operated by:</p>
             <p className="mt-2">
               Robin Jost<br />
-              Cottbus, Germany<br />
+              Ziegeleigrund 10, 03051 Cottbus, Germany<br />
+              Phone: +49 176 22789264<br />
               Email:{" "}
               <a href="mailto:jost@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">
                 jost@ikigai-dynamics.com
               </a>
+            </p>
+            <p className="mt-2">
+              Robin Jost operates as a freelancer (Freiberufler) under &sect;18 EStG. The
+              Kleinunternehmerregelung pursuant to &sect;19 UStG applies; no VAT is charged.
             </p>
             <p className="mt-2">
               These Terms apply to all users of the TubeVault platform, including the website
@@ -94,7 +99,7 @@ export default function TermsPage() {
             <h3 className="mb-2 mt-4 text-base font-medium text-cream">4.1 Available Plans</h3>
             <p>
               Prices are shown in US Dollars (USD). The amount charged in your local currency may vary
-              due to exchange rate fluctuations. Payment processing is handled by Stripe, Inc.
+              due to exchange rate fluctuations. Payment processing is handled by Stripe Payments Europe Ltd., Ireland.
             </p>
 
             <h3 className="mb-2 mt-4 text-base font-medium text-cream">4.2 Subscription and Auto-Renewal</h3>
@@ -327,25 +332,13 @@ export default function TermsPage() {
             </p>
           </section>
 
-          {/* Annex */}
+          {/* Legal Notice reference */}
           <section className="border-t border-white/[0.06] pt-8">
-            <h2 className="mb-3 text-lg font-semibold text-cream">Annex: Legal Notice (Impressum)</h2>
-            <p>Information pursuant to &sect; 5 TMG:</p>
-            <p className="mt-2">
-              Robin Jost<br />
-              <br />
-              Cottbus, Germany
-            </p>
-            <p className="mt-2">
-              Email:{" "}
-              <a href="mailto:jost@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">
-                jost@ikigai-dynamics.com
-              </a>
-            </p>
-            <p className="mt-2">
-              Note: VAT-exempt pursuant to &sect; 19 UStG (German small business regulation). No VAT is
-              charged. A VAT identification number is not required as long as no B2B transactions are
-              made to customers in other EU member states.
+            <p>
+              Legal notice (Impressum) pursuant to &sect;5 TMG:{" "}
+              <Link href="/impressum" className="text-primary hover:text-primary-hover">
+                tubevault.io/impressum
+              </Link>
             </p>
           </section>
         </div>

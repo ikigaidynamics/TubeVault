@@ -361,7 +361,7 @@ export function LandingPage({ variant }: Props) {
               <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-text/50">Legal</h4>
               <ul className="mt-4 space-y-2.5">
                 <li><Link href="/terms" className="text-sm text-gray-text transition-colors hover:text-cream">Terms of Service</Link></li>
-                <li><Link href="/privacy" className="text-sm text-gray-text transition-colors hover:text-cream">Privacy</Link></li>
+                <li><Link href="/privacy" className="text-sm text-gray-text transition-colors hover:text-cream">Privacy Policy</Link></li>
                 <li><CookieSettingsButton /></li>
               </ul>
             </div>

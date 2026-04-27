@@ -10,7 +10,13 @@ export default function PrivacyPage() {
         <p className="mt-2 text-sm text-gray-text">
           TubeVault &middot; tubevault.io
           <br />
-          Effective date: June 2025 &middot; Operator: Robin Jost, Cottbus, Germany
+          Effective date: April 27, 2026 &middot; Operator: Robin Jost, Cottbus, Germany
+        </p>
+
+        <p className="mt-4 text-sm text-gray-text">
+          <Link href="/datenschutz" className="text-primary hover:text-primary-hover">
+            Deutsche Version &rarr;
+          </Link>
         </p>
 
         <div className="mt-10 space-y-8 text-sm leading-relaxed text-cream/80">
@@ -22,7 +28,8 @@ export default function PrivacyPage() {
             </p>
             <p className="mt-2">
               Robin Jost<br />
-              Cottbus, Germany<br />
+              Ziegeleigrund 10, 03051 Cottbus, Germany<br />
+              Phone: +49 176 22789264<br />
               Email:{" "}
               <a href="mailto:jost@ikigai-dynamics.com" className="text-primary hover:text-primary-hover">
                 jost@ikigai-dynamics.com
@@ -30,12 +37,14 @@ export default function PrivacyPage() {
               Website:{" "}
               <a href="https://tubevault.io" className="text-primary hover:text-primary-hover">
                 https://tubevault.io
-              </a>
+              </a><br />
             </p>
             <p className="mt-2">
-              Note: Robin Jost operates as a sole trader (Einzelunternehmer). The appointment of a
-              Data Protection Officer is not required under Art. 37 GDPR given the nature and scale
-              of processing activities.
+              Note: Robin Jost operates as a freelancer (Freiberufler) under &sect;18 EStG and is registered
+              with the Finanzamt Cottbus. The Kleinunternehmerregelung pursuant to &sect;19 UStG applies; no
+              VAT is charged. No trade registration (Gewerbeanmeldung) is required under German law for
+              freelance activity. The appointment of a Data Protection Officer is not required under
+              Art. 37 GDPR given the nature and scale of processing activities.
             </p>
           </section>
 
@@ -50,6 +59,9 @@ export default function PrivacyPage() {
               <li><strong className="text-cream">Technical data:</strong> IP address (in server logs), browser information</li>
               <li><strong className="text-cream">Payment data:</strong> Processed exclusively by Stripe &mdash; we do not receive or store payment card details</li>
               <li><strong className="text-cream">Technical identifiers:</strong> Hashed device characteristics for anonymous users (no persistent tracking)</li>
+              <li><strong className="text-cream">Attribution data:</strong> UTM parameters, referrer URL, landing page variant (only with consent)</li>
+              <li><strong className="text-cream">Persistent session identifier:</strong> tv_session_id for attribution (only with consent)</li>
+              <li><strong className="text-cream">Consent records:</strong> Which categories accepted, timestamp, IP-hashed (for GDPR Art. 7 accountability)</li>
             </ul>
           </section>
 
@@ -72,10 +84,10 @@ export default function PrivacyPage() {
             <h3 className="mb-2 mt-4 text-base font-medium text-cream">4.1 Email Registration</h3>
             <p>
               To create an account, we collect your email address and a password you choose. This data
-              is processed and stored via Supabase Auth (see Section 9).
+              is processed and stored via Supabase Auth (see Section 12).
             </p>
             <p className="mt-1">Legal basis: Art. 6(1)(b) GDPR</p>
-            <p>Retention: For the duration of the contractual relationship; deletable at any time upon request (Section 12).</p>
+            <p>Retention: For the duration of the contractual relationship; deletable at any time upon request (Section 15).</p>
 
             <h3 className="mb-2 mt-4 text-base font-medium text-cream">4.2 Google OAuth (Single Sign-On)</h3>
             <p>
@@ -105,7 +117,7 @@ export default function PrivacyPage() {
             <ul className="ml-4 list-disc space-y-1.5">
               <li>Your search input is used as a vector query against our local Qdrant database (Hetzner server, Germany)</li>
               <li>The most relevant transcript excerpts are identified</li>
-              <li>Your search query and the relevant excerpts are transmitted to the OpenAI API (international transfer &mdash; see Section 9) to generate a summarised answer</li>
+              <li>Your search query and relevant transcript excerpts are transmitted from our server to the OpenAI API (international transfer &mdash; see Section 12) to generate a summarised answer. Your browser does not communicate directly with OpenAI.</li>
               <li>The answer is displayed to you with timestamp links to the source videos on YouTube</li>
             </ul>
 
@@ -137,15 +149,18 @@ export default function PrivacyPage() {
               <li><strong className="text-cream">Channel interactions</strong> &mdash; which channels are viewed and searched</li>
               <li><strong className="text-cream">Feature usage</strong> &mdash; which platform features are used (e.g. transcript view, cross-channel search)</li>
               <li><strong className="text-cream">Conversion events</strong> &mdash; upgrade button clicks, subscription starts, new signups</li>
-              <li><strong className="text-cream">Answer quality</strong> &mdash; optional thumbs up / thumbs down ratings on AI-generated answers</li>
             </ul>
 
             <h3 className="mb-2 mt-4 text-base font-medium text-cream">6.2 Privacy Safeguards</h3>
             <ul className="ml-4 list-disc space-y-1.5">
               <li><strong className="text-cream">Unauthenticated users:</strong> only hashed data is stored, never raw query text</li>
               <li><strong className="text-cream">Authenticated users:</strong> raw query text is stored for a maximum of 7 days, then automatically nulled by a scheduled cleanup job</li>
-              <li>Session identifiers are generated from a daily-rotated hash of browser characteristics &mdash; they do not persist across days and cannot identify you personally</li>
               <li>Aggregate statistics (without any personal reference) are retained indefinitely for product development purposes</li>
+            </ul>
+            <p className="mt-3">TubeVault uses two distinct tracking systems:</p>
+            <ul className="ml-4 mt-2 list-disc space-y-1.5">
+              <li><strong className="text-cream">Analytics tracking (anonymous):</strong> Session identifiers are derived from a daily-rotated hash of browser characteristics. These identifiers do not persist across days and cannot identify you personally.</li>
+              <li><strong className="text-cream">Attribution tracking (consent-based):</strong> A persistent UUID (tv_session_id) is stored in your browser&apos;s localStorage to correlate marketing campaign visits with subsequent signups. This identifier persists until you clear your browser data or revoke attribution consent. It is only created after you grant attribution consent.</li>
             </ul>
 
             <p className="mt-3">Legal basis: Art. 6(1)(f) GDPR &mdash; legitimate interest in improving the product and understanding user needs</p>
@@ -174,12 +189,83 @@ export default function PrivacyPage() {
 
           {/* 8 */}
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-cream">8. Payment Processing</h2>
+            <h2 className="mb-3 text-lg font-semibold text-cream">8. Cookies &amp; Local Storage</h2>
+            <p>TubeVault uses the following client-side storage mechanisms:</p>
+
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">Strictly necessary (no consent required)</h3>
+            <ul className="ml-4 list-disc space-y-1.5">
+              <li><strong className="text-cream">Authentication cookies</strong> (Supabase Auth) &mdash; for login session</li>
+              <li><strong className="text-cream">tv_consent</strong> &mdash; your cookie consent preferences</li>
+              <li><strong className="text-cream">tv_audit_session_id</strong> &mdash; anonymous identifier for consent audit trail (GDPR Art. 7 documentation requirement)</li>
+            </ul>
+
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">Analytics (consent required)</h3>
+            <ul className="ml-4 list-disc space-y-1.5">
+              <li><strong className="text-cream">Daily-rotated session hash</strong> (server-side) &mdash; for usage statistics</li>
+            </ul>
+
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">Attribution (consent required)</h3>
+            <ul className="ml-4 list-disc space-y-1.5">
+              <li><strong className="text-cream">tv_session_id</strong> (localStorage) &mdash; persistent UUID linking sessions for conversion tracking</li>
+              <li><strong className="text-cream">tv_attribution</strong> (localStorage) &mdash; captured UTM parameters and referrer (90-day retention)</li>
+            </ul>
+
+            <p className="mt-3">
+              You can manage your consent at any time via the &ldquo;Cookie settings&rdquo; link in our footer.
+            </p>
+          </section>
+
+          {/* 9 */}
+          <section>
+            <h2 className="mb-3 text-lg font-semibold text-cream">9. Attribution Tracking</h2>
+            <p>When you visit our landing pages, we may capture:</p>
+            <ul className="ml-4 mt-2 list-disc space-y-1.5">
+              <li>UTM parameters (utm_source, utm_medium, utm_campaign, utm_content, utm_term) from the URL</li>
+              <li>Referrer (the website that linked to us)</li>
+              <li>Landing page variant (which version of our landing page you saw)</li>
+              <li>Persistent session identifier (UUID stored in your browser)</li>
+            </ul>
+            <p className="mt-2">
+              This data is only collected after you grant attribution consent via our cookie banner.
+              Without consent, no attribution data is recorded.
+            </p>
+            <p className="mt-1">
+              Retention: Attribution records are automatically deleted after 90 days. Consent records
+              (consent_log) are retained for the duration of our legal accountability obligations under
+              GDPR Art. 7(1).
+            </p>
+          </section>
+
+          {/* 10 */}
+          <section>
+            <h2 className="mb-3 text-lg font-semibold text-cream">10. Cookie Consent (TTDSG)</h2>
             <p>
-              Subscription payments are processed entirely by Stripe, Inc. (USA). We do not store credit
-              card numbers or full payment details. Stripe acts as a data processor under Art. 28 GDPR;
-              a Data Processing Agreement is in place. Transfers to the USA are safeguarded by the
-              EU&ndash;US Data Privacy Framework and Standard Contractual Clauses.
+              In compliance with &sect;25 TTDSG and GDPR Art. 6(1)(a), we obtain your explicit consent
+              before storing non-essential information on your device. Our cookie banner offers three options:
+            </p>
+            <ul className="ml-4 mt-2 list-disc space-y-1.5">
+              <li><strong className="text-cream">Accept all:</strong> All categories enabled (analytics + attribution)</li>
+              <li><strong className="text-cream">Necessary only:</strong> Only strictly necessary cookies are stored</li>
+              <li><strong className="text-cream">Settings:</strong> Granular control over each category</li>
+            </ul>
+            <p className="mt-2">
+              Your consent choice is stored in localStorage (tv_consent) and a cookie (tv_consent) for
+              server-side enforcement. Both expire after 12 months, after which you will be asked again.
+            </p>
+            <p className="mt-1">
+              You can revoke or change your consent at any time via the &ldquo;Cookie settings&rdquo;
+              link in the footer of our website.
+            </p>
+          </section>
+
+          {/* 11 */}
+          <section>
+            <h2 className="mb-3 text-lg font-semibold text-cream">11. Payment Processing</h2>
+            <p>
+              Subscription payments are processed by Stripe Payments Europe Ltd., Ireland. We do not store
+              credit card numbers or full payment details. Stripe acts as a data processor under Art. 28 GDPR;
+              a Data Processing Agreement is in place. For payments routed through US-based Stripe entities,
+              Standard Contractual Clauses ensure adequate protection.
             </p>
             <p className="mt-2">
               Stripe Privacy Policy:{" "}
@@ -196,15 +282,15 @@ export default function PrivacyPage() {
             </p>
           </section>
 
-          {/* 9 */}
+          {/* 12 */}
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-cream">9. Service Providers and International Transfers</h2>
+            <h2 className="mb-3 text-lg font-semibold text-cream">12. Service Providers and International Transfers</h2>
             <p>
               We engage the following service providers, each under a Data Processing Agreement (DPA)
               pursuant to Art. 28 GDPR:
             </p>
 
-            <h3 className="mb-2 mt-4 text-base font-medium text-cream">9.1 Supabase</h3>
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">12.1 Supabase</h3>
             <p>
               Supabase is used as our authentication provider and user data database, configured with
               an EU server location (Frankfurt). A DPA under Art. 28 GDPR is in place.
@@ -216,7 +302,7 @@ export default function PrivacyPage() {
               </a>
             </p>
 
-            <h3 className="mb-2 mt-4 text-base font-medium text-cream">9.2 Hetzner Online GmbH</h3>
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">12.2 Hetzner Online GmbH</h3>
             <p>
               Our servers (application, vector database, embeddings, analytics) are located exclusively
               at Hetzner data centres in Germany. A DPA is in place with Hetzner.
@@ -228,7 +314,7 @@ export default function PrivacyPage() {
               </a>
             </p>
 
-            <h3 className="mb-2 mt-4 text-base font-medium text-cream">9.3 OpenAI (International Transfer to USA)</h3>
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">12.3 OpenAI (International Transfer to USA)</h3>
             <p>
               Your search queries are transmitted to OpenAI for AI answer generation. OpenAI processes
               this data in the USA. The transfer is based on EU Standard Contractual Clauses
@@ -242,11 +328,35 @@ export default function PrivacyPage() {
                 https://openai.com/policies/privacy-policy
               </a>
             </p>
+
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">12.4 Stripe Payments Europe Ltd.</h3>
+            <p>
+              Payment processing is handled by Stripe Payments Europe Ltd., 1 Grand Canal Street Lower,
+              Grand Canal Dock, Dublin, D02 H210, Ireland. Stripe processes:
+            </p>
+            <ul className="ml-4 mt-2 list-disc space-y-1.5">
+              <li>Email address (for receipts and customer record)</li>
+              <li>Subscription tier and price ID</li>
+              <li>Payment card details (handled directly by Stripe; never seen by TubeVault)</li>
+              <li>Supabase user ID (as metadata for subscription correlation)</li>
+            </ul>
+            <p className="mt-2">Legal basis: Contract performance (Art. 6(1)(b) GDPR).</p>
+            <p>Data location: EU (Stripe Payments Europe Ltd., Ireland).</p>
+            <p>
+              For payments routed through US-based Stripe entities, Stripe maintains Standard
+              Contractual Clauses for adequate protection.
+            </p>
+            <p className="mt-1">
+              Privacy information:{" "}
+              <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary-hover">
+                https://stripe.com/privacy
+              </a>
+            </p>
           </section>
 
-          {/* 10 */}
+          {/* 13 */}
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-cream">10. Server Logs and Technical Data</h2>
+            <h2 className="mb-3 text-lg font-semibold text-cream">13. Server Logs and Technical Data</h2>
             <p>When you access our platform, technical information is automatically recorded in server log files:</p>
             <ul className="ml-4 mt-2 list-disc space-y-1.5">
               <li>IP address (truncated after 24 hours)</li>
@@ -264,9 +374,9 @@ export default function PrivacyPage() {
             <p>Retention: Maximum 30 days, then automatically deleted</p>
           </section>
 
-          {/* 11 */}
+          {/* 14 */}
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-cream">11. Data Security</h2>
+            <h2 className="mb-3 text-lg font-semibold text-cream">14. Data Security</h2>
             <p>We implement appropriate technical and organisational security measures, including:</p>
             <ul className="ml-4 mt-2 list-disc space-y-1.5">
               <li>Encrypted transmission via HTTPS/TLS (Let&apos;s Encrypt certificate via Caddy)</li>
@@ -279,9 +389,9 @@ export default function PrivacyPage() {
             <p className="mt-2">Please note that no data transmission over the internet is entirely secure.</p>
           </section>
 
-          {/* 12 */}
+          {/* 15 */}
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-cream">12. Your Rights as a Data Subject</h2>
+            <h2 className="mb-3 text-lg font-semibold text-cream">15. Your Rights as a Data Subject</h2>
             <p>Under the GDPR, you have the following rights regarding your personal data:</p>
 
             <h3 className="mb-1 mt-3 text-base font-medium text-cream">Right of Access (Art. 15 GDPR)</h3>
@@ -327,19 +437,29 @@ export default function PrivacyPage() {
             <p className="mt-1">You may also lodge a complaint with the supervisory authority in your country of residence or place of work within the EU.</p>
           </section>
 
-          {/* 13 */}
+          {/* 16 */}
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-cream">13. Data Retention Periods</h2>
+            <h2 className="mb-3 text-lg font-semibold text-cream">16. Data Retention Periods</h2>
             <p>
               Personal data is deleted as soon as it is no longer required for the processing purpose
-              and no statutory retention obligations apply. See the specific sections above for
-              retention periods applicable to each data category.
+              and no statutory retention obligations apply. Key retention periods:
             </p>
+            <ul className="ml-4 mt-2 list-disc space-y-1.5">
+              <li><strong className="text-cream">Raw search queries:</strong> 7 days</li>
+              <li><strong className="text-cream">Server logs:</strong> 30 days</li>
+              <li><strong className="text-cream">Attribution records</strong> (landing_attribution): 90 days</li>
+              <li><strong className="text-cream">Consent records</strong> (consent_log): retained for the duration of our legal accountability obligations under GDPR Art. 7(1)</li>
+              <li><strong className="text-cream">tv_consent</strong> localStorage entry: 12 months</li>
+              <li><strong className="text-cream">tv_session_id</strong> localStorage entry: until manually cleared by user</li>
+              <li><strong className="text-cream">Payment records:</strong> 10 years (German commercial and tax law)</li>
+              <li><strong className="text-cream">Aggregate statistics:</strong> indefinite (no personal data)</li>
+            </ul>
+            <p className="mt-2">See the specific sections above for additional details on each data category.</p>
           </section>
 
-          {/* 14 */}
+          {/* 17 */}
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-cream">14. Minors</h2>
+            <h2 className="mb-3 text-lg font-semibold text-cream">17. Minors</h2>
             <p>
               TubeVault is not directed at children under the age of 16. We do not knowingly collect
               personal data from persons under 16. If we become aware that a person under 16 has
@@ -347,9 +467,9 @@ export default function PrivacyPage() {
             </p>
           </section>
 
-          {/* 15 */}
+          {/* 18 */}
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-cream">15. Changes to This Privacy Policy</h2>
+            <h2 className="mb-3 text-lg font-semibold text-cream">18. Changes to This Privacy Policy</h2>
             <p>
               We reserve the right to update this Privacy Policy as necessary, in particular when the
               platform changes, new service providers are engaged, or the legal framework evolves.
@@ -358,9 +478,9 @@ export default function PrivacyPage() {
             </p>
           </section>
 
-          {/* 16 */}
+          {/* 19 */}
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-cream">16. Contact</h2>
+            <h2 className="mb-3 text-lg font-semibold text-cream">19. Contact</h2>
             <p>
               For questions about data protection or to exercise your rights, please contact:
             </p>
@@ -371,6 +491,15 @@ export default function PrivacyPage() {
               </a>
             </p>
             <p className="mt-1">We respond to requests within 30 days as required by Art. 12(3) GDPR.</p>
+          </section>
+        </div>
+
+        <div className="mt-10 space-y-8 text-sm leading-relaxed text-cream/80">
+          <section>
+            <h2 className="mb-3 text-lg font-semibold text-cream">Version History</h2>
+            <ul className="ml-4 list-disc space-y-1.5">
+              <li>Version 1.0 &mdash; April 27, 2026: Initial publication.</li>
+            </ul>
           </section>
         </div>
 
