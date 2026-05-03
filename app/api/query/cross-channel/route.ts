@@ -26,12 +26,34 @@ const HIDDEN = [
 
 const PER_CHANNEL_TIMEOUT_MS = 25000;
 const BATCH_SIZE = 3;
+const MAX_SOURCES_PER_CHANNEL = 3;
 const GLOBAL_TOP_SOURCES = 15;
-const RELEVANCE_THRESHOLD_RATIO = 0.5; // 50% of max score
+
+// Patterns that indicate the channel had no relevant content
+const NO_RESULT_PATTERNS = [
+  "i found no statement",
+  "no statement about this",
+  "not discussed in the indexed",
+  "no relevant information",
+  "not covered in the available",
+  "no specific information",
+  "does not appear to",
+  "isn't discussed",
+  "is not discussed",
+  "no mention of",
+  "cannot find",
+  "i couldn't find",
+  "not mentioned in",
+];
+
+function isRelevantAnswer(answer: string): boolean {
+  const lower = answer.toLowerCase();
+  return !NO_RESULT_PATTERNS.some((p) => lower.includes(p));
+}
 
 const CROSS_CHANNEL_SYSTEM_PROMPT = `You are synthesizing answers from multiple YouTube creators about the user's question. Follow these rules strictly:
 
-1. ALWAYS mention each creator BY NAME when referencing their content. Example: "Andrew Huberman recommends...", "According to Dr. Eric Berg..."
+1. ALWAYS mention each creator BY NAME when referencing their content. Example: "Andrew Huberman recommends...", "According to Anthony Chaffee..."
 2. Include SHORT direct quotes from the transcripts when impactful. Format: Creator Name says: "exact short quote". Keep quotes under 20 words.
 3. Structure your response to COMPARE expert opinions:
    - Start with what the experts AGREE on
@@ -46,12 +68,12 @@ Format example:
 
 Andrew Huberman emphasizes [point], noting: "[short quote]". He specifically recommends [action].
 
-Dr. Eric Berg takes a similar approach but adds [different angle]. He says: "[short quote]".
+Dr. Brad Stanfield takes a similar approach but adds [different angle]. He says: "[short quote]".
 
 Bryan Johnson differs from both, focusing on [alternative]. His protocol involves [specifics].
 
 **Where they agree:** All three emphasize [common ground].
-**Where they differ:** Huberman focuses on [X] while Berg prioritizes [Y]."`;
+**Where they differ:** Huberman focuses on [X] while Stanfield prioritizes [Y]."`;
 
 // Lazy-init OpenAI client (only if key is set)
 let openaiClient: OpenAI | null = null;
@@ -81,6 +103,7 @@ interface ChannelResult {
   collection: Collection;
   answer: string;
   sources: CrossChannelSource[];
+  relevant: boolean;
 }
 
 /**
@@ -92,7 +115,7 @@ function buildSynthesisContext(
   topSources: CrossChannelSource[]
 ): string {
   let context = `User question: "${question}"\n\n`;
-  context += "=== PER-CHANNEL ANSWERS ===\n\n";
+  context += "=== PER-CHANNEL EXPERT ANSWERS ===\n\n";
 
   for (const cr of channelResults) {
     if (!cr.answer) continue;
@@ -100,15 +123,13 @@ function buildSynthesisContext(
     context += `${cr.answer}\n\n`;
   }
 
-  context += "=== TOP TRANSCRIPT EXCERPTS ===\n\n";
+  context += "=== TOP TRANSCRIPT EXCERPTS (use for direct quotes) ===\n\n";
 
   for (const src of topSources) {
-    context += `[${src.collection_display_name}] (score: ${src.relevance_score.toFixed(3)})\n`;
     const text = src.text || src.snippet || "";
-    if (text) {
-      context += `"${text.slice(0, 300)}"\n`;
-    }
-    context += "\n";
+    if (!text) continue;
+    context += `[${src.collection_display_name}] from "${src.title}":\n`;
+    context += `"${text.slice(0, 400)}"\n\n`;
   }
 
   return context;
@@ -241,8 +262,7 @@ export async function POST(req: NextRequest) {
     BATCH_SIZE
   );
 
-  // ── Collect all sources into a single pool ──
-  const allSources: CrossChannelSource[] = [];
+  // ── Collect results and classify relevance ──
   const channelResults: ChannelResult[] = [];
 
   for (const result of results) {
@@ -259,50 +279,42 @@ export async function POST(req: NextRequest) {
 
     if (data.sources && Array.isArray(data.sources)) {
       for (const src of data.sources) {
-        const score = src.relevance_score ?? src.score ?? 0;
-        const crossSrc: CrossChannelSource = {
+        channelSources.push({
           ...src,
           collection_name: collection.name,
           collection_display_name: collection.display_name,
           collection_logo: logoUrl,
-          relevance_score: score,
-        };
-        allSources.push(crossSrc);
-        channelSources.push(crossSrc);
+          relevance_score: src.relevance_score ?? src.score ?? 0,
+        });
       }
     }
 
-    if (data.answer && channelSources.length > 0) {
-      channelResults.push({
-        collection,
-        answer: data.answer,
-        sources: channelSources,
-      });
-    }
+    const answer = data.answer || "";
+    const relevant = isRelevantAnswer(answer) && channelSources.length > 0;
+
+    channelResults.push({
+      collection,
+      answer,
+      sources: channelSources,
+      relevant,
+    });
   }
 
-  // ── RELEVANCE FILTERING ──
-  // Dynamic threshold: 50% of the best score
-  let filteredSources = allSources;
-  if (allSources.length > 0) {
-    const maxScore = Math.max(...allSources.map((s) => s.relevance_score));
-    const threshold = maxScore * RELEVANCE_THRESHOLD_RATIO;
-    filteredSources = allSources.filter((s) => s.relevance_score >= threshold);
+  // ── FILTER: only keep channels with relevant answers ──
+  const relevantResults = channelResults.filter((cr) => cr.relevant);
+
+  // Collect sources from relevant channels only, capped per channel
+  const topSources: CrossChannelSource[] = [];
+  for (const cr of relevantResults) {
+    topSources.push(...cr.sources.slice(0, MAX_SOURCES_PER_CHANNEL));
   }
 
-  // Sort by relevance and take global top N
-  filteredSources.sort((a, b) => b.relevance_score - a.relevance_score);
-  const topSources = filteredSources.slice(0, GLOBAL_TOP_SOURCES);
+  // Cap total sources
+  const finalSources = topSources.slice(0, GLOBAL_TOP_SOURCES);
 
-  // Filter channel results to only include channels with sources in topSources
-  const relevantChannelNames = new Set(topSources.map((s) => s.collection_name));
-  const relevantChannelResults = channelResults.filter((cr) =>
-    relevantChannelNames.has(cr.collection.name)
-  );
-
-  // ── GROUP BY CHANNEL (only relevant ones) ──
+  // ── GROUP BY CHANNEL ──
   const groupMap = new Map<string, ChannelSourceGroup>();
-  for (const src of topSources) {
+  for (const src of finalSources) {
     if (!groupMap.has(src.collection_name)) {
       groupMap.set(src.collection_name, {
         collection_name: src.collection_name,
@@ -314,23 +326,18 @@ export async function POST(req: NextRequest) {
     groupMap.get(src.collection_name)!.sources.push(src);
   }
 
-  // Sort groups by their best source score
-  const channelGroups = Array.from(groupMap.values()).sort(
-    (a, b) =>
-      (b.sources[0]?.relevance_score ?? 0) -
-      (a.sources[0]?.relevance_score ?? 0)
-  );
+  const channelGroups = Array.from(groupMap.values());
 
   // ── LLM SYNTHESIS ──
   let synthesizedAnswer = "";
   const openai = getOpenAI();
 
-  if (openai && relevantChannelResults.length > 0) {
+  if (openai && relevantResults.length > 0) {
     try {
       const context = buildSynthesisContext(
         question,
-        relevantChannelResults,
-        topSources
+        relevantResults,
+        finalSources
       );
 
       const completion = await openai.chat.completions.create({
@@ -349,18 +356,11 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Fallback: pick best single-channel answer
-  if (!synthesizedAnswer) {
-    let bestAnswer = "";
-    let bestScore = -1;
-    for (const cr of relevantChannelResults) {
-      const topScore = cr.sources[0]?.relevance_score ?? 0;
-      if (topScore > bestScore) {
-        bestScore = topScore;
-        bestAnswer = cr.answer;
-      }
-    }
-    synthesizedAnswer = bestAnswer;
+  // Fallback: pick longest relevant answer (likely most detailed)
+  if (!synthesizedAnswer && relevantResults.length > 0) {
+    synthesizedAnswer = relevantResults
+      .map((cr) => cr.answer)
+      .sort((a, b) => b.length - a.length)[0];
   }
 
   const queryTimeMs = Date.now() - startTime;
@@ -370,7 +370,7 @@ export async function POST(req: NextRequest) {
       synthesizedAnswer ||
       "No relevant results found across the selected channels.",
     channelGroups,
-    allSources: topSources,
+    allSources: finalSources,
     channelsQueried: collections.length,
     queryTimeMs,
   };
