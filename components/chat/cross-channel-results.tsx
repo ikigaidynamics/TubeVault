@@ -59,7 +59,7 @@ export function CrossChannelResults({
             >
               {group.logo ? (
                 <Image
-                  src={group.logo}
+                  src={group.logo.includes("yt3.googleusercontent.com") && group.logo.endsWith("=s0") ? group.logo.slice(0, -2) + "s240" : group.logo}
                   alt={group.display_name}
                   width={24}
                   height={24}

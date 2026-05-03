@@ -35,11 +35,19 @@ interface ChannelSidebarProps {
   onRenameConversation?: (id: string, title: string) => void;
 }
 
+function normalizeAvatarUrl(url: string): string {
+  // YouTube avatar URLs with =s0 return original (huge) image — cap at 240px
+  if (url.includes("yt3.googleusercontent.com") && url.endsWith("=s0")) {
+    return url.slice(0, -2) + "s240";
+  }
+  return url;
+}
+
 function ChannelAvatar({ col }: { col: Collection }) {
   const avatarUrl = col.logo
     ? col.logo.startsWith("/")
       ? `https://mindvault.ikigai-dynamics.com${col.logo}`
-      : col.logo
+      : normalizeAvatarUrl(col.logo)
     : null;
   const initials = col.display_name
     .split(" ")

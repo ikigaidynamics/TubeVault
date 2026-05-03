@@ -630,18 +630,30 @@ export default function DashboardPage() {
 
       {/* Main area */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Top bar — breadcrumb */}
+        {/* Top bar — mobile logo + breadcrumb */}
         <header className="flex items-center gap-1.5 border-b border-white/[0.04] bg-[#0F1011]/95 px-3 py-2.5 pl-14 backdrop-blur-sm md:px-6 md:pl-6">
-          <Link href="/" className="shrink-0 text-[12px] text-gray-text/50 transition-colors hover:text-cream">
+          {/* Mobile: TubeVault.io logo */}
+          <Link href="/" className="md:hidden">
+            <Image
+              src="/TubeVault.io_Logo.png"
+              alt="TubeVault.io"
+              width={160}
+              height={36}
+              className="h-7 w-auto object-contain"
+              priority
+            />
+          </Link>
+          {/* Desktop: text breadcrumb */}
+          <Link href="/" className="hidden shrink-0 text-[12px] text-gray-text/50 transition-colors hover:text-cream md:inline">
             TubeVault
           </Link>
-          <ChevronRight className="h-3 w-3 shrink-0 text-gray-text/20" />
+          <ChevronRight className="hidden h-3 w-3 shrink-0 text-gray-text/20 md:block" />
           {hasActiveChat ? (
-            <span className="min-w-0 truncate text-[12px] font-medium text-cream">
+            <span className="hidden min-w-0 truncate text-[12px] font-medium text-cream md:inline">
               {searchAllActive ? "Cross-Channel" : selectedCollection?.display_name || "..."}
             </span>
           ) : (
-            <span className="text-[12px] text-gray-text/50">Welcome</span>
+            <span className="hidden text-[12px] text-gray-text/50 md:inline">Welcome</span>
           )}
           {selectedCollection && (
             <span className="hidden shrink-0 text-[10px] text-gray-text/30 sm:inline">
@@ -649,14 +661,14 @@ export default function DashboardPage() {
             </span>
           )}
           {hasActiveChat && (
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-2 md:ml-auto">
               {messages.length > 0 && (
                 <button
                   onClick={handleNewChat}
                   className="flex items-center gap-1 rounded-lg border border-primary/20 px-2 py-1 text-[10px] font-medium text-primary transition-all hover:bg-primary/10"
                 >
                   <Plus className="h-3 w-3" />
-                  New Chat
+                  <span className="hidden sm:inline">New Chat</span>
                 </button>
               )}
               <div className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_rgba(101,174,76,0.4)]" />
@@ -715,11 +727,16 @@ export default function DashboardPage() {
                       <Globe className="h-6 w-6 text-primary" />
                     </div>
                   ) : (() => {
-                    const logoUrl = selectedCollection?.logo
-                      ? selectedCollection.logo.startsWith("/")
-                        ? `https://mindvault.ikigai-dynamics.com${selectedCollection.logo}`
-                        : selectedCollection.logo
-                      : null;
+                    let logoUrl: string | null = null;
+                    if (selectedCollection?.logo) {
+                      if (selectedCollection.logo.startsWith("/")) {
+                        logoUrl = `https://mindvault.ikigai-dynamics.com${selectedCollection.logo}`;
+                      } else if (selectedCollection.logo.includes("yt3.googleusercontent.com") && selectedCollection.logo.endsWith("=s0")) {
+                        logoUrl = selectedCollection.logo.slice(0, -2) + "s240";
+                      } else {
+                        logoUrl = selectedCollection.logo;
+                      }
+                    }
                     return logoUrl ? (
                       <Image src={logoUrl} alt={selectedCollection?.display_name || ""} width={48} height={48} className="mx-auto h-12 w-12 rounded-xl object-cover md:mx-0" unoptimized />
                     ) : (
@@ -872,7 +889,7 @@ export default function DashboardPage() {
                 placeholder={hasActiveChat ? `Ask anything about ${chatLabel}...` : "Pick a channel to start asking questions..."}
                 disabled={!hasActiveChat || loading}
                 rows={1}
-                className="max-h-[120px] min-h-[24px] min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-2.5 text-sm leading-[1.6] text-cream placeholder:text-gray-text/35 focus:outline-none disabled:opacity-30 md:text-base"
+                className="max-h-[120px] min-h-[24px] min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-2.5 text-base leading-[1.6] text-cream placeholder:text-gray-text/35 focus:outline-none disabled:opacity-30"
               />
               <button
                 onClick={handleSend}

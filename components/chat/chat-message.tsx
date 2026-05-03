@@ -17,8 +17,29 @@ interface ChatMessageProps {
   queryTimeMs?: number;
 }
 
+/** Replace "Section 1", "Section 2" etc. with the actual video title from sources */
+function replaceSectionRefs(text: string, srcs?: Source[]): string {
+  if (!srcs || srcs.length === 0) return text;
+  return text.replace(/\bSection\s+(\d+)\b/gi, (match, numStr) => {
+    const idx = parseInt(numStr, 10) - 1;
+    if (idx >= 0 && idx < srcs.length && srcs[idx].title) {
+      return `**${srcs[idx].title}**`;
+    }
+    return match;
+  });
+}
+
 export function ChatMessage({ role, content, sources, userAvatar, channelId, crossChannelGroups, channelsQueried, queryTimeMs }: ChatMessageProps) {
   const [avatarError, setAvatarError] = useState(false);
+
+  // Collect all sources (cross-channel groups flatten into a single list)
+  const allSources = crossChannelGroups && crossChannelGroups.length > 0
+    ? crossChannelGroups.flatMap((g) => g.sources)
+    : sources;
+
+  const processedContent = role === "assistant"
+    ? replaceSectionRefs(content, allSources)
+    : content;
 
   return (
     <div
@@ -66,13 +87,13 @@ export function ChatMessage({ role, content, sources, userAvatar, channelId, cro
             <div
               className="prose-invert prose-sm max-w-none break-words [overflow-wrap:anywhere]"
               dangerouslySetInnerHTML={{
-                __html: content
+                __html: processedContent
                   .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
                   .replace(/\n/g, "<br />"),
               }}
             />
           ) : (
-            content
+            processedContent
           )}
         </div>
 

@@ -23,6 +23,14 @@ const POPULAR_QUESTIONS = [
   { q: "Evidence for lost ancient technology?", ch: "unchartedx", name: "UnchartedX", cat: "History" },
 ];
 
+// Fallback logos for popular questions (in case collections API hasn't loaded yet)
+const FALLBACK_LOGOS: Record<string, string> = {
+  andrew_huberman: "https://mindvault.ikigai-dynamics.com/static/andrew_huberman_avatar.jpg",
+  the_randall_carlson: "https://mindvault.ikigai-dynamics.com/static/the_randall_carlson_avatar.jpg",
+  bryan_johnson: "https://mindvault.ikigai-dynamics.com/static/bryan_johnson_avatar.jpg",
+  unchartedx: "https://mindvault.ikigai-dynamics.com/static/UnchartedX.jpg",
+};
+
 interface WelcomeScreenProps {
   collections: Collection[];
   collectionsLoading: boolean;
@@ -36,9 +44,14 @@ interface WelcomeScreenProps {
 
 function getLogoUrl(col: Collection | undefined): string | null {
   if (!col?.logo) return null;
-  return col.logo.startsWith("/")
-    ? `https://mindvault.ikigai-dynamics.com${col.logo}`
-    : col.logo;
+  if (col.logo.startsWith("/")) {
+    return `https://mindvault.ikigai-dynamics.com${col.logo}`;
+  }
+  // YouTube avatar URLs with =s0 return original (huge) image — cap at 240px
+  if (col.logo.includes("yt3.googleusercontent.com") && col.logo.endsWith("=s0")) {
+    return col.logo.slice(0, -2) + "s240";
+  }
+  return col.logo;
 }
 
 function getCategory(col: Collection | undefined): string {
@@ -162,13 +175,13 @@ export function WelcomeScreen({
               <div className="relative h-14 flex-1">
                 {!isFocused && !selectedChannel && (
                   <div className="pointer-events-none absolute inset-0 flex items-center">
-                    <span className="text-lg text-gray-text/35">{displayText}</span>
+                    <span className="text-[14px] text-gray-text/35 sm:text-lg">{displayText}</span>
                     <span className="ml-px inline-block h-5 w-[2px] animate-pulse bg-primary/50" />
                   </div>
                 )}
                 <input
                   type="text"
-                  className="h-full w-full bg-transparent text-lg text-cream placeholder:text-gray-text/35 focus:outline-none"
+                  className="h-full w-full bg-transparent text-[16px] text-cream placeholder:text-gray-text/35 focus:outline-none sm:text-lg"
                   placeholder={isFocused || selectedChannel ? "Ask anything..." : ""}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
@@ -304,7 +317,7 @@ export function WelcomeScreen({
           <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
             {POPULAR_QUESTIONS.map((item, i) => {
               const col = collections.find((c) => c.name === item.ch);
-              const logo = getLogoUrl(col);
+              const logo = getLogoUrl(col) || FALLBACK_LOGOS[item.ch] || null;
               const locked = !isUnlocked(item.ch);
 
               return (
