@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, AlertCircle, Globe, ChevronRight } from "lucide-react";
+import { Search, AlertCircle, Globe, ChevronRight, ChevronDown } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { queryCollection, type Collection, type HistoryMessage, type Source, type ChannelSourceGroup, type CrossChannelResponse } from "@/lib/api";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
@@ -157,6 +157,7 @@ export default function DashboardPage() {
   const [showLimitWall, setShowLimitWall] = useState(false);
   const [crossChannelSelected, setCrossChannelSelected] = useState<Set<string>>(new Set());
   const [crossChannelProgress, setCrossChannelProgress] = useState<CrossChannelProgress | null>(null);
+  const [channelSelectorOpen, setChannelSelectorOpen] = useState(false);
 
   const [pickedChannels, setPickedChannels] = useState<string[]>([]);
   const [lockedUntil, setLockedUntil] = useState<string | null>(null);
@@ -389,6 +390,82 @@ export default function DashboardPage() {
   const hasActiveChat = selectedChannel || searchAllActive;
   const chatLabel = searchAllActive ? `${crossChannelSelected.size} channels` : selectedCollection?.display_name || selectedChannel;
 
+  const renderChannelSelector = (compact = false) => (
+    <>
+      {/* Category preset pills */}
+      <div className="flex flex-wrap gap-2">
+        {CATEGORIES.map((cat) => {
+          const slugs = cat === "All"
+            ? collections.map((c) => c.name)
+            : getCollectionNamesByCategory(cat).filter((s) => collections.some((c) => c.name === s));
+          const allSelected = slugs.length > 0 && slugs.every((s) => crossChannelSelected.has(s));
+          return (
+            <button
+              key={cat}
+              onClick={() => {
+                setCrossChannelSelected((prev) => {
+                  const next = new Set(prev);
+                  if (cat === "All") {
+                    if (allSelected) { next.clear(); } else { collections.forEach((c) => next.add(c.name)); }
+                  } else {
+                    if (allSelected) { slugs.forEach((s) => next.delete(s)); } else { slugs.forEach((s) => next.add(s)); }
+                  }
+                  return next;
+                });
+              }}
+              className={`rounded-full px-3 py-1 text-[11px] font-medium transition-all duration-200 ${
+                allSelected
+                  ? "bg-primary/15 text-primary border border-primary/30"
+                  : "text-gray-text/50 border border-white/[0.06] hover:text-cream hover:border-white/[0.12]"
+              }`}
+            >
+              {cat}
+            </button>
+          );
+        })}
+      </div>
+      {/* Channel grid */}
+      <div className={`mt-2 grid grid-cols-2 sm:grid-cols-3 gap-1.5 overflow-y-auto scrollbar-hide ${compact ? "lg:grid-cols-4 max-h-[200px]" : "max-h-[260px]"}`}>
+        {collections.map((col) => {
+          const selected = crossChannelSelected.has(col.name);
+          const colLogo = col.logo
+            ? col.logo.startsWith("/")
+              ? `https://mindvault.ikigai-dynamics.com${col.logo}`
+              : col.logo
+            : null;
+          return (
+            <button
+              key={col.name}
+              onClick={() => {
+                setCrossChannelSelected((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(col.name)) { next.delete(col.name); } else { next.add(col.name); }
+                  return next;
+                });
+              }}
+              className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-all duration-150 ${
+                selected
+                  ? "bg-primary/10 border border-primary/30"
+                  : "border border-white/[0.04] hover:border-white/[0.1] hover:bg-white/[0.02]"
+              }`}
+            >
+              {colLogo ? (
+                <Image src={colLogo} alt="" width={24} height={24} className="h-6 w-6 shrink-0 rounded-full object-cover" unoptimized />
+              ) : (
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-[8px] font-bold text-gray-text">
+                  {col.display_name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
+                </div>
+              )}
+              <span className={`truncate text-[11px] ${selected ? "text-cream font-medium" : "text-gray-text/60"}`}>
+                {col.display_name}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+
   return (
     <div className="flex h-screen bg-[#0A0A0B]">
       <UpgradeModal open={upgradeModal.open} onClose={() => setUpgradeModal({ open: false })} title={upgradeModal.title} message={upgradeModal.message} />
@@ -464,6 +541,34 @@ export default function DashboardPage() {
           )}
         </header>
 
+        {/* Collapsible cross-channel selector (visible during active chat) */}
+        {searchAllActive && messages.length > 0 && (
+          <div className="border-b border-white/[0.04] bg-[#0F1011]">
+            <button
+              onClick={() => setChannelSelectorOpen((p) => !p)}
+              className="flex w-full items-center gap-2 px-6 py-2 text-left transition-colors hover:bg-white/[0.02] md:px-12"
+            >
+              <Globe className="h-3.5 w-3.5 text-primary/50" />
+              <span className="text-[12px] font-medium text-cream/70">
+                {crossChannelSelected.size} of {collections.length} channels
+              </span>
+              <span className="text-[11px] text-gray-text/40">
+                Edit selection
+              </span>
+              <ChevronDown
+                className={`ml-auto h-3.5 w-3.5 text-gray-text/30 transition-transform duration-200 ${
+                  channelSelectorOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+            {channelSelectorOpen && (
+              <div className="px-6 pb-3 animate-[fadeUp_0.15s_ease-out] md:px-12">
+                {renderChannelSelector(true)}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)", backgroundSize: "64px 64px" }}>
           {!hasActiveChat ? (
@@ -515,76 +620,8 @@ export default function DashboardPage() {
                       <p className="text-[13px] leading-relaxed text-gray-text/50">
                         Select channels to include in your search.
                       </p>
-                      {/* Category preset pills */}
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {CATEGORIES.map((cat) => {
-                          const slugs = cat === "All"
-                            ? collections.map((c) => c.name)
-                            : getCollectionNamesByCategory(cat).filter((s) => collections.some((c) => c.name === s));
-                          const allSelected = slugs.length > 0 && slugs.every((s) => crossChannelSelected.has(s));
-                          return (
-                            <button
-                              key={cat}
-                              onClick={() => {
-                                setCrossChannelSelected((prev) => {
-                                  const next = new Set(prev);
-                                  if (cat === "All") {
-                                    if (allSelected) { next.clear(); } else { collections.forEach((c) => next.add(c.name)); }
-                                  } else {
-                                    if (allSelected) { slugs.forEach((s) => next.delete(s)); } else { slugs.forEach((s) => next.add(s)); }
-                                  }
-                                  return next;
-                                });
-                              }}
-                              className={`rounded-full px-3 py-1 text-[11px] font-medium transition-all duration-200 ${
-                                allSelected
-                                  ? "bg-primary/15 text-primary border border-primary/30"
-                                  : "text-gray-text/50 border border-white/[0.06] hover:text-cream hover:border-white/[0.12]"
-                              }`}
-                            >
-                              {cat}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {/* Channel grid */}
-                      <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-[260px] overflow-y-auto scrollbar-hide">
-                        {collections.map((col) => {
-                          const selected = crossChannelSelected.has(col.name);
-                          const logoUrl = col.logo
-                            ? col.logo.startsWith("/")
-                              ? `https://mindvault.ikigai-dynamics.com${col.logo}`
-                              : col.logo
-                            : null;
-                          return (
-                            <button
-                              key={col.name}
-                              onClick={() => {
-                                setCrossChannelSelected((prev) => {
-                                  const next = new Set(prev);
-                                  if (next.has(col.name)) { next.delete(col.name); } else { next.add(col.name); }
-                                  return next;
-                                });
-                              }}
-                              className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-all duration-150 ${
-                                selected
-                                  ? "bg-primary/10 border border-primary/30"
-                                  : "border border-white/[0.04] hover:border-white/[0.1] hover:bg-white/[0.02]"
-                              }`}
-                            >
-                              {logoUrl ? (
-                                <Image src={logoUrl} alt="" width={24} height={24} className="h-6 w-6 shrink-0 rounded-full object-cover" unoptimized />
-                              ) : (
-                                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-[8px] font-bold text-gray-text">
-                                  {col.display_name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
-                                </div>
-                              )}
-                              <span className={`truncate text-[11px] ${selected ? "text-cream font-medium" : "text-gray-text/60"}`}>
-                                {col.display_name}
-                              </span>
-                            </button>
-                          );
-                        })}
+                      <div className="mt-1">
+                        {renderChannelSelector()}
                       </div>
                     </>
                   ) : selectedCollection?.description ? (
