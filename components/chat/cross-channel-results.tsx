@@ -17,14 +17,8 @@ export function CrossChannelResults({
   channelsQueried,
   queryTimeMs,
 }: CrossChannelResultsProps) {
-  // Top 3 groups auto-expanded
-  const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
-    const init: Record<string, boolean> = {};
-    channelGroups.slice(0, 3).forEach((g) => {
-      init[g.collection_name] = true;
-    });
-    return init;
-  });
+  // All groups collapsed by default — user clicks to expand
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const toggle = (name: string) =>
     setExpanded((prev) => ({ ...prev, [name]: !prev[name] }));

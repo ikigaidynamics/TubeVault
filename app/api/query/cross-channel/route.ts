@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import OpenAI from "openai";
 import { TIER_LIMITS, type SubscriptionTier } from "@/lib/tiers";
 import { getCollectionsByCategory } from "@/lib/categories";
+import { getCachedCollections } from "@/lib/collections-cache";
 import type {
   Collection,
   CrossChannelSource,
@@ -24,6 +26,42 @@ const HIDDEN = [
 
 const PER_CHANNEL_TIMEOUT_MS = 25000;
 const BATCH_SIZE = 3;
+const GLOBAL_TOP_SOURCES = 15;
+const RELEVANCE_THRESHOLD_RATIO = 0.5; // 50% of max score
+
+const CROSS_CHANNEL_SYSTEM_PROMPT = `You are synthesizing answers from multiple YouTube creators about the user's question. Follow these rules strictly:
+
+1. ALWAYS mention each creator BY NAME when referencing their content. Example: "Andrew Huberman recommends...", "According to Dr. Eric Berg..."
+2. Include SHORT direct quotes from the transcripts when impactful. Format: Creator Name says: "exact short quote". Keep quotes under 20 words.
+3. Structure your response to COMPARE expert opinions:
+   - Start with what the experts AGREE on
+   - Then highlight key DIFFERENCES in their recommendations
+   - Note any unique insights from individual creators
+4. Only discuss creators whose content is actually relevant to the question. If only 2 out of 10 channels have relevant content, only mention those 2.
+5. Be comprehensive but concise. Aim for 200-400 words.
+6. End with a brief summary: "In summary, [X] experts discussed this topic. They agree on [Y] but differ on [Z]."
+
+Format example:
+"Multiple experts have weighed in on [topic]:
+
+Andrew Huberman emphasizes [point], noting: "[short quote]". He specifically recommends [action].
+
+Dr. Eric Berg takes a similar approach but adds [different angle]. He says: "[short quote]".
+
+Bryan Johnson differs from both, focusing on [alternative]. His protocol involves [specifics].
+
+**Where they agree:** All three emphasize [common ground].
+**Where they differ:** Huberman focuses on [X] while Berg prioritizes [Y]."`;
+
+// Lazy-init OpenAI client (only if key is set)
+let openaiClient: OpenAI | null = null;
+function getOpenAI(): OpenAI | null {
+  if (!process.env.OPENAI_API_KEY) return null;
+  if (!openaiClient) {
+    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openaiClient;
+}
 
 async function queryInBatches<T, R>(
   items: T[],
@@ -37,6 +75,43 @@ async function queryInBatches<T, R>(
     results.push(...batchResults);
   }
   return results;
+}
+
+interface ChannelResult {
+  collection: Collection;
+  answer: string;
+  sources: CrossChannelSource[];
+}
+
+/**
+ * Build a synthesis prompt from the per-channel answers and top sources.
+ */
+function buildSynthesisContext(
+  question: string,
+  channelResults: ChannelResult[],
+  topSources: CrossChannelSource[]
+): string {
+  let context = `User question: "${question}"\n\n`;
+  context += "=== PER-CHANNEL ANSWERS ===\n\n";
+
+  for (const cr of channelResults) {
+    if (!cr.answer) continue;
+    context += `--- ${cr.collection.display_name} ---\n`;
+    context += `${cr.answer}\n\n`;
+  }
+
+  context += "=== TOP TRANSCRIPT EXCERPTS ===\n\n";
+
+  for (const src of topSources) {
+    context += `[${src.collection_display_name}] (score: ${src.relevance_score.toFixed(3)})\n`;
+    const text = src.text || src.snippet || "";
+    if (text) {
+      context += `"${text.slice(0, 300)}"\n`;
+    }
+    context += "\n";
+  }
+
+  return context;
 }
 
 export async function POST(req: NextRequest) {
@@ -103,12 +178,10 @@ export async function POST(req: NextRequest) {
 
   const startTime = Date.now();
 
-  // Fetch collections
+  // Fetch collections (from shared cache)
   let collections: Collection[];
   try {
-    const colRes = await fetch(`${API_BASE_URL}/collections`);
-    if (!colRes.ok) throw new Error("Failed to fetch collections");
-    collections = await colRes.json();
+    collections = await getCachedCollections();
   } catch {
     return NextResponse.json(
       { error: "Failed to fetch channels" },
@@ -134,7 +207,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Query collections in batches to avoid overwhelming the API
+  // Query collections in batches
   const results = await queryInBatches(
     collections,
     async (col) => {
@@ -168,10 +241,9 @@ export async function POST(req: NextRequest) {
     BATCH_SIZE
   );
 
-  // Merge sources from all successful results
+  // ── Collect all sources into a single pool ──
   const allSources: CrossChannelSource[] = [];
-  let bestAnswer = "";
-  let bestScore = -1;
+  const channelResults: ChannelResult[] = [];
 
   for (const result of results) {
     if (result.status !== "fulfilled" || !result.value) continue;
@@ -183,39 +255,54 @@ export async function POST(req: NextRequest) {
         : collection.logo
       : null;
 
+    const channelSources: CrossChannelSource[] = [];
+
     if (data.sources && Array.isArray(data.sources)) {
       for (const src of data.sources) {
         const score = src.relevance_score ?? src.score ?? 0;
-        allSources.push({
+        const crossSrc: CrossChannelSource = {
           ...src,
           collection_name: collection.name,
           collection_display_name: collection.display_name,
           collection_logo: logoUrl,
           relevance_score: score,
-        });
+        };
+        allSources.push(crossSrc);
+        channelSources.push(crossSrc);
       }
     }
 
-    // Pick the answer from the channel with the highest-scoring source
-    if (data.answer) {
-      const topScore =
-        data.sources?.[0]?.relevance_score ??
-        data.sources?.[0]?.score ??
-        0;
-      // Use first answer as fallback, or upgrade if better score found
-      if (!bestAnswer || topScore > bestScore) {
-        bestScore = topScore;
-        bestAnswer = data.answer;
-      }
+    if (data.answer && channelSources.length > 0) {
+      channelResults.push({
+        collection,
+        answer: data.answer,
+        sources: channelSources,
+      });
     }
   }
 
-  // Sort all sources by relevance
-  allSources.sort((a, b) => b.relevance_score - a.relevance_score);
+  // ── RELEVANCE FILTERING ──
+  // Dynamic threshold: 50% of the best score
+  let filteredSources = allSources;
+  if (allSources.length > 0) {
+    const maxScore = Math.max(...allSources.map((s) => s.relevance_score));
+    const threshold = maxScore * RELEVANCE_THRESHOLD_RATIO;
+    filteredSources = allSources.filter((s) => s.relevance_score >= threshold);
+  }
 
-  // Group by channel
+  // Sort by relevance and take global top N
+  filteredSources.sort((a, b) => b.relevance_score - a.relevance_score);
+  const topSources = filteredSources.slice(0, GLOBAL_TOP_SOURCES);
+
+  // Filter channel results to only include channels with sources in topSources
+  const relevantChannelNames = new Set(topSources.map((s) => s.collection_name));
+  const relevantChannelResults = channelResults.filter((cr) =>
+    relevantChannelNames.has(cr.collection.name)
+  );
+
+  // ── GROUP BY CHANNEL (only relevant ones) ──
   const groupMap = new Map<string, ChannelSourceGroup>();
-  for (const src of allSources) {
+  for (const src of topSources) {
     if (!groupMap.has(src.collection_name)) {
       groupMap.set(src.collection_name, {
         collection_name: src.collection_name,
@@ -234,14 +321,56 @@ export async function POST(req: NextRequest) {
       (a.sources[0]?.relevance_score ?? 0)
   );
 
+  // ── LLM SYNTHESIS ──
+  let synthesizedAnswer = "";
+  const openai = getOpenAI();
+
+  if (openai && relevantChannelResults.length > 0) {
+    try {
+      const context = buildSynthesisContext(
+        question,
+        relevantChannelResults,
+        topSources
+      );
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: CROSS_CHANNEL_SYSTEM_PROMPT },
+          { role: "user", content: context },
+        ],
+        max_tokens: 1200,
+        temperature: 0.4,
+      });
+
+      synthesizedAnswer = completion.choices[0]?.message?.content || "";
+    } catch {
+      // LLM synthesis failed — fall back to best single-channel answer
+    }
+  }
+
+  // Fallback: pick best single-channel answer
+  if (!synthesizedAnswer) {
+    let bestAnswer = "";
+    let bestScore = -1;
+    for (const cr of relevantChannelResults) {
+      const topScore = cr.sources[0]?.relevance_score ?? 0;
+      if (topScore > bestScore) {
+        bestScore = topScore;
+        bestAnswer = cr.answer;
+      }
+    }
+    synthesizedAnswer = bestAnswer;
+  }
+
   const queryTimeMs = Date.now() - startTime;
 
   const response: CrossChannelResponse = {
     answer:
-      bestAnswer ||
+      synthesizedAnswer ||
       "No relevant results found across the selected channels.",
     channelGroups,
-    allSources: allSources.slice(0, 30), // Cap at 30 total sources
+    allSources: topSources,
     channelsQueried: collections.length,
     queryTimeMs,
   };
