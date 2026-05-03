@@ -22,7 +22,22 @@ const HIDDEN = [
   "3blue1brown",
 ];
 
-const PER_CHANNEL_TIMEOUT_MS = 8000;
+const PER_CHANNEL_TIMEOUT_MS = 25000;
+const BATCH_SIZE = 3;
+
+async function queryInBatches<T, R>(
+  items: T[],
+  fn: (item: T) => Promise<R>,
+  batchSize: number
+): Promise<PromiseSettledResult<R>[]> {
+  const results: PromiseSettledResult<R>[] = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const batchResults = await Promise.allSettled(batch.map(fn));
+    results.push(...batchResults);
+  }
+  return results;
+}
 
 export async function POST(req: NextRequest) {
   const cookieStore = cookies();
@@ -119,9 +134,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Query each collection in parallel
-  const results = await Promise.allSettled(
-    collections.map(async (col) => {
+  // Query collections in batches to avoid overwhelming the API
+  const results = await queryInBatches(
+    collections,
+    async (col) => {
       const controller = new AbortController();
       const timeout = setTimeout(
         () => controller.abort(),
@@ -148,7 +164,8 @@ export async function POST(req: NextRequest) {
       } finally {
         clearTimeout(timeout);
       }
-    })
+    },
+    BATCH_SIZE
   );
 
   // Merge sources from all successful results
@@ -180,13 +197,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Pick the answer from the channel with the highest-scoring source
-    const topScore =
-      data.sources?.[0]?.relevance_score ??
-      data.sources?.[0]?.score ??
-      0;
-    if (data.answer && topScore > bestScore) {
-      bestScore = topScore;
-      bestAnswer = data.answer;
+    if (data.answer) {
+      const topScore =
+        data.sources?.[0]?.relevance_score ??
+        data.sources?.[0]?.score ??
+        0;
+      // Use first answer as fallback, or upgrade if better score found
+      if (!bestAnswer || topScore > bestScore) {
+        bestScore = topScore;
+        bestAnswer = data.answer;
+      }
     }
   }
 
