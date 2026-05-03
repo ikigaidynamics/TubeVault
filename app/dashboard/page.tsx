@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, AlertCircle, Globe, ChevronRight, ChevronDown, Plus } from "lucide-react";
+import { Search, AlertCircle, Globe, ChevronRight, ChevronDown, Plus, Menu } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { queryCollection, type Collection, type HistoryMessage, type CrossChannelResponse, type Message, type ConversationSummary } from "@/lib/api";
 import { listConversations, createConversation, loadConversation, appendMessages, deleteConversation, renameConversation } from "@/lib/conversations";
@@ -138,7 +138,7 @@ export default function DashboardPage() {
   const [userEmail, setUserEmail] = useState("");
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [collectionsLoading, setCollectionsLoading] = useState(true);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const [tier, setTier] = useState<SubscriptionTier>("free");
@@ -150,6 +150,7 @@ export default function DashboardPage() {
   const [crossChannelSelected, setCrossChannelSelected] = useState<Set<string>>(new Set());
   const [crossChannelProgress, setCrossChannelProgress] = useState<CrossChannelProgress | null>(null);
   const [channelSelectorOpen, setChannelSelectorOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [conversationList, setConversationList] = useState<ConversationSummary[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -271,8 +272,27 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+    if (messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.role !== "assistant") return;
+
+    // Wait for DOM to render the new message
+    requestAnimationFrame(() => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      const msgElements = container.querySelectorAll<HTMLElement>('[data-role="assistant"]');
+      const lastElement = msgElements[msgElements.length - 1];
+      if (!lastElement) return;
+
+      // Scroll so the top of the answer is at the top of the container with 16px padding
+      const containerTop = container.getBoundingClientRect().top;
+      const elementTop = lastElement.getBoundingClientRect().top;
+      const offset = elementTop - containerTop + container.scrollTop - 16;
+
+      container.scrollTo({ top: offset, behavior: "smooth" });
+    });
+  }, [messages.length]);
 
   const getHistory = useCallback((): HistoryMessage[] => {
     return messages.slice(-10).map((m) => ({ role: m.role, content: m.content }));
@@ -573,7 +593,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex h-screen max-w-[100vw] overflow-x-hidden bg-[#0A0A0B]">
+    <div className="flex h-dvh max-w-[100vw] overflow-hidden bg-[#0A0A0B]">
       <UpgradeModal open={upgradeModal.open} onClose={() => setUpgradeModal({ open: false })} title={upgradeModal.title} message={upgradeModal.message} />
 
       {/* Admin tier toggle */}
@@ -626,23 +646,43 @@ export default function DashboardPage() {
         onNewChat={handleNewChat}
         onDeleteConversation={handleDeleteConversation}
         onRenameConversation={handleRenameConversation}
+        mobileOpen={sidebarOpen}
+        onMobileOpenChange={setSidebarOpen}
       />
 
       {/* Main area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar — mobile logo + breadcrumb (sticky so it stays visible during scroll) */}
-        <header className="sticky top-0 z-30 flex items-center gap-1.5 border-b border-white/[0.04] bg-[#0F1011]/95 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] pl-14 backdrop-blur-sm md:px-6 md:pl-6 md:pt-2.5">
-          {/* Mobile: TubeVault.io logo */}
-          <Link href="/" className="md:hidden">
-            <Image
-              src="/TubeVault.io_Logo_cropped.png"
-              alt="TubeVault.io"
-              width={660}
-              height={100}
-              className="h-[26px] w-auto object-contain"
-              priority
-            />
-          </Link>
+        <header
+          className="shrink-0 border-b border-white/[0.04] bg-[#0F1011]"
+          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        >
+          <div className="flex items-center gap-2 px-3 py-2 md:px-6 md:py-2.5">
+            {/* Mobile: hamburger + icon + text logo — all flex-centered */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] text-gray-text transition-colors hover:text-cream md:hidden"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <Link href="/" className="flex items-center gap-1.5 md:hidden">
+              <Image
+                src="/TubeVault_Image_noBG.png"
+                alt=""
+                width={24}
+                height={24}
+                className="h-6 w-6 shrink-0"
+                priority
+              />
+              <Image
+                src="/TubeVault.io_Logo_cropped.png"
+                alt="TubeVault.io"
+                width={660}
+                height={100}
+                className="h-[18px] w-auto shrink-0"
+                priority
+              />
+            </Link>
           {/* Desktop: text breadcrumb */}
           <Link href="/" className="hidden shrink-0 text-[12px] text-gray-text/50 transition-colors hover:text-cream md:inline">
             TubeVault
@@ -674,6 +714,7 @@ export default function DashboardPage() {
               <div className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_rgba(101,174,76,0.4)]" />
             </div>
           )}
+          </div>
         </header>
 
         {/* Collapsible cross-channel selector (visible during active chat) */}
@@ -705,7 +746,7 @@ export default function DashboardPage() {
         )}
 
         {/* Messages area */}
-        <div className="flex-1 overflow-y-auto" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)", backgroundSize: "64px 64px" }}>
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)", backgroundSize: "64px 64px" }}>
           {!hasActiveChat ? (
             <WelcomeScreen
               collections={collections}
@@ -838,7 +879,7 @@ export default function DashboardPage() {
             /* ── Messages ── */
             <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 md:px-12">
               {messages.map((msg, i) => (
-                <div key={i} className="animate-[fadeUp_0.3s_ease-out]">
+                <div key={i} data-role={msg.role} className="animate-[fadeUp_0.3s_ease-out]">
                   <ChatMessage role={msg.role} content={msg.content} sources={msg.sources} userAvatar={userAvatar} channelId={selectedChannel ?? undefined} crossChannelGroups={msg.crossChannelGroups} channelsQueried={msg.channelsQueried} queryTimeMs={msg.queryTimeMs} />
                 </div>
               ))}
@@ -853,7 +894,6 @@ export default function DashboardPage() {
               {showLimitWall && (
                 <InlineUpgradeWall context="daily_limit" onDismiss={() => setShowLimitWall(false)} />
               )}
-              <div ref={chatEndRef} />
             </div>
           )}
         </div>

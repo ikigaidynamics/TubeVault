@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { LogOut, Menu, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight, ArrowRight, Zap, FileText, Plus, MessageSquare, Trash2, Pencil } from "lucide-react";
+import { LogOut, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight, ArrowRight, Zap, FileText, Plus, MessageSquare, Trash2, Pencil } from "lucide-react";
 import type { Collection, ConversationSummary } from "@/lib/api";
 import type { SubscriptionTier } from "@/lib/tiers";
 import { TIER_LIMITS } from "@/lib/tiers";
@@ -33,6 +33,8 @@ interface ChannelSidebarProps {
   onNewChat?: () => void;
   onDeleteConversation?: (id: string) => void;
   onRenameConversation?: (id: string, title: string) => void;
+  mobileOpen?: boolean;
+  onMobileOpenChange?: (open: boolean) => void;
 }
 
 function normalizeAvatarUrl(url: string): string {
@@ -98,9 +100,13 @@ export function ChannelSidebar({
   onNewChat,
   onDeleteConversation,
   onRenameConversation,
+  mobileOpen: mobileOpenProp,
+  onMobileOpenChange,
 }: ChannelSidebarProps) {
   const router = useRouter();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileOpenInternal, setMobileOpenInternal] = useState(false);
+  const mobileOpen = mobileOpenProp ?? mobileOpenInternal;
+  const setMobileOpen = onMobileOpenChange ?? setMobileOpenInternal;
   const [avatarError, setAvatarError] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
@@ -527,14 +533,6 @@ export function ChannelSidebar({
 
   return (
     <>
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="fixed left-3 z-50 rounded-lg border border-white/[0.08] bg-[#0F1011] p-2 text-gray-text transition-colors hover:text-cream md:hidden"
-        style={{ top: "max(0.625rem, env(safe-area-inset-top, 0.625rem))" }}
-      >
-        <Menu className="h-5 w-5" />
-      </button>
-
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/60 md:hidden"
