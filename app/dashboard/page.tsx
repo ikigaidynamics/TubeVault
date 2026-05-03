@@ -631,7 +631,7 @@ export default function DashboardPage() {
       {/* Main area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar — mobile logo + breadcrumb */}
-        <header className="flex items-center gap-1.5 border-b border-white/[0.04] bg-[#0F1011]/95 px-3 py-3 pl-14 backdrop-blur-sm md:px-6 md:py-2.5 md:pl-6">
+        <header className="flex items-center gap-1.5 border-b border-white/[0.04] bg-[#0F1011]/95 px-3 py-2.5 pl-14 backdrop-blur-sm md:px-6 md:pl-6">
           {/* Mobile: TubeVault.io logo */}
           <Link href="/" className="md:hidden">
             <Image
@@ -639,7 +639,7 @@ export default function DashboardPage() {
               alt="TubeVault.io"
               width={660}
               height={100}
-              className="h-9 w-auto object-contain"
+              className="h-[26px] w-auto object-contain"
               priority
             />
           </Link>
@@ -886,7 +886,7 @@ export default function DashboardPage() {
                   e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={hasActiveChat ? `Ask anything about ${chatLabel}...` : "Pick a channel to start asking questions..."}
+                placeholder={hasActiveChat ? `Ask about ${chatLabel}...` : "Pick a channel to start..."}
                 disabled={!hasActiveChat || loading}
                 rows={1}
                 className="max-h-[120px] min-h-[24px] min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-2.5 text-base leading-[1.6] text-cream placeholder:text-gray-text/35 focus:outline-none disabled:opacity-30"
