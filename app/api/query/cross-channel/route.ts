@@ -24,8 +24,8 @@ const HIDDEN = [
   "3blue1brown",
 ];
 
-const PER_CHANNEL_TIMEOUT_MS = 25000;
-const BATCH_SIZE = 3;
+const PER_CHANNEL_TIMEOUT_MS = 60000;
+const BATCH_SIZE = 2;
 const MAX_SOURCES_PER_CHANNEL = 3;
 const GLOBAL_TOP_SOURCES = 15;
 
