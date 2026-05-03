@@ -216,7 +216,7 @@ export function ChannelSidebar({
               setMobileOpen(false);
             } else {
               // analytics
-              track("upgrade_click", { metadata: { trigger: "channel_limit", current_tier: tier } });
+              track("upgrade_click", { metadata: { trigger: "cross_channel_upgrade", current_tier: tier } });
               router.push("/pricing");
             }
           }}
@@ -232,7 +232,7 @@ export function ChannelSidebar({
           </span>
           {!canCrossSearch && (
             <span className="ml-auto shrink-0 rounded-full border border-primary/20 px-1.5 py-px text-[8px] font-medium text-primary/60">
-              PRO
+              PREMIUM
             </span>
           )}
         </button>

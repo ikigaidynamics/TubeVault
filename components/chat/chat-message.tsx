@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import { SourceCard } from "./source-card";
-import type { Source } from "@/lib/api";
+import { CrossChannelResults } from "./cross-channel-results";
+import type { Source, ChannelSourceGroup } from "@/lib/api";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -11,9 +12,12 @@ interface ChatMessageProps {
   sources?: Source[];
   userAvatar?: string | null;
   channelId?: string;
+  crossChannelGroups?: ChannelSourceGroup[];
+  channelsQueried?: number;
+  queryTimeMs?: number;
 }
 
-export function ChatMessage({ role, content, sources, userAvatar, channelId }: ChatMessageProps) {
+export function ChatMessage({ role, content, sources, userAvatar, channelId, crossChannelGroups, channelsQueried, queryTimeMs }: ChatMessageProps) {
   const [avatarError, setAvatarError] = useState(false);
 
   return (
@@ -73,7 +77,13 @@ export function ChatMessage({ role, content, sources, userAvatar, channelId }: C
         </div>
 
         {/* Sources */}
-        {sources && sources.length > 0 && (
+        {crossChannelGroups && crossChannelGroups.length > 0 ? (
+          <CrossChannelResults
+            channelGroups={crossChannelGroups}
+            channelsQueried={channelsQueried ?? 0}
+            queryTimeMs={queryTimeMs ?? 0}
+          />
+        ) : sources && sources.length > 0 ? (
           <div className="space-y-1.5 pt-1">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-text/40">
               Sources
@@ -82,7 +92,7 @@ export function ChatMessage({ role, content, sources, userAvatar, channelId }: C
               <SourceCard key={i} source={source} index={i} channelId={channelId} />
             ))}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

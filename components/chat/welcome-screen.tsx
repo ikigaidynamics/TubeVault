@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Search, ArrowRight, Lock, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Collection } from "@/lib/api";
+import { CATEGORIES, getCollectionCategory } from "@/lib/categories";
 
 const TYPEWRITER_QUESTIONS = [
   "How do I optimize my sleep?",
@@ -12,8 +13,6 @@ const TYPEWRITER_QUESTIONS = [
   "Best cold exposure protocol?",
   "Evidence for ancient civilizations?",
 ];
-
-const CATEGORIES = ["All", "Health & Longevity", "History & Ancient Knowledge", "Other"] as const;
 
 const POPULAR_QUESTIONS = [
   { q: "How do I get better sleep?", ch: "andrew_huberman", name: "Andrew Huberman", cat: "Health", featured: true },
@@ -42,13 +41,8 @@ function getLogoUrl(col: Collection | undefined): string | null {
 }
 
 function getCategory(col: Collection | undefined): string {
-  if (!col?.description) return "Other";
-  const d = col.description.toLowerCase();
-  if (d.includes("health") || d.includes("nutrition") || d.includes("longevity") || d.includes("neuroscience") || d.includes("medicine") || d.includes("fitness") || d.includes("biohacking"))
-    return "Health & Longevity";
-  if (d.includes("history") || d.includes("ancient") || d.includes("geology") || d.includes("archaeology") || d.includes("apologetics") || d.includes("theology"))
-    return "History & Ancient Knowledge";
-  return "Other";
+  if (!col) return "Other";
+  return getCollectionCategory(col);
 }
 
 export function WelcomeScreen({

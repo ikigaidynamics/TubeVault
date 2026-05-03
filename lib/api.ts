@@ -31,6 +31,28 @@ export interface Collection {
   visible_on_homepage: boolean;
 }
 
+export interface CrossChannelSource extends Source {
+  collection_name: string;
+  collection_display_name: string;
+  collection_logo: string | null;
+  relevance_score: number;
+}
+
+export interface ChannelSourceGroup {
+  collection_name: string;
+  display_name: string;
+  logo: string | null;
+  sources: CrossChannelSource[];
+}
+
+export interface CrossChannelResponse {
+  answer: string;
+  channelGroups: ChannelSourceGroup[];
+  allSources: CrossChannelSource[];
+  channelsQueried: number;
+  queryTimeMs: number;
+}
+
 export async function fetchCollections(): Promise<Collection[]> {
   const res = await fetch(`${API_BASE_URL}/collections`, {
     next: { revalidate: 300 },

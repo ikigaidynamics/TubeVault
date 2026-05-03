@@ -8,7 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Search, AlertCircle, Globe, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase";
-import { queryCollection, type Collection, type HistoryMessage, type Source } from "@/lib/api";
+import { queryCollection, type Collection, type HistoryMessage, type Source, type ChannelSourceGroup, type CrossChannelResponse } from "@/lib/api";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { WelcomeScreen } from "@/components/chat/welcome-screen";
 import { ChatMessage } from "@/components/chat/chat-message";
@@ -20,11 +20,15 @@ import { ChannelPickerModal } from "@/components/chat/channel-picker-modal";
 import { TruncatedText } from "@/components/chat/truncated-text";
 import { cleanDescription } from "@/lib/clean-description";
 import { TIER_LIMITS, type SubscriptionTier } from "@/lib/tiers";
+import { CATEGORIES, type Category } from "@/lib/categories";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
   sources?: Source[];
+  crossChannelGroups?: ChannelSourceGroup[];
+  channelsQueried?: number;
+  queryTimeMs?: number;
 }
 
 const API_BASE_URL =
@@ -58,6 +62,7 @@ export default function DashboardPage() {
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; title?: string; message?: string }>({ open: false });
   const [searchAllActive, setSearchAllActive] = useState(false);
   const [showLimitWall, setShowLimitWall] = useState(false);
+  const [crossChannelCategory, setCrossChannelCategory] = useState<Category>("All");
 
   const [pickedChannels, setPickedChannels] = useState<string[]>([]);
   const [lockedUntil, setLockedUntil] = useState<string | null>(null);
@@ -200,12 +205,40 @@ export default function DashboardPage() {
         if (incData.remaining !== undefined) setQuestionsRemaining(incData.remaining);
       }
 
-      const channelName = searchAllActive ? "_all" : selectedChannel!;
-      const data = await queryCollection(channelName, question, getHistory());
-      // analytics
-      track("search", { channelId: channelName, query: question, resultCount: data.sources?.length ?? 0 });
-
-      setMessages((prev) => [...prev, { role: "assistant", content: data.answer, sources: data.sources }]);
+      if (searchAllActive) {
+        // Cross-channel search via server route
+        const res = await fetch("/api/query/cross-channel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            question,
+            category: crossChannelCategory,
+            history: getHistory(),
+          }),
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || "Cross-channel query failed");
+        }
+        const data: CrossChannelResponse = await res.json();
+        track("search", { channelId: "_cross", query: question, resultCount: data.allSources?.length ?? 0 });
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: data.answer,
+            sources: data.allSources,
+            crossChannelGroups: data.channelGroups,
+            channelsQueried: data.channelsQueried,
+            queryTimeMs: data.queryTimeMs,
+          },
+        ]);
+      } else {
+        const channelName = selectedChannel!;
+        const data = await queryCollection(channelName, question, getHistory());
+        track("search", { channelId: channelName, query: question, resultCount: data.sources?.length ?? 0 });
+        setMessages((prev) => [...prev, { role: "assistant", content: data.answer, sources: data.sources }]);
+      }
     } catch {
       setError("Failed to get a response. Please try again.");
       setMessages((prev) => prev.slice(0, -1));
@@ -233,7 +266,7 @@ export default function DashboardPage() {
   }
 
   function handleSearchAll() {
-    setSearchAllActive(true); setSelectedChannel(null); setMessages([]); setError(null);
+    setSearchAllActive(true); setSelectedChannel(null); setMessages([]); setError(null); setCrossChannelCategory("All");
   }
 
   function handleWelcomeSubmit(channel: string, question: string) {
@@ -367,9 +400,26 @@ export default function DashboardPage() {
                     )}
                   </h2>
                   {searchAllActive ? (
-                    <p className="text-[13px] leading-relaxed text-gray-text/50">
-                      Get answers from all creators with source links.
-                    </p>
+                    <>
+                      <p className="text-[13px] leading-relaxed text-gray-text/50">
+                        Get answers from all creators with source links.
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {CATEGORIES.map((cat) => (
+                          <button
+                            key={cat}
+                            onClick={() => setCrossChannelCategory(cat)}
+                            className={`rounded-full px-3 py-1 text-[11px] font-medium transition-all duration-200 ${
+                              crossChannelCategory === cat
+                                ? "bg-primary/15 text-primary border border-primary/30"
+                                : "text-gray-text/50 border border-white/[0.06] hover:text-cream hover:border-white/[0.12]"
+                            }`}
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                      </div>
+                    </>
                   ) : selectedCollection?.description ? (
                     <TruncatedText
                       text={cleanDescription(selectedCollection.name, selectedCollection.description)}
@@ -396,30 +446,42 @@ export default function DashboardPage() {
                       key={s}
                       onClick={() => {
                         setInput(s);
-                        // Auto-submit after state update
                         setTimeout(() => {
-                          setInput(s);
-                          const fakeEvent = { trim: () => s } as unknown;
-                          void fakeEvent;
-                          // Directly trigger send logic
                           setInput("");
                           setError(null);
                           setMessages((prev) => [...prev, { role: "user", content: s }]);
                           setLoading(true);
-                          const channelName = searchAllActive ? "_all" : selectedChannel!;
-                          queryCollection(channelName, s, getHistory())
-                            .then((data) => {
-                              setMessages((prev) => [...prev, { role: "assistant", content: data.answer, sources: data.sources }]);
+                          if (searchAllActive) {
+                            fetch("/api/query/cross-channel", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ question: s, category: crossChannelCategory, history: getHistory() }),
                             })
-                            .catch(() => {
-                              setError("Failed to get a response. Please try again.");
-                              setMessages((prev) => prev.slice(0, -1));
-                              setInput(s);
-                            })
-                            .finally(() => {
-                              setLoading(false);
-                              inputRef.current?.focus();
-                            });
+                              .then((res) => {
+                                if (!res.ok) throw new Error("Cross-channel query failed");
+                                return res.json() as Promise<CrossChannelResponse>;
+                              })
+                              .then((data) => {
+                                setMessages((prev) => [...prev, { role: "assistant", content: data.answer, sources: data.allSources, crossChannelGroups: data.channelGroups, channelsQueried: data.channelsQueried, queryTimeMs: data.queryTimeMs }]);
+                              })
+                              .catch(() => {
+                                setError("Failed to get a response. Please try again.");
+                                setMessages((prev) => prev.slice(0, -1));
+                                setInput(s);
+                              })
+                              .finally(() => { setLoading(false); inputRef.current?.focus(); });
+                          } else {
+                            queryCollection(selectedChannel!, s, getHistory())
+                              .then((data) => {
+                                setMessages((prev) => [...prev, { role: "assistant", content: data.answer, sources: data.sources }]);
+                              })
+                              .catch(() => {
+                                setError("Failed to get a response. Please try again.");
+                                setMessages((prev) => prev.slice(0, -1));
+                                setInput(s);
+                              })
+                              .finally(() => { setLoading(false); inputRef.current?.focus(); });
+                          }
                         }, 0);
                       }}
                       className="w-full rounded-xl border border-[#2E2F31] bg-[#141416] px-3.5 py-2.5 text-left text-[12px] leading-relaxed text-gray-text/60 transition-all duration-200 hover:translate-x-1 hover:border-primary/20 hover:text-cream/80 hover:shadow-[0_4px_20px_rgba(101,174,76,0.06)]"
@@ -435,10 +497,16 @@ export default function DashboardPage() {
             <div className="mx-auto max-w-3xl space-y-5 px-6 py-6 md:px-12">
               {messages.map((msg, i) => (
                 <div key={i} className="animate-[fadeUp_0.3s_ease-out]">
-                  <ChatMessage role={msg.role} content={msg.content} sources={msg.sources} userAvatar={userAvatar} channelId={selectedChannel ?? undefined} />
+                  <ChatMessage role={msg.role} content={msg.content} sources={msg.sources} userAvatar={userAvatar} channelId={selectedChannel ?? undefined} crossChannelGroups={msg.crossChannelGroups} channelsQueried={msg.channelsQueried} queryTimeMs={msg.queryTimeMs} />
                 </div>
               ))}
-              {loading && <TypingIndicator />}
+              {loading && (
+                <TypingIndicator
+                  label={searchAllActive
+                    ? `Searching across ${crossChannelCategory === "All" ? "all" : crossChannelCategory} channels...`
+                    : undefined}
+                />
+              )}
               {showLimitWall && (
                 <InlineUpgradeWall context="daily_limit" onDismiss={() => setShowLimitWall(false)} />
               )}
