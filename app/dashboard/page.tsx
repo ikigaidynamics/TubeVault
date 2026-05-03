@@ -38,6 +38,103 @@ function getDefaults(collections: Collection[], n: number): string[] {
     .map((c) => c.name);
 }
 
+interface CrossChannelProgress {
+  phase: string;
+  completed: number;
+  total: number;
+  channels: {
+    name: string;
+    display_name: string;
+    relevant: boolean;
+    timeout?: boolean;
+  }[];
+}
+
+async function streamCrossChannel(
+  question: string,
+  channels: string[],
+  history: HistoryMessage[],
+  onProgress: (progress: CrossChannelProgress) => void
+): Promise<CrossChannelResponse> {
+  const res = await fetch("/api/query/cross-channel", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question, channels, history }),
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error || "Cross-channel query failed");
+  }
+
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let result: CrossChannelResponse | null = null;
+  const completedChannels: CrossChannelProgress["channels"] = [];
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+
+    // SSE messages are separated by double newlines
+    const parts = buffer.split("\n\n");
+    buffer = parts.pop() || "";
+
+    for (const part of parts) {
+      if (!part.trim()) continue;
+      const lines = part.split("\n");
+      let eventType = "";
+      let dataStr = "";
+
+      for (const line of lines) {
+        if (line.startsWith("event: ")) {
+          eventType = line.slice(7).trim();
+        } else if (line.startsWith("data: ")) {
+          dataStr = line.slice(6);
+        }
+      }
+
+      if (!eventType || !dataStr) continue;
+
+      try {
+        const data = JSON.parse(dataStr);
+
+        if (eventType === "status") {
+          onProgress({
+            phase: data.phase,
+            completed: data.completed || 0,
+            total: data.total || 0,
+            channels: [...completedChannels],
+          });
+        } else if (eventType === "channel_done") {
+          completedChannels.push({
+            name: data.name,
+            display_name: data.display_name,
+            relevant: data.relevant,
+            timeout: data.timeout,
+          });
+          onProgress({
+            phase: "querying",
+            completed: data.completed,
+            total: data.total,
+            channels: [...completedChannels],
+          });
+        } else if (eventType === "result") {
+          result = data as CrossChannelResponse;
+        }
+      } catch {
+        // Skip malformed SSE events
+      }
+    }
+  }
+
+  if (!result) throw new Error("No result received from cross-channel search");
+  return result;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -59,6 +156,7 @@ export default function DashboardPage() {
   const [searchAllActive, setSearchAllActive] = useState(false);
   const [showLimitWall, setShowLimitWall] = useState(false);
   const [crossChannelSelected, setCrossChannelSelected] = useState<Set<string>>(new Set());
+  const [crossChannelProgress, setCrossChannelProgress] = useState<CrossChannelProgress | null>(null);
 
   const [pickedChannels, setPickedChannels] = useState<string[]>([]);
   const [lockedUntil, setLockedUntil] = useState<string | null>(null);
@@ -223,21 +321,14 @@ export default function DashboardPage() {
       }
 
       if (searchAllActive) {
-        // Cross-channel search via server route
-        const res = await fetch("/api/query/cross-channel", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            question,
-            channels: Array.from(crossChannelSelected),
-            history: getHistory(),
-          }),
-        });
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || "Cross-channel query failed");
-        }
-        const data: CrossChannelResponse = await res.json();
+        // Cross-channel search via SSE stream
+        setCrossChannelProgress(null);
+        const data = await streamCrossChannel(
+          question,
+          Array.from(crossChannelSelected),
+          getHistory(),
+          (progress) => setCrossChannelProgress(progress)
+        );
         track("search", { channelId: "_cross", query: question, resultCount: data.allSources?.length ?? 0 });
         setMessages((prev) => [
           ...prev,
@@ -261,6 +352,7 @@ export default function DashboardPage() {
       setMessages((prev) => prev.slice(0, -1));
       setInput(question);
     } finally {
+      setCrossChannelProgress(null);
       setLoading(false);
       inputRef.current?.focus();
     }
@@ -527,16 +619,10 @@ export default function DashboardPage() {
                           setMessages((prev) => [...prev, { role: "user", content: s }]);
                           setLoading(true);
                           if (searchAllActive) {
-                            fetch("/api/query/cross-channel", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ question: s, channels: Array.from(crossChannelSelected), history: getHistory() }),
-                            })
-                              .then((res) => {
-                                if (!res.ok) throw new Error("Cross-channel query failed");
-                                return res.json() as Promise<CrossChannelResponse>;
-                              })
+                            setCrossChannelProgress(null);
+                            streamCrossChannel(s, Array.from(crossChannelSelected), getHistory(), (progress) => setCrossChannelProgress(progress))
                               .then((data) => {
+                                track("search", { channelId: "_cross", query: s, resultCount: data.allSources?.length ?? 0 });
                                 setMessages((prev) => [...prev, { role: "assistant", content: data.answer, sources: data.allSources, crossChannelGroups: data.channelGroups, channelsQueried: data.channelsQueried, queryTimeMs: data.queryTimeMs }]);
                               })
                               .catch(() => {
@@ -544,7 +630,7 @@ export default function DashboardPage() {
                                 setMessages((prev) => prev.slice(0, -1));
                                 setInput(s);
                               })
-                              .finally(() => { setLoading(false); inputRef.current?.focus(); });
+                              .finally(() => { setCrossChannelProgress(null); setLoading(false); inputRef.current?.focus(); });
                           } else {
                             queryCollection(selectedChannel!, s, getHistory())
                               .then((data) => {
@@ -580,6 +666,7 @@ export default function DashboardPage() {
                   label={searchAllActive
                     ? `Searching across ${crossChannelSelected.size} channel${crossChannelSelected.size !== 1 ? "s" : ""}...`
                     : undefined}
+                  progress={crossChannelProgress}
                 />
               )}
               {showLimitWall && (

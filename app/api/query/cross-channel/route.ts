@@ -9,7 +9,6 @@ import type {
   Collection,
   CrossChannelSource,
   ChannelSourceGroup,
-  CrossChannelResponse,
 } from "@/lib/api";
 
 const API_BASE_URL =
@@ -24,12 +23,11 @@ const HIDDEN = [
   "3blue1brown",
 ];
 
-const PER_CHANNEL_TIMEOUT_MS = 60000;
-const BATCH_SIZE = 2;
+const PER_CHANNEL_TIMEOUT_MS = 180_000; // 3 minutes per channel
+const CONCURRENCY = 2;
 const MAX_SOURCES_PER_CHANNEL = 3;
 const GLOBAL_TOP_SOURCES = 15;
 
-// Patterns that indicate the channel had no relevant content
 const NO_RESULT_PATTERNS = [
   "i found no statement",
   "no statement about this",
@@ -75,7 +73,6 @@ Bryan Johnson differs from both, focusing on [alternative]. His protocol involve
 **Where they agree:** All three emphasize [common ground].
 **Where they differ:** Huberman focuses on [X] while Stanfield prioritizes [Y]."`;
 
-// Lazy-init OpenAI client (only if key is set)
 let openaiClient: OpenAI | null = null;
 function getOpenAI(): OpenAI | null {
   if (!process.env.OPENAI_API_KEY) return null;
@@ -85,20 +82,6 @@ function getOpenAI(): OpenAI | null {
   return openaiClient;
 }
 
-async function queryInBatches<T, R>(
-  items: T[],
-  fn: (item: T) => Promise<R>,
-  batchSize: number
-): Promise<PromiseSettledResult<R>[]> {
-  const results: PromiseSettledResult<R>[] = [];
-  for (let i = 0; i < items.length; i += batchSize) {
-    const batch = items.slice(i, i + batchSize);
-    const batchResults = await Promise.allSettled(batch.map(fn));
-    results.push(...batchResults);
-  }
-  return results;
-}
-
 interface ChannelResult {
   collection: Collection;
   answer: string;
@@ -106,9 +89,6 @@ interface ChannelResult {
   relevant: boolean;
 }
 
-/**
- * Build a synthesis prompt from the per-channel answers and top sources.
- */
 function buildSynthesisContext(
   question: string,
   channelResults: ChannelResult[],
@@ -133,6 +113,57 @@ function buildSynthesisContext(
   }
 
   return context;
+}
+
+function logoUrl(col: Collection): string | null {
+  if (!col.logo) return null;
+  return col.logo.startsWith("/")
+    ? `https://mindvault.ikigai-dynamics.com${col.logo}`
+    : col.logo;
+}
+
+/**
+ * Query a single channel with a generous timeout.
+ */
+async function queryChannel(
+  col: Collection,
+  question: string,
+  history: { role: string; content: string }[]
+): Promise<ChannelResult | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), PER_CHANNEL_TIMEOUT_MS);
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/query/${col.name}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, history }),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+
+    const sources: CrossChannelSource[] = (data.sources || []).map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (src: any) => ({
+        ...src,
+        collection_name: col.name,
+        collection_display_name: col.display_name,
+        collection_logo: logoUrl(col),
+        relevance_score: src.relevance_score ?? src.score ?? 0,
+      })
+    );
+
+    const answer = data.answer || "";
+    const relevant = isRelevantAnswer(answer) && sources.length > 0;
+
+    return { collection: col, answer, sources, relevant };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -166,7 +197,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Check tier
   const { data: sub } = await supabase
     .from("subscriptions")
     .select("tier")
@@ -197,9 +227,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const startTime = Date.now();
-
-  // Fetch collections (from shared cache)
   let collections: Collection[];
   try {
     collections = await getCachedCollections();
@@ -210,10 +237,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Filter hidden
   collections = collections.filter((c) => !HIDDEN.includes(c.name));
 
-  // Filter by explicit channel list (takes priority) or category fallback
   if (channels && channels.length > 0) {
     const channelSet = new Set(channels);
     collections = collections.filter((c) => channelSet.has(c.name));
@@ -228,166 +253,158 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Query collections in batches
-  console.log(`[cross-channel] Querying ${collections.length} channels for: "${question.slice(0, 60)}"`);
-  const results = await queryInBatches(
-    collections,
-    async (col) => {
-      const controller = new AbortController();
-      const timeout = setTimeout(
-        () => controller.abort(),
-        PER_CHANNEL_TIMEOUT_MS
-      );
+  // ── SSE STREAM ──
+  const encoder = new TextEncoder();
+  const startTime = Date.now();
 
-      try {
-        const res = await fetch(`${API_BASE_URL}/query/${col.name}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            question,
-            history: history || [],
-          }),
-          signal: controller.signal,
-        });
+  const stream = new ReadableStream({
+    async start(controller) {
+      function send(event: string, data: unknown) {
+        controller.enqueue(
+          encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
+        );
+      }
 
-        if (!res.ok) {
-          console.log(`[cross-channel] ${col.name}: HTTP ${res.status}`);
-          return null;
+      send("status", {
+        phase: "querying",
+        total: collections.length,
+        completed: 0,
+        message: `Searching ${collections.length} channels...`,
+      });
+
+      // ── Query channels with bounded concurrency ──
+      const channelResults: ChannelResult[] = [];
+      const queue = [...collections];
+      let completed = 0;
+      const historyArr = history || [];
+
+      async function worker() {
+        while (queue.length > 0) {
+          const col = queue.shift()!;
+          const result = await queryChannel(col, question, historyArr);
+          completed++;
+
+          if (result) {
+            channelResults.push(result);
+            send("channel_done", {
+              name: col.name,
+              display_name: col.display_name,
+              relevant: result.relevant,
+              sources: result.sources.length,
+              completed,
+              total: collections.length,
+            });
+          } else {
+            send("channel_done", {
+              name: col.name,
+              display_name: col.display_name,
+              relevant: false,
+              sources: 0,
+              completed,
+              total: collections.length,
+              timeout: true,
+            });
+          }
         }
-
-        const data = await res.json();
-        console.log(`[cross-channel] ${col.name}: OK, ${data.sources?.length ?? 0} sources`);
-        return { collection: col, data };
-      } catch (err) {
-        console.log(`[cross-channel] ${col.name}: FAILED - ${err instanceof Error ? err.message : "unknown"}`);
-        return null;
-      } finally {
-        clearTimeout(timeout);
       }
-    },
-    BATCH_SIZE
-  );
 
-  // ── Collect results and classify relevance ──
-  const channelResults: ChannelResult[] = [];
-  let fulfilled = 0;
-  let rejected = 0;
-
-  for (const result of results) {
-    if (result.status !== "fulfilled" || !result.value) {
-      rejected++;
-      continue;
-    }
-    fulfilled++;
-
-    const { collection, data } = result.value;
-    const logoUrl = collection.logo
-      ? collection.logo.startsWith("/")
-        ? `https://mindvault.ikigai-dynamics.com${collection.logo}`
-        : collection.logo
-      : null;
-
-    const channelSources: CrossChannelSource[] = [];
-
-    if (data.sources && Array.isArray(data.sources)) {
-      for (const src of data.sources) {
-        channelSources.push({
-          ...src,
-          collection_name: collection.name,
-          collection_display_name: collection.display_name,
-          collection_logo: logoUrl,
-          relevance_score: src.relevance_score ?? src.score ?? 0,
-        });
-      }
-    }
-
-    const answer = data.answer || "";
-    const relevant = isRelevantAnswer(answer) && channelSources.length > 0;
-
-    channelResults.push({
-      collection,
-      answer,
-      sources: channelSources,
-      relevant,
-    });
-  }
-
-  // ── FILTER: only keep channels with relevant answers ──
-  const relevantResults = channelResults.filter((cr) => cr.relevant);
-  console.log(`[cross-channel] Results: ${fulfilled} fulfilled, ${rejected} rejected, ${relevantResults.length} relevant`);
-
-  // Collect sources from relevant channels only, capped per channel
-  const topSources: CrossChannelSource[] = [];
-  for (const cr of relevantResults) {
-    topSources.push(...cr.sources.slice(0, MAX_SOURCES_PER_CHANNEL));
-  }
-
-  // Cap total sources
-  const finalSources = topSources.slice(0, GLOBAL_TOP_SOURCES);
-
-  // ── GROUP BY CHANNEL ──
-  const groupMap = new Map<string, ChannelSourceGroup>();
-  for (const src of finalSources) {
-    if (!groupMap.has(src.collection_name)) {
-      groupMap.set(src.collection_name, {
-        collection_name: src.collection_name,
-        display_name: src.collection_display_name,
-        logo: src.collection_logo,
-        sources: [],
-      });
-    }
-    groupMap.get(src.collection_name)!.sources.push(src);
-  }
-
-  const channelGroups = Array.from(groupMap.values());
-
-  // ── LLM SYNTHESIS ──
-  let synthesizedAnswer = "";
-  const openai = getOpenAI();
-  console.log(`[cross-channel] Synthesis: openai=${!!openai}, relevant=${relevantResults.length}, groups=${channelGroups.length}, sources=${finalSources.length}`);
-
-  if (openai && relevantResults.length > 0) {
-    try {
-      const context = buildSynthesisContext(
-        question,
-        relevantResults,
-        finalSources
+      // Launch workers
+      const workers = Array.from(
+        { length: Math.min(CONCURRENCY, collections.length) },
+        () => worker()
       );
+      await Promise.all(workers);
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: CROSS_CHANNEL_SYSTEM_PROMPT },
-          { role: "user", content: context },
-        ],
-        max_tokens: 1200,
-        temperature: 0.4,
+      // ── Filter and build response ──
+      const relevantResults = channelResults.filter((cr) => cr.relevant);
+
+      send("status", {
+        phase: "synthesizing",
+        total: collections.length,
+        completed: collections.length,
+        relevant: relevantResults.length,
+        message:
+          relevantResults.length > 0
+            ? `Synthesizing answers from ${relevantResults.length} channels...`
+            : "No relevant results found.",
       });
 
-      synthesizedAnswer = completion.choices[0]?.message?.content || "";
-    } catch {
-      // LLM synthesis failed — fall back to best single-channel answer
-    }
-  }
+      // Collect top sources
+      const topSources: CrossChannelSource[] = [];
+      for (const cr of relevantResults) {
+        topSources.push(...cr.sources.slice(0, MAX_SOURCES_PER_CHANNEL));
+      }
+      const finalSources = topSources.slice(0, GLOBAL_TOP_SOURCES);
 
-  // Fallback: pick longest relevant answer (likely most detailed)
-  if (!synthesizedAnswer && relevantResults.length > 0) {
-    synthesizedAnswer = relevantResults
-      .map((cr) => cr.answer)
-      .sort((a, b) => b.length - a.length)[0];
-  }
+      // Group by channel
+      const groupMap = new Map<string, ChannelSourceGroup>();
+      for (const src of finalSources) {
+        if (!groupMap.has(src.collection_name)) {
+          groupMap.set(src.collection_name, {
+            collection_name: src.collection_name,
+            display_name: src.collection_display_name,
+            logo: src.collection_logo,
+            sources: [],
+          });
+        }
+        groupMap.get(src.collection_name)!.sources.push(src);
+      }
+      const channelGroups = Array.from(groupMap.values());
 
-  const queryTimeMs = Date.now() - startTime;
+      // LLM synthesis
+      let synthesizedAnswer = "";
+      const openai = getOpenAI();
 
-  const response: CrossChannelResponse = {
-    answer:
-      synthesizedAnswer ||
-      "No relevant results found across the selected channels.",
-    channelGroups,
-    allSources: finalSources,
-    channelsQueried: collections.length,
-    queryTimeMs,
-  };
+      if (openai && relevantResults.length > 0) {
+        try {
+          const context = buildSynthesisContext(
+            question,
+            relevantResults,
+            finalSources
+          );
+          const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+              { role: "system", content: CROSS_CHANNEL_SYSTEM_PROMPT },
+              { role: "user", content: context },
+            ],
+            max_tokens: 1200,
+            temperature: 0.4,
+          });
+          synthesizedAnswer = completion.choices[0]?.message?.content || "";
+        } catch {
+          // fall back
+        }
+      }
 
-  return NextResponse.json(response);
+      if (!synthesizedAnswer && relevantResults.length > 0) {
+        synthesizedAnswer = relevantResults
+          .map((cr) => cr.answer)
+          .sort((a, b) => b.length - a.length)[0];
+      }
+
+      const queryTimeMs = Date.now() - startTime;
+
+      // Send final result
+      send("result", {
+        answer:
+          synthesizedAnswer ||
+          "No relevant results found across the selected channels.",
+        channelGroups,
+        allSources: finalSources,
+        channelsQueried: collections.length,
+        queryTimeMs,
+      });
+
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
 }
