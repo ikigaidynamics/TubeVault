@@ -46,7 +46,7 @@ function backgroundRefresh() {
   refreshInProgress = true;
 
   fetch(`${API_BASE_URL}/collections`, {
-    signal: AbortSignal.timeout(120_000),
+    signal: AbortSignal.timeout(300_000),
   })
     .then((res) => (res.ok ? res.json() : Promise.reject()))
     .then((all: Collection[]) => {
