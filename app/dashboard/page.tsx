@@ -2,8 +2,8 @@
 
 export const dynamic = "force-dynamic";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Search, AlertCircle, Globe, ChevronRight, ChevronDown, Plus, Menu } from "lucide-react";
@@ -127,8 +127,22 @@ async function streamCrossChannel(
   return result;
 }
 
-export default function DashboardPage() {
+export default function DashboardPageWrapper() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-dvh items-center justify-center bg-[#0A0A0B]">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+      </div>
+    }>
+      <DashboardPage />
+    </Suspense>
+  );
+}
+
+function DashboardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -208,6 +222,59 @@ export default function DashboardPage() {
       })
       .catch(() => {});
   }, []);
+
+  // After Stripe checkout redirect: sync subscription from Stripe → Supabase, then refresh tier
+  useEffect(() => {
+    if (searchParams.get("checkout") !== "success") return;
+
+    let cancelled = false;
+
+    async function syncAfterCheckout() {
+      // Remove ?checkout=success from URL immediately
+      window.history.replaceState({}, "", "/dashboard");
+
+      // Try syncing up to 5 times (webhook might be slow)
+      for (let attempt = 0; attempt < 5; attempt++) {
+        try {
+          const syncRes = await fetch("/api/stripe/sync", { method: "POST" });
+          const syncData = await syncRes.json();
+          if (cancelled) return;
+
+          if (syncData.tier && syncData.tier !== "free") {
+            setTier(syncData.tier);
+            setCheckoutSuccess(true);
+            // Also refresh question limits
+            const checkRes = await fetch("/api/questions/check");
+            const checkData = await checkRes.json();
+            if (!cancelled) {
+              if (checkData.tier) setTier(checkData.tier);
+              if (checkData.remaining !== undefined) {
+                setQuestionsRemaining(checkData.remaining >= 0 ? checkData.remaining : null);
+                setQuestionLimit(checkData.limit >= 0 ? checkData.limit : null);
+              }
+            }
+            return;
+          }
+        } catch { /* retry */ }
+
+        // Wait before retry (increasing delay)
+        await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+      }
+
+      // Even after retries, still show success (payment went through, webhook might just be slow)
+      if (!cancelled) setCheckoutSuccess(true);
+    }
+
+    syncAfterCheckout();
+    return () => { cancelled = true; };
+  }, [searchParams]);
+
+  // Auto-dismiss checkout success toast after 6s
+  useEffect(() => {
+    if (!checkoutSuccess) return;
+    const t = setTimeout(() => setCheckoutSuccess(false), 6000);
+    return () => clearTimeout(t);
+  }, [checkoutSuccess]);
 
   const [collectionsWarming, setCollectionsWarming] = useState(false);
 
@@ -595,6 +662,17 @@ export default function DashboardPage() {
   return (
     <div className="flex h-dvh max-w-[100vw] overflow-hidden bg-[#0A0A0B]">
       <UpgradeModal open={upgradeModal.open} onClose={() => setUpgradeModal({ open: false })} title={upgradeModal.title} message={upgradeModal.message} />
+
+      {/* Checkout success toast */}
+      {checkoutSuccess && (
+        <div className="fixed left-1/2 top-4 z-[200] -translate-x-1/2 animate-[fadeUp_0.3s_ease-out] rounded-xl border border-primary/30 bg-[#1C1D1F] px-5 py-3 shadow-lg"
+          style={{ paddingTop: "max(0.75rem, calc(env(safe-area-inset-top, 0px) + 0.75rem))" }}
+        >
+          <p className="text-sm font-medium text-cream">
+            Upgrade successful! You&apos;re now on the <span className="capitalize text-primary">{tier}</span> plan.
+          </p>
+        </div>
+      )}
 
       {/* Admin tier toggle */}
       {isAdmin && (
