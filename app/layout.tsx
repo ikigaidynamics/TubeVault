@@ -32,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} ${alice.variable} antialiased`} suppressHydrationWarning>
+      <body className={`${inter.className} ${alice.variable} antialiased max-w-[100vw] overflow-x-hidden`} suppressHydrationWarning>
         {children}
         <CookieBanner />
       </body>

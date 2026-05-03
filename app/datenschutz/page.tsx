@@ -10,7 +10,7 @@ export default function DatenschutzPage() {
         <p className="mt-2 text-sm text-gray-text">
           TubeVault &middot; tubevault.io
           <br />
-          Wirksamkeitsdatum: 27. April 2026 &middot; Betreiber: Robin Jost, Cottbus, Deutschland
+          Letzte Aktualisierung: 3. Mai 2026 &middot; Betreiber: Robin Jost, Cottbus, Deutschland
         </p>
 
         <p className="mt-4 flex gap-4 text-sm text-gray-text">
@@ -59,6 +59,7 @@ export default function DatenschutzPage() {
             <ul className="ml-4 mt-2 list-disc space-y-1.5">
               <li><strong className="text-cream">Kontaktdaten:</strong> E-Mail-Adresse (bei Registrierung)</li>
               <li><strong className="text-cream">Profildaten:</strong> Name und Profilbild (bei Anmeldung &uuml;ber Google OAuth)</li>
+              <li><strong className="text-cream">Konversationsdaten:</strong> Chatverlauf einschlie&szlig;lich Ihrer Fragen, KI-generierter Antworten, Quellenverweise und Zeitstempel (siehe Abschnitt 5a)</li>
               <li><strong className="text-cream">Nutzungsdaten:</strong> Suchanfragen, Kanal-Interaktionen, Feature-Nutzung, Conversion-Events</li>
               <li><strong className="text-cream">Technische Daten:</strong> IP-Adresse (in Server-Logs), Browser-Informationen</li>
               <li><strong className="text-cream">Zahlungsdaten:</strong> Werden ausschlie&szlig;lich von Stripe verarbeitet &mdash; wir erhalten oder speichern keine Zahlungskartendaten</li>
@@ -134,6 +135,49 @@ export default function DatenschutzPage() {
               Suchanfragen k&ouml;nnen f&uuml;r maximal 30 Tage in unseren Server-Logs gespeichert werden,
               zur Missbrauchspr&auml;vention und IT-Sicherheit. Eine personalisierte Auswertung einzelner
               Anfragen findet nicht statt.
+            </p>
+          </section>
+
+          {/* 5a */}
+          <section>
+            <h2 className="mb-3 text-lg font-semibold text-cream">5a. Chatverlauf und Konversationsdaten</h2>
+            <p>
+              Wenn Sie TubeVault eingeloggt nutzen, werden Ihre Konversationen (Fragen und
+              KI-generierte Antworten) in Ihrem Konto gespeichert, damit Sie sp&auml;ter darauf
+              zugreifen k&ouml;nnen &mdash; sitzungs- und ger&auml;te&uuml;bergreifend.
+            </p>
+
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">5a.1 Was wir speichern</h3>
+            <ul className="ml-4 list-disc space-y-1.5">
+              <li>Ihre Suchfragen (Klartext)</li>
+              <li>KI-generierte Antworten (Klartext)</li>
+              <li>Quellenverweise (Videotitel, URLs, Zeitstempel)</li>
+              <li>Konversations-Metadaten: Titel, zugeordneter Kanal, Erstellungs- und Aktualisierungszeitstempel</li>
+              <li>Bei kanal&uuml;bergreifenden Suchen: welche Kan&auml;le abgefragt wurden</li>
+            </ul>
+
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">5a.2 Zweck und Rechtsgrundlage</h3>
+            <p>
+              Zweck: Bereitstellung der Chatverlauf-Funktion als Teil der Kernfunktionalit&auml;t der
+              Plattform, die es Ihnen erm&ouml;glicht, Konversationen fortzusetzen und fr&uuml;here
+              Antworten einzusehen.
+            </p>
+            <p className="mt-1">Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserf&uuml;llung)</p>
+
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">5a.3 Speicherdauer und L&ouml;schung</h3>
+            <p>
+              Konversationen werden gespeichert, solange Ihr Konto besteht. Sie k&ouml;nnen einzelne
+              Konversationen jederzeit &uuml;ber Ihr Dashboard l&ouml;schen. Bei L&ouml;schung Ihres
+              Kontos werden alle Konversationen und Nachrichten unwiderruflich gel&ouml;scht.
+            </p>
+
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">5a.4 KI-Titelgenerierung</h3>
+            <p>
+              Um Ihnen die Identifizierung von Konversationen zu erleichtern, wird f&uuml;r jede
+              Konversation automatisch ein kurzer Thementitel mithilfe der OpenAI-API generiert
+              (derselbe Anbieter wie f&uuml;r die Antwortgenerierung; siehe Abschnitt 12.3). Die
+              erste Frage und Antwort einer Konversation werden hierf&uuml;r an OpenAI &uuml;bermittelt.
+              Sie k&ouml;nnen Konversationen jederzeit umbenennen.
             </p>
           </section>
 
@@ -417,6 +461,7 @@ export default function DatenschutzPage() {
             </p>
             <ul className="ml-4 mt-1 list-disc space-y-1">
               <li>Ihr Supabase-Nutzerkonto (einschlie&szlig;lich E-Mail, Passwort-Hash, OAuth-Verkn&uuml;pfung)</li>
+              <li>Alle Konversationen und Chat-Nachrichten (Fragen, Antworten, Quellenverweise)</li>
               <li>Alle gespeicherten Suchanfragen und Analytics-Events, die Ihrer Konto-ID zugeordnet sind</li>
               <li>Alle Pr&auml;ferenzdaten</li>
             </ul>
@@ -456,6 +501,7 @@ export default function DatenschutzPage() {
               Wesentliche Aufbewahrungsfristen:
             </p>
             <ul className="ml-4 mt-2 list-disc space-y-1.5">
+              <li><strong className="text-cream">Konversationsdaten:</strong> Gespeichert bis zur L&ouml;schung der Konversation oder Ihres Kontos</li>
               <li><strong className="text-cream">Klartext-Suchanfragen:</strong> 7 Tage</li>
               <li><strong className="text-cream">Server-Logs:</strong> 30 Tage</li>
               <li><strong className="text-cream">Attributionsdaten</strong> (landing_attribution): 90 Tage</li>
@@ -517,6 +563,7 @@ export default function DatenschutzPage() {
           <section>
             <h2 className="mb-3 text-lg font-semibold text-cream">Versionshistorie</h2>
             <ul className="ml-4 list-disc space-y-1.5">
+              <li>Version 1.1 &mdash; 3. Mai 2026: Abschnitt 5a (Chatverlauf und Konversationsdaten) hinzugef&uuml;gt; Daten&uuml;bersicht, L&ouml;schrechte und Aufbewahrungsfristen aktualisiert.</li>
               <li>Version 1.0 &mdash; 27. April 2026: Erstver&ouml;ffentlichung.</li>
             </ul>
           </section>

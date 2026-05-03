@@ -53,18 +53,18 @@ export function ChatMessage({ role, content, sources, userAvatar, channelId, cro
 
       {/* Content */}
       <div
-        className={`max-w-[85%] space-y-2 ${role === "user" ? "items-end" : "items-start"}`}
+        className={`min-w-0 max-w-[85%] space-y-2 ${role === "user" ? "items-end" : "items-start"}`}
       >
         <div
           className={`rounded-2xl px-4 py-3 text-[14px] leading-[1.65] ${
             role === "user"
-              ? "bg-primary/10 font-medium text-cream border border-primary/20"
+              ? "bg-primary/10 font-medium text-cream border border-primary/20 break-words"
               : "border border-[#1E1F21] bg-[#111213] text-cream/90"
           }`}
         >
           {role === "assistant" ? (
             <div
-              className="prose-invert prose-sm max-w-none"
+              className="prose-invert prose-sm max-w-none break-words [overflow-wrap:anywhere]"
               dangerouslySetInnerHTML={{
                 __html: content
                   .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")

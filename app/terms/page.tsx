@@ -10,7 +10,7 @@ export default function TermsPage() {
         <p className="mt-2 text-sm text-gray-text">
           TubeVault &middot; tubevault.io
           <br />
-          Effective date: April 27, 2026 &middot; Operator: Robin Jost, Cottbus, Germany
+          Last updated: May 3, 2026 &middot; Operator: Robin Jost, Cottbus, Germany
         </p>
 
         <div className="mt-10 space-y-8 text-sm leading-relaxed text-cream/80">
@@ -53,6 +53,7 @@ export default function TermsPage() {
               <li>Semantic search across indexed YouTube channel archives</li>
               <li>AI-generated answers based on transcript excerpts (GPT-4o-mini by OpenAI)</li>
               <li>Timestamp links to source videos on YouTube</li>
+              <li>Persistent chat history: conversations are saved to your account and can be revisited across sessions and devices</li>
               <li>Access to transcripts (depending on subscription tier)</li>
               <li>Cross-channel search (Premium tier)</li>
             </ul>
@@ -64,7 +65,24 @@ export default function TermsPage() {
               source links. TubeVault answers are not a substitute for professional advice.
             </p>
 
-            <h3 className="mb-2 mt-4 text-base font-medium text-cream">2.3 Availability</h3>
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">2.3 Chat History</h3>
+            <p>
+              Conversations are stored in your account for your convenience. You can delete individual
+              conversations at any time from your dashboard. We are not responsible for loss of
+              conversation data due to technical issues, service changes, or account deletion. Chat
+              history is provided on a best-effort basis and should not be relied upon as an
+              archival system.
+            </p>
+
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">2.4 YouTube Content</h3>
+            <p>
+              The content accessible through TubeVault (transcripts, video references) is owned by
+              the respective YouTube creators and protected by their copyrights. TubeVault provides
+              a search and discovery service only. We do not claim ownership of any creator content.
+              All source links point to the original videos on YouTube.
+            </p>
+
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">2.5 Availability</h3>
             <p>
               We strive for high platform availability but cannot guarantee uninterrupted service.
               Maintenance, technical issues or third-party service outages may temporarily affect
@@ -340,6 +358,16 @@ export default function TermsPage() {
                 tubevault.io/impressum
               </Link>
             </p>
+          </section>
+        </div>
+
+        <div className="mt-10 space-y-8 text-sm leading-relaxed text-cream/80">
+          <section>
+            <h2 className="mb-3 text-lg font-semibold text-cream">Version History</h2>
+            <ul className="ml-4 list-disc space-y-1.5">
+              <li>Version 1.1 &mdash; May 3, 2026: Added Sections 2.3 (Chat History) and 2.4 (YouTube Content).</li>
+              <li>Version 1.0 &mdash; April 27, 2026: Initial publication.</li>
+            </ul>
           </section>
         </div>
 

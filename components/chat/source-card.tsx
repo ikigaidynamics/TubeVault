@@ -51,7 +51,7 @@ export function SourceCard({ source, index, channelId }: SourceCardProps) {
       {/* Header — clickable */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
+        className="flex w-full items-center gap-3 px-3 py-2.5 text-left min-w-0"
       >
         {/* Thumbnail or index */}
         {thumbnailUrl ? (

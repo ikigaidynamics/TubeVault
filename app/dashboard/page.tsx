@@ -573,12 +573,12 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex h-screen bg-[#0A0A0B]">
+    <div className="flex h-screen max-w-[100vw] overflow-x-hidden bg-[#0A0A0B]">
       <UpgradeModal open={upgradeModal.open} onClose={() => setUpgradeModal({ open: false })} title={upgradeModal.title} message={upgradeModal.message} />
 
       {/* Admin tier toggle */}
       {isAdmin && (
-        <div className="fixed right-4 top-4 z-[200] flex items-center gap-1 rounded-xl border border-primary/30 bg-[#1C1D1F] p-1 shadow-lg">
+        <div className="fixed right-2 top-2 z-[200] flex items-center gap-1 rounded-xl border border-primary/30 bg-[#1C1D1F] p-1 shadow-lg md:right-4 md:top-4">
           <span className="px-2 text-[10px] font-medium text-gray-text/50">TIER:</span>
           {(["free", "starter", "pro", "premium"] as SubscriptionTier[]).map((t) => (
             <button
@@ -629,22 +629,22 @@ export default function DashboardPage() {
       />
 
       {/* Main area */}
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar — breadcrumb */}
-        <header className="flex items-center gap-1.5 border-b border-white/[0.04] bg-[#0F1011]/95 px-6 py-2.5 pl-14 backdrop-blur-sm md:pl-6">
-          <Link href="/" className="text-[12px] text-gray-text/50 transition-colors hover:text-cream">
+        <header className="flex items-center gap-1.5 border-b border-white/[0.04] bg-[#0F1011]/95 px-3 py-2.5 pl-14 backdrop-blur-sm md:px-6 md:pl-6">
+          <Link href="/" className="shrink-0 text-[12px] text-gray-text/50 transition-colors hover:text-cream">
             TubeVault
           </Link>
-          <ChevronRight className="h-3 w-3 text-gray-text/20" />
+          <ChevronRight className="h-3 w-3 shrink-0 text-gray-text/20" />
           {hasActiveChat ? (
-            <span className="text-[12px] font-medium text-cream">
+            <span className="min-w-0 truncate text-[12px] font-medium text-cream">
               {searchAllActive ? "Cross-Channel" : selectedCollection?.display_name || "..."}
             </span>
           ) : (
             <span className="text-[12px] text-gray-text/50">Welcome</span>
           )}
           {selectedCollection && (
-            <span className="ml-1 text-[10px] text-gray-text/30">
+            <span className="hidden shrink-0 text-[10px] text-gray-text/30 sm:inline">
               {selectedCollection.video_count ? `${selectedCollection.video_count} videos` : ""}
             </span>
           )}
@@ -669,7 +669,7 @@ export default function DashboardPage() {
           <div className="border-b border-white/[0.04] bg-[#0F1011]">
             <button
               onClick={() => setChannelSelectorOpen((p) => !p)}
-              className="flex w-full items-center gap-2 px-6 py-2 text-left transition-colors hover:bg-white/[0.02] md:px-12"
+              className="flex w-full items-center gap-2 px-4 py-2 text-left transition-colors hover:bg-white/[0.02] md:px-12"
             >
               <Globe className="h-3.5 w-3.5 text-primary/50" />
               <span className="text-[12px] font-medium text-cream/70">
@@ -685,7 +685,7 @@ export default function DashboardPage() {
               />
             </button>
             {channelSelectorOpen && (
-              <div className="px-6 pb-3 animate-[fadeUp_0.15s_ease-out] md:px-12">
+              <div className="px-4 pb-3 animate-[fadeUp_0.15s_ease-out] md:px-12">
                 {renderChannelSelector(true)}
               </div>
             )}
@@ -707,8 +707,8 @@ export default function DashboardPage() {
             />
           ) : messages.length === 0 && !loading ? (
             /* ── Channel welcome ── */
-            <div className="flex h-full animate-[fadeUp_0.5s_ease-out] items-center justify-center px-6 md:px-12">
-              <div className="flex w-full max-w-[860px] flex-col items-center gap-8 md:flex-row md:items-center md:gap-0">
+            <div className="flex h-full animate-[fadeUp_0.5s_ease-out] items-center justify-center px-4 md:px-12">
+              <div className="flex w-full max-w-[860px] flex-col items-center gap-8 overflow-hidden md:flex-row md:items-center md:gap-0">
                 <div className="flex flex-[0_0_61.8%] flex-col gap-4 text-center md:pr-12 md:text-left">
                   {searchAllActive ? (
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 md:mx-0">
@@ -819,7 +819,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             /* ── Messages ── */
-            <div className="mx-auto max-w-3xl space-y-5 px-6 py-6 md:px-12">
+            <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 md:px-12">
               {messages.map((msg, i) => (
                 <div key={i} className="animate-[fadeUp_0.3s_ease-out]">
                   <ChatMessage role={msg.role} content={msg.content} sources={msg.sources} userAvatar={userAvatar} channelId={selectedChannel ?? undefined} crossChannelGroups={msg.crossChannelGroups} channelsQueried={msg.channelsQueried} queryTimeMs={msg.queryTimeMs} />
@@ -843,23 +843,23 @@ export default function DashboardPage() {
 
         {/* Error */}
         {error && (
-          <div className="mx-6 mb-2 flex items-center gap-2 rounded-xl bg-red-500/[0.08] px-4 py-2.5 text-[13px] text-red-400/80 md:mx-12">
+          <div className="mx-4 mb-2 flex items-center gap-2 rounded-xl bg-red-500/[0.08] px-4 py-2.5 text-[13px] text-red-400/80 md:mx-12">
             <AlertCircle className="h-4 w-4 shrink-0" />
             {error}
           </div>
         )}
 
         {/* Input */}
-        <div className="border-t border-[#2E2F31] bg-[#0F1011] px-6 py-4 md:px-10 lg:px-14">
+        <div className="border-t border-[#2E2F31] bg-[#0F1011] px-3 py-4 md:px-10 lg:px-14">
           <div className="mx-auto max-w-3xl">
             <div
-              className={`flex items-end gap-3 rounded-2xl border bg-[#1C1D1F] px-5 py-2 transition-all duration-200 ${
+              className={`flex items-end gap-2 rounded-2xl border bg-[#1C1D1F] px-3 py-2 transition-all duration-200 md:gap-3 md:px-5 ${
                 input
                   ? "border-primary/30 ring-1 ring-primary/30 shadow-[0_0_20px_rgba(101,174,76,0.06)]"
                   : "border-[#2E2F31] hover:border-white/[0.12]"
               }`}
             >
-              <Search className="mb-3 h-5 w-5 shrink-0 text-gray-text/30" />
+              <Search className="mb-3 hidden h-5 w-5 shrink-0 text-gray-text/30 sm:block" />
               <textarea
                 ref={inputRef}
                 value={input}
@@ -872,12 +872,12 @@ export default function DashboardPage() {
                 placeholder={hasActiveChat ? `Ask anything about ${chatLabel}...` : "Pick a channel to start asking questions..."}
                 disabled={!hasActiveChat || loading}
                 rows={1}
-                className="max-h-[120px] min-h-[24px] flex-1 resize-none overflow-hidden bg-transparent py-2.5 text-base leading-[1.6] text-cream placeholder:text-gray-text/35 focus:outline-none disabled:opacity-30"
+                className="max-h-[120px] min-h-[24px] min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-2.5 text-sm leading-[1.6] text-cream placeholder:text-gray-text/35 focus:outline-none disabled:opacity-30 md:text-base"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || !hasActiveChat || loading || (searchAllActive && crossChannelSelected.size === 0)}
-                className="mb-1 shrink-0 rounded-xl bg-primary px-5 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-primary-hover hover:shadow-[0_0_12px_rgba(101,174,76,0.3)] disabled:opacity-20 disabled:hover:shadow-none"
+                className="mb-1 shrink-0 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-primary-hover hover:shadow-[0_0_12px_rgba(101,174,76,0.3)] disabled:opacity-20 disabled:hover:shadow-none md:px-5"
               >
                 Search
               </button>

@@ -33,8 +33,8 @@ export function CrossChannelResults({
   return (
     <div className="space-y-2 pt-1">
       {/* Header */}
-      <div className="flex items-center gap-2">
-        <Globe className="h-3 w-3 text-primary/50" />
+      <div className="flex flex-wrap items-center gap-2">
+        <Globe className="h-3 w-3 shrink-0 text-primary/50" />
         <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-text/40">
           Sources from {channelGroups.length} channel{channelGroups.length !== 1 ? "s" : ""}
         </span>
@@ -75,7 +75,7 @@ export function CrossChannelResults({
                     .slice(0, 2)}
                 </div>
               )}
-              <span className="text-[12px] font-medium text-cream">
+              <span className="min-w-0 truncate text-[12px] font-medium text-cream">
                 {group.display_name}
               </span>
               <span className="rounded-full bg-white/[0.06] px-1.5 py-0.5 text-[9px] font-medium text-gray-text/50">

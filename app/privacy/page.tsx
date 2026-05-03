@@ -10,7 +10,7 @@ export default function PrivacyPage() {
         <p className="mt-2 text-sm text-gray-text">
           TubeVault &middot; tubevault.io
           <br />
-          Effective date: April 27, 2026 &middot; Operator: Robin Jost, Cottbus, Germany
+          Last updated: May 3, 2026 &middot; Operator: Robin Jost, Cottbus, Germany
         </p>
 
         <p className="mt-4 text-sm text-gray-text">
@@ -55,6 +55,7 @@ export default function PrivacyPage() {
             <ul className="ml-4 mt-2 list-disc space-y-1.5">
               <li><strong className="text-cream">Contact data:</strong> Email address (upon registration)</li>
               <li><strong className="text-cream">Profile data:</strong> Name and profile picture (when signing in with Google OAuth)</li>
+              <li><strong className="text-cream">Conversation data:</strong> Chat history including your questions, AI-generated answers, source references, and timestamps (see Section 5a)</li>
               <li><strong className="text-cream">Usage data:</strong> Search queries, channel interactions, feature usage, conversion events</li>
               <li><strong className="text-cream">Technical data:</strong> IP address (in server logs), browser information</li>
               <li><strong className="text-cream">Payment data:</strong> Processed exclusively by Stripe &mdash; we do not receive or store payment card details</li>
@@ -130,6 +131,46 @@ export default function PrivacyPage() {
               Search queries may be stored in our server logs for a maximum of 30 days for abuse
               prevention and IT security purposes. No personalised analysis of individual queries is
               carried out.
+            </p>
+          </section>
+
+          {/* 5a */}
+          <section>
+            <h2 className="mb-3 text-lg font-semibold text-cream">5a. Chat History and Conversation Data</h2>
+            <p>
+              When you use TubeVault while signed in, your conversations (questions and AI-generated
+              answers) are stored in your account so you can revisit them later across sessions and devices.
+            </p>
+
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">5a.1 What We Store</h3>
+            <ul className="ml-4 list-disc space-y-1.5">
+              <li>Your search questions (plain text)</li>
+              <li>AI-generated answers (plain text)</li>
+              <li>Source references (video titles, URLs, timestamps)</li>
+              <li>Conversation metadata: title, associated channel, creation and update timestamps</li>
+              <li>For cross-channel searches: which channels were queried</li>
+            </ul>
+
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">5a.2 Purpose and Legal Basis</h3>
+            <p>
+              Purpose: Providing the chat history feature as part of the platform&apos;s core functionality,
+              allowing you to continue conversations and review past answers.
+            </p>
+            <p className="mt-1">Legal basis: Art. 6(1)(b) GDPR (contract performance)</p>
+
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">5a.3 Retention and Deletion</h3>
+            <p>
+              Conversations are stored for as long as your account exists. You can delete individual
+              conversations at any time from your dashboard. When you delete your account, all
+              conversations and messages are permanently deleted.
+            </p>
+
+            <h3 className="mb-2 mt-4 text-base font-medium text-cream">5a.4 AI Title Generation</h3>
+            <p>
+              To help you identify conversations, a short topic title is automatically generated for
+              each conversation using OpenAI&apos;s API (the same provider used for answer generation;
+              see Section 12.3). The first question and answer of a conversation are sent to OpenAI
+              to produce a brief title. You can rename conversations at any time.
             </p>
           </section>
 
@@ -408,6 +449,7 @@ export default function PrivacyPage() {
             </p>
             <ul className="ml-4 mt-1 list-disc space-y-1">
               <li>Your Supabase user account (including email, password hash, OAuth link)</li>
+              <li>All conversations and chat messages (questions, answers, source references)</li>
               <li>All stored search queries and analytics events associated with your account ID</li>
               <li>All preference data</li>
             </ul>
@@ -445,6 +487,7 @@ export default function PrivacyPage() {
               and no statutory retention obligations apply. Key retention periods:
             </p>
             <ul className="ml-4 mt-2 list-disc space-y-1.5">
+              <li><strong className="text-cream">Conversation data:</strong> Stored until you delete the conversation or your account</li>
               <li><strong className="text-cream">Raw search queries:</strong> 7 days</li>
               <li><strong className="text-cream">Server logs:</strong> 30 days</li>
               <li><strong className="text-cream">Attribution records</strong> (landing_attribution): 90 days</li>
@@ -504,6 +547,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="mb-3 text-lg font-semibold text-cream">Version History</h2>
             <ul className="ml-4 list-disc space-y-1.5">
+              <li>Version 1.1 &mdash; May 3, 2026: Added Section 5a (Chat History and Conversation Data); updated data overview, erasure rights, and retention periods.</li>
               <li>Version 1.0 &mdash; April 27, 2026: Initial publication.</li>
             </ul>
           </section>

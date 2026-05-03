@@ -146,13 +146,13 @@ export function WelcomeScreen({
           <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-primary/40">
             Your AI Search Engine
           </p>
-          <h2 className="mt-2 text-2xl font-bold text-cream sm:text-3xl">
+          <h2 className="mt-2 text-xl font-bold text-cream sm:text-3xl">
             What would you like to know?
           </h2>
 
           <div className="mx-auto mt-6 max-w-2xl">
             <div
-              className={`flex items-center gap-3 rounded-2xl border bg-[#141516] px-5 transition-all duration-200 ${
+              className={`flex items-center gap-2 rounded-2xl border bg-[#141516] px-3 transition-all duration-200 sm:gap-3 sm:px-5 ${
                 isFocused
                   ? "border-primary/30 ring-2 ring-primary/20 shadow-[0_0_20px_rgba(101,174,76,0.06)]"
                   : "border-[#2E2F31] hover:border-white/[0.12]"
@@ -177,7 +177,7 @@ export function WelcomeScreen({
               </div>
               <button
                 disabled
-                className="shrink-0 rounded-xl bg-primary px-5 py-2 text-sm font-medium text-white opacity-40"
+                className="shrink-0 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-white opacity-40 sm:px-5"
               >
                 Search
               </button>
@@ -197,7 +197,7 @@ export function WelcomeScreen({
           </p>
 
           {/* Category pills */}
-          <div className="mt-4 flex justify-center gap-2">
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
