@@ -12,6 +12,11 @@ const HIDDEN = [
   "doctor_sethi",
 ];
 
+// Override broken/outdated logo URLs from the backend
+const LOGO_OVERRIDES: Record<string, string> = {
+  lex_fridman: "/channels/lex_fridman_avatar.jpg",
+};
+
 // In-memory cache with 5-minute TTL
 let cachedData: Collection[] | null = null;
 let cacheTimestamp = 0;
@@ -41,6 +46,12 @@ function writeDiskCache(data: Collection[]) {
 // Background refresh (fire-and-forget, never blocks the response)
 let refreshInProgress = false;
 
+function applyOverrides(collections: Collection[]): Collection[] {
+  return collections.map((c) =>
+    LOGO_OVERRIDES[c.name] ? { ...c, logo: LOGO_OVERRIDES[c.name] } : c
+  );
+}
+
 function backgroundRefresh() {
   if (refreshInProgress) return;
   refreshInProgress = true;
@@ -50,7 +61,7 @@ function backgroundRefresh() {
   })
     .then((res) => (res.ok ? res.json() : Promise.reject()))
     .then((all: Collection[]) => {
-      const filtered = all.filter((c) => !HIDDEN.includes(c.name));
+      const filtered = applyOverrides(all.filter((c) => !HIDDEN.includes(c.name)));
       cachedData = filtered;
       cacheTimestamp = Date.now();
       writeDiskCache(filtered);
@@ -92,7 +103,7 @@ export async function getCachedCollections(): Promise<Collection[]> {
     });
     if (!res.ok) throw new Error("API error");
     const all: Collection[] = await res.json();
-    const filtered = all.filter((c) => !HIDDEN.includes(c.name));
+    const filtered = applyOverrides(all.filter((c) => !HIDDEN.includes(c.name)));
     cachedData = filtered;
     cacheTimestamp = now;
     writeDiskCache(filtered);
