@@ -631,15 +631,15 @@ export default function DashboardPage() {
       {/* Main area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar — mobile logo + breadcrumb */}
-        <header className="flex items-center gap-1.5 border-b border-white/[0.04] bg-[#0F1011]/95 px-3 py-2.5 pl-14 backdrop-blur-sm md:px-6 md:pl-6">
+        <header className="flex items-center gap-1.5 border-b border-white/[0.04] bg-[#0F1011]/95 px-3 py-3 pl-14 backdrop-blur-sm md:px-6 md:py-2.5 md:pl-6">
           {/* Mobile: TubeVault.io logo */}
           <Link href="/" className="md:hidden">
             <Image
-              src="/TubeVault.io_Logo.png"
+              src="/TubeVault.io_Logo_cropped.png"
               alt="TubeVault.io"
-              width={160}
-              height={36}
-              className="h-7 w-auto object-contain"
+              width={660}
+              height={100}
+              className="h-9 w-auto object-contain"
               priority
             />
           </Link>
