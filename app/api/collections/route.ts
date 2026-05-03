@@ -11,8 +11,8 @@ export async function GET() {
     });
   } catch {
     return NextResponse.json(
-      { error: "Collections service unavailable" },
-      { status: 503 }
+      { error: "warming", message: "Loading channels for the first time..." },
+      { status: 503, headers: { "Retry-After": "5" } }
     );
   }
 }

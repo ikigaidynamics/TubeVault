@@ -31,10 +31,6 @@ interface Message {
   queryTimeMs?: number;
 }
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://mindvault.ikigai-dynamics.com/api";
-
 function getDefaults(collections: Collection[], n: number): string[] {
   return [...collections]
     .sort((a, b) => (b.video_count || 0) - (a.video_count || 0))
@@ -112,21 +108,41 @@ export default function DashboardPage() {
       .catch(() => {});
   }, []);
 
+  const [collectionsWarming, setCollectionsWarming] = useState(false);
+
   useEffect(() => {
+    let cancelled = false;
     async function load() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/collections`);
-        if (!res.ok) throw new Error("Failed to fetch");
-        const HIDDEN = ["industrie_und_handelskammer_cottbus", "btu_cottbus_senftenberg", "doctor_sethi"];
-        const all: Collection[] = await res.json();
-        setCollections(all.filter((c) => !HIDDEN.includes(c.name)));
-      } catch {
+      const MAX_RETRIES = 24; // up to ~2 min of retrying
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        try {
+          const res = await fetch("/api/collections");
+          if (res.status === 503) {
+            // Server is warming up — show hint and retry
+            if (!cancelled) setCollectionsWarming(true);
+            await new Promise((r) => setTimeout(r, 5000));
+            continue;
+          }
+          if (!res.ok) throw new Error("Failed to fetch");
+          const all: Collection[] = await res.json();
+          if (!cancelled) {
+            setCollections(all);
+            setCollectionsWarming(false);
+            setCollectionsLoading(false);
+          }
+          return;
+        } catch {
+          break;
+        }
+      }
+      if (!cancelled) {
         setError("Failed to load channels. Please refresh.");
-      } finally {
+        setCollectionsWarming(false);
         setCollectionsLoading(false);
       }
     }
     load();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -362,6 +378,7 @@ export default function DashboardPage() {
             <WelcomeScreen
               collections={collections}
               collectionsLoading={collectionsLoading}
+              collectionsWarming={collectionsWarming}
               selectedChannel={selectedChannel}
               pickedChannels={pickedChannels}
               hasUnlimitedChannels={hasUnlimitedChannels}

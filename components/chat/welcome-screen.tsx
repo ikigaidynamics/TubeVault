@@ -26,6 +26,7 @@ const POPULAR_QUESTIONS = [
 interface WelcomeScreenProps {
   collections: Collection[];
   collectionsLoading: boolean;
+  collectionsWarming?: boolean;
   selectedChannel: string | null;
   pickedChannels: string[];
   hasUnlimitedChannels: boolean;
@@ -48,6 +49,7 @@ function getCategory(col: Collection | undefined): string {
 export function WelcomeScreen({
   collections,
   collectionsLoading,
+  collectionsWarming,
   selectedChannel,
   pickedChannels,
   hasUnlimitedChannels,
@@ -113,8 +115,14 @@ export function WelcomeScreen({
 
   if (collectionsLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full flex-col items-center justify-center gap-3">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
         <p className="text-sm text-gray-text/40">Loading channels...</p>
+        {collectionsWarming && (
+          <p className="max-w-xs text-center text-xs text-gray-text/30">
+            Loading the collection for the first time — this may take a moment.
+          </p>
+        )}
       </div>
     );
   }
