@@ -20,7 +20,7 @@ import { ChannelPickerModal } from "@/components/chat/channel-picker-modal";
 import { TruncatedText } from "@/components/chat/truncated-text";
 import { cleanDescription } from "@/lib/clean-description";
 import { TIER_LIMITS, type SubscriptionTier } from "@/lib/tiers";
-import { CATEGORIES, type Category } from "@/lib/categories";
+import { CATEGORIES, getCollectionNamesByCategory } from "@/lib/categories";
 
 interface Message {
   role: "user" | "assistant";
@@ -62,7 +62,7 @@ export default function DashboardPage() {
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; title?: string; message?: string }>({ open: false });
   const [searchAllActive, setSearchAllActive] = useState(false);
   const [showLimitWall, setShowLimitWall] = useState(false);
-  const [crossChannelCategory, setCrossChannelCategory] = useState<Category>("All");
+  const [crossChannelSelected, setCrossChannelSelected] = useState<Set<string>>(new Set());
 
   const [pickedChannels, setPickedChannels] = useState<string[]>([]);
   const [lockedUntil, setLockedUntil] = useState<string | null>(null);
@@ -174,6 +174,7 @@ export default function DashboardPage() {
 
   async function handleSend() {
     if (!input.trim() || (!selectedChannel && !searchAllActive) || loading) return;
+    if (searchAllActive && crossChannelSelected.size === 0) return;
 
     if (questionsRemaining !== null && questionsRemaining <= 0) {
       // analytics
@@ -212,7 +213,7 @@ export default function DashboardPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             question,
-            category: crossChannelCategory,
+            channels: Array.from(crossChannelSelected),
             history: getHistory(),
           }),
         });
@@ -266,7 +267,8 @@ export default function DashboardPage() {
   }
 
   function handleSearchAll() {
-    setSearchAllActive(true); setSelectedChannel(null); setMessages([]); setError(null); setCrossChannelCategory("All");
+    setSearchAllActive(true); setSelectedChannel(null); setMessages([]); setError(null);
+    setCrossChannelSelected(new Set(collections.map((c) => c.name)));
   }
 
   function handleWelcomeSubmit(channel: string, question: string) {
@@ -277,7 +279,7 @@ export default function DashboardPage() {
 
   const selectedCollection = collections.find((c) => c.name === selectedChannel);
   const hasActiveChat = selectedChannel || searchAllActive;
-  const chatLabel = searchAllActive ? "all channels" : selectedCollection?.display_name || selectedChannel;
+  const chatLabel = searchAllActive ? `${crossChannelSelected.size} channels` : selectedCollection?.display_name || selectedChannel;
 
   return (
     <div className="flex h-screen bg-[#0A0A0B]">
@@ -394,7 +396,7 @@ export default function DashboardPage() {
                   </p>
                   <h2 className="text-[1.6rem] font-normal leading-tight text-cream/90">
                     {searchAllActive ? (
-                      <>Search across all <span className="text-cream">{collections.length} channels</span></>
+                      <>Search across <span className="text-cream">{crossChannelSelected.size} of {collections.length} channels</span></>
                     ) : (
                       <>Explore <span className="text-cream">{selectedCollection?.display_name}</span></>
                     )}
@@ -402,22 +404,78 @@ export default function DashboardPage() {
                   {searchAllActive ? (
                     <>
                       <p className="text-[13px] leading-relaxed text-gray-text/50">
-                        Get answers from all creators with source links.
+                        Select channels to include in your search.
                       </p>
+                      {/* Category preset pills */}
                       <div className="flex flex-wrap gap-2 mt-1">
-                        {CATEGORIES.map((cat) => (
-                          <button
-                            key={cat}
-                            onClick={() => setCrossChannelCategory(cat)}
-                            className={`rounded-full px-3 py-1 text-[11px] font-medium transition-all duration-200 ${
-                              crossChannelCategory === cat
-                                ? "bg-primary/15 text-primary border border-primary/30"
-                                : "text-gray-text/50 border border-white/[0.06] hover:text-cream hover:border-white/[0.12]"
-                            }`}
-                          >
-                            {cat}
-                          </button>
-                        ))}
+                        {CATEGORIES.map((cat) => {
+                          const slugs = cat === "All"
+                            ? collections.map((c) => c.name)
+                            : getCollectionNamesByCategory(cat).filter((s) => collections.some((c) => c.name === s));
+                          const allSelected = slugs.length > 0 && slugs.every((s) => crossChannelSelected.has(s));
+                          return (
+                            <button
+                              key={cat}
+                              onClick={() => {
+                                setCrossChannelSelected((prev) => {
+                                  const next = new Set(prev);
+                                  if (cat === "All") {
+                                    if (allSelected) { next.clear(); } else { collections.forEach((c) => next.add(c.name)); }
+                                  } else {
+                                    if (allSelected) { slugs.forEach((s) => next.delete(s)); } else { slugs.forEach((s) => next.add(s)); }
+                                  }
+                                  return next;
+                                });
+                              }}
+                              className={`rounded-full px-3 py-1 text-[11px] font-medium transition-all duration-200 ${
+                                allSelected
+                                  ? "bg-primary/15 text-primary border border-primary/30"
+                                  : "text-gray-text/50 border border-white/[0.06] hover:text-cream hover:border-white/[0.12]"
+                              }`}
+                            >
+                              {cat}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {/* Channel grid */}
+                      <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-[260px] overflow-y-auto scrollbar-hide">
+                        {collections.map((col) => {
+                          const selected = crossChannelSelected.has(col.name);
+                          const logoUrl = col.logo
+                            ? col.logo.startsWith("/")
+                              ? `https://mindvault.ikigai-dynamics.com${col.logo}`
+                              : col.logo
+                            : null;
+                          return (
+                            <button
+                              key={col.name}
+                              onClick={() => {
+                                setCrossChannelSelected((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(col.name)) { next.delete(col.name); } else { next.add(col.name); }
+                                  return next;
+                                });
+                              }}
+                              className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-all duration-150 ${
+                                selected
+                                  ? "bg-primary/10 border border-primary/30"
+                                  : "border border-white/[0.04] hover:border-white/[0.1] hover:bg-white/[0.02]"
+                              }`}
+                            >
+                              {logoUrl ? (
+                                <Image src={logoUrl} alt="" width={24} height={24} className="h-6 w-6 shrink-0 rounded-full object-cover" unoptimized />
+                              ) : (
+                                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-[8px] font-bold text-gray-text">
+                                  {col.display_name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
+                                </div>
+                              )}
+                              <span className={`truncate text-[11px] ${selected ? "text-cream font-medium" : "text-gray-text/60"}`}>
+                                {col.display_name}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </>
                   ) : selectedCollection?.description ? (
@@ -455,7 +513,7 @@ export default function DashboardPage() {
                             fetch("/api/query/cross-channel", {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ question: s, category: crossChannelCategory, history: getHistory() }),
+                              body: JSON.stringify({ question: s, channels: Array.from(crossChannelSelected), history: getHistory() }),
                             })
                               .then((res) => {
                                 if (!res.ok) throw new Error("Cross-channel query failed");
@@ -503,7 +561,7 @@ export default function DashboardPage() {
               {loading && (
                 <TypingIndicator
                   label={searchAllActive
-                    ? `Searching across ${crossChannelCategory === "All" ? "all" : crossChannelCategory} channels...`
+                    ? `Searching across ${crossChannelSelected.size} channel${crossChannelSelected.size !== 1 ? "s" : ""}...`
                     : undefined}
                 />
               )}
@@ -550,7 +608,7 @@ export default function DashboardPage() {
               />
               <button
                 onClick={handleSend}
-                disabled={!input.trim() || !hasActiveChat || loading}
+                disabled={!input.trim() || !hasActiveChat || loading || (searchAllActive && crossChannelSelected.size === 0)}
                 className="mb-1 shrink-0 rounded-xl bg-primary px-5 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-primary-hover hover:shadow-[0_0_12px_rgba(101,174,76,0.3)] disabled:opacity-20 disabled:hover:shadow-none"
               >
                 Search

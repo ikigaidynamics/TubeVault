@@ -61,6 +61,16 @@ export function getCollectionCategory(col: Collection): Category {
   return "Other";
 }
 
+/** Return all slugs in CATEGORY_MAP matching a given category. */
+export function getCollectionNamesByCategory(
+  category: Category | string
+): string[] {
+  if (category === "All") return Object.keys(CATEGORY_MAP);
+  return Object.entries(CATEGORY_MAP)
+    .filter(([, cat]) => cat === category)
+    .map(([slug]) => slug);
+}
+
 /** Filter collections by category. "All" returns everything. */
 export function getCollectionsByCategory(
   collections: Collection[],

@@ -72,9 +72,10 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { question, category, history } = body as {
+  const { question, category, channels, history } = body as {
     question: string;
     category?: string;
+    channels?: string[];
     history?: { role: string; content: string }[];
   };
 
@@ -103,14 +104,17 @@ export async function POST(req: NextRequest) {
   // Filter hidden
   collections = collections.filter((c) => !HIDDEN.includes(c.name));
 
-  // Filter by category
-  if (category && category !== "All") {
+  // Filter by explicit channel list (takes priority) or category fallback
+  if (channels && channels.length > 0) {
+    const channelSet = new Set(channels);
+    collections = collections.filter((c) => channelSet.has(c.name));
+  } else if (category && category !== "All") {
     collections = getCollectionsByCategory(collections, category);
   }
 
   if (collections.length === 0) {
     return NextResponse.json(
-      { error: "No channels found for the selected category" },
+      { error: "No channels found for the selected filters" },
       { status: 404 }
     );
   }
