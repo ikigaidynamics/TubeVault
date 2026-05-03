@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Search, AlertCircle, Globe, ChevronRight, ChevronDown, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { queryCollection, type Collection, type HistoryMessage, type CrossChannelResponse, type Message, type ConversationSummary } from "@/lib/api";
-import { listConversations, createConversation, loadConversation, appendMessages, deleteConversation } from "@/lib/conversations";
+import { listConversations, createConversation, loadConversation, appendMessages, deleteConversation, renameConversation } from "@/lib/conversations";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { WelcomeScreen } from "@/components/chat/welcome-screen";
 import { ChatMessage } from "@/components/chat/chat-message";
@@ -309,6 +309,8 @@ export default function DashboardPage() {
     }
     appendMessages(convId, [{ role: "user", content: question }, assistantMsg]);
     listConversations().then(setConversationList).catch(() => {});
+    // Refresh again after a delay to pick up the LLM-generated title
+    setTimeout(() => listConversations().then(setConversationList).catch(() => {}), 3000);
   }
 
   function handleNewChat() {
@@ -345,6 +347,13 @@ export default function DashboardPage() {
       setActiveConv(null);
       setMessages([]);
     }
+  }
+
+  function handleRenameConversation(id: string, title: string) {
+    renameConversation(id, title).catch(() => {});
+    setConversationList((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, title } : c))
+    );
   }
 
   async function handleSend() {
@@ -616,6 +625,7 @@ export default function DashboardPage() {
         onSelectConversation={handleSelectConversation}
         onNewChat={handleNewChat}
         onDeleteConversation={handleDeleteConversation}
+        onRenameConversation={handleRenameConversation}
       />
 
       {/* Main area */}

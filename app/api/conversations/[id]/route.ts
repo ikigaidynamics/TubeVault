@@ -84,6 +84,44 @@ export async function GET(
   });
 }
 
+// PATCH: rename a conversation
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const supabase = getSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { title } = (await req.json()) as { title?: string };
+  if (!title || !title.trim()) {
+    return NextResponse.json({ error: "Title required" }, { status: 400 });
+  }
+
+  const { data: conv } = await supabaseAdmin
+    .from("conversations")
+    .select("id")
+    .eq("id", params.id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!conv) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  await supabaseAdmin
+    .from("conversations")
+    .update({ title: title.trim() })
+    .eq("id", params.id);
+
+  return NextResponse.json({ ok: true });
+}
+
 // DELETE: remove a conversation (messages cascade)
 export async function DELETE(
   _req: NextRequest,

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { LogOut, Menu, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight, ArrowRight, Zap, FileText, Plus, MessageSquare, Trash2 } from "lucide-react";
+import { LogOut, Menu, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight, ArrowRight, Zap, FileText, Plus, MessageSquare, Trash2, Pencil } from "lucide-react";
 import type { Collection, ConversationSummary } from "@/lib/api";
 import type { SubscriptionTier } from "@/lib/tiers";
 import { TIER_LIMITS } from "@/lib/tiers";
@@ -32,6 +32,7 @@ interface ChannelSidebarProps {
   onSelectConversation?: (id: string) => void;
   onNewChat?: () => void;
   onDeleteConversation?: (id: string) => void;
+  onRenameConversation?: (id: string, title: string) => void;
 }
 
 function ChannelAvatar({ col }: { col: Collection }) {
@@ -88,10 +89,21 @@ export function ChannelSidebar({
   onSelectConversation,
   onNewChat,
   onDeleteConversation,
+  onRenameConversation,
 }: ChannelSidebarProps) {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const editInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingId && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.select();
+    }
+  }, [editingId]);
 
   const limits = TIER_LIMITS[tier];
   const canCrossSearch = limits.hasCrossChannelSearch;
@@ -180,25 +192,71 @@ export function ChannelSidebar({
                       <MessageSquare className="h-4 w-4 shrink-0 text-gray-text/30" />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className={`truncate text-[11px] leading-tight ${isActive ? "font-medium text-cream" : "text-gray-text/70"}`}>
-                        {conv.title}
-                      </p>
+                      {editingId === conv.id ? (
+                        <input
+                          ref={editInputRef}
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onBlur={() => {
+                            const trimmed = editingTitle.trim();
+                            if (trimmed && trimmed !== conv.title) {
+                              onRenameConversation?.(conv.id, trimmed);
+                            }
+                            setEditingId(null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              (e.target as HTMLInputElement).blur();
+                            } else if (e.key === "Escape") {
+                              setEditingId(null);
+                            }
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-full rounded bg-white/10 px-1 py-0.5 text-[11px] leading-tight text-cream outline-none ring-1 ring-primary/40"
+                          maxLength={80}
+                        />
+                      ) : (
+                        <p
+                          className={`truncate text-[11px] leading-tight cursor-pointer ${isActive ? "font-medium text-cream" : "text-gray-text/70"}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingId(conv.id);
+                            setEditingTitle(conv.title);
+                          }}
+                          title="Click to rename"
+                        >
+                          {conv.title}
+                        </p>
+                      )}
                       <p className="text-[9px] text-gray-text/30">
                         {conv.is_cross_channel ? "Cross-Channel" : channelCol?.display_name || conv.channel_name}
                         {" \u00B7 "}
                         {relativeTime(conv.updated_at)}
                       </p>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteConversation?.(conv.id);
-                      }}
-                      className="shrink-0 rounded p-0.5 text-gray-text/0 transition-colors group-hover:text-gray-text/30 hover:!text-red-400/70"
-                      title="Delete conversation"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
+                    <div className="flex shrink-0 flex-col gap-0.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingId(conv.id);
+                          setEditingTitle(conv.title);
+                        }}
+                        className="shrink-0 rounded p-0.5 text-gray-text/0 transition-colors group-hover:text-gray-text/30 hover:!text-primary/70"
+                        title="Rename conversation"
+                      >
+                        <Pencil className="h-2.5 w-2.5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteConversation?.(conv.id);
+                        }}
+                        className="shrink-0 rounded p-0.5 text-gray-text/0 transition-colors group-hover:text-gray-text/30 hover:!text-red-400/70"
+                        title="Delete conversation"
+                      >
+                        <Trash2 className="h-2.5 w-2.5" />
+                      </button>
+                    </div>
                   </div>
                 );
               })}

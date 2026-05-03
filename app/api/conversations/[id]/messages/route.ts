@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import OpenAI from "openai";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -102,17 +103,64 @@ export async function POST(
     updated_at: new Date().toISOString(),
   };
 
-  if (conv.title === "New conversation") {
-    const firstUser = incoming.find((m) => m.role === "user");
-    if (firstUser) {
-      updates.title = firstUser.content.slice(0, 60);
-    }
-  }
-
   await supabaseAdmin
     .from("conversations")
     .update(updates)
     .eq("id", params.id);
 
+  // Generate a short topic title if this is the first exchange
+  if (conv.title === "New conversation") {
+    const firstUser = incoming.find((m) => m.role === "user");
+    const firstAssistant = incoming.find((m) => m.role === "assistant");
+    if (firstUser) {
+      if (process.env.OPENAI_API_KEY) {
+        // LLM-generated title (async, won't block response)
+        generateTitle(params.id, firstUser.content, firstAssistant?.content);
+      } else {
+        // Fallback: truncated question
+        await supabaseAdmin
+          .from("conversations")
+          .update({ title: firstUser.content.slice(0, 60) })
+          .eq("id", params.id);
+      }
+    }
+  }
+
   return NextResponse.json({ ok: true, message_count: newCount });
+}
+
+/** Fire-and-forget: use GPT-4o-mini to generate a short topic title */
+function generateTitle(conversationId: string, question: string, answer?: string) {
+  (async () => {
+    try {
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const context = answer
+        ? `Question: ${question.slice(0, 200)}\nAnswer: ${answer.slice(0, 300)}`
+        : `Question: ${question.slice(0, 300)}`;
+
+      const res = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        temperature: 0,
+        max_tokens: 20,
+        messages: [
+          {
+            role: "system",
+            content:
+              "Generate a very short title (3-6 words) that describes the topic of this conversation. No quotes, no punctuation at the end. Just the topic.",
+          },
+          { role: "user", content: context },
+        ],
+      });
+
+      const title = res.choices[0]?.message?.content?.trim();
+      if (title) {
+        await supabaseAdmin
+          .from("conversations")
+          .update({ title })
+          .eq("id", conversationId);
+      }
+    } catch {
+      // Best-effort — fall back to no title update
+    }
+  })();
 }

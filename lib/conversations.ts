@@ -45,6 +45,17 @@ export async function appendMessages(
   }).catch(() => {});
 }
 
+export async function renameConversation(
+  id: string,
+  title: string
+): Promise<void> {
+  await fetch(`/api/conversations/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title }),
+  });
+}
+
 export async function deleteConversation(id: string): Promise<void> {
   fetch(`/api/conversations/${id}`, { method: "DELETE" }).catch(() => {});
 }
