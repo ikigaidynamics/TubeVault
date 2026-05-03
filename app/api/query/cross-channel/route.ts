@@ -229,6 +229,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Query collections in batches
+  console.log(`[cross-channel] Querying ${collections.length} channels for: "${question.slice(0, 60)}"`);
   const results = await queryInBatches(
     collections,
     async (col) => {
@@ -249,11 +250,16 @@ export async function POST(req: NextRequest) {
           signal: controller.signal,
         });
 
-        if (!res.ok) return null;
+        if (!res.ok) {
+          console.log(`[cross-channel] ${col.name}: HTTP ${res.status}`);
+          return null;
+        }
 
         const data = await res.json();
+        console.log(`[cross-channel] ${col.name}: OK, ${data.sources?.length ?? 0} sources`);
         return { collection: col, data };
-      } catch {
+      } catch (err) {
+        console.log(`[cross-channel] ${col.name}: FAILED - ${err instanceof Error ? err.message : "unknown"}`);
         return null;
       } finally {
         clearTimeout(timeout);
@@ -264,9 +270,15 @@ export async function POST(req: NextRequest) {
 
   // ── Collect results and classify relevance ──
   const channelResults: ChannelResult[] = [];
+  let fulfilled = 0;
+  let rejected = 0;
 
   for (const result of results) {
-    if (result.status !== "fulfilled" || !result.value) continue;
+    if (result.status !== "fulfilled" || !result.value) {
+      rejected++;
+      continue;
+    }
+    fulfilled++;
 
     const { collection, data } = result.value;
     const logoUrl = collection.logo
@@ -302,6 +314,7 @@ export async function POST(req: NextRequest) {
 
   // ── FILTER: only keep channels with relevant answers ──
   const relevantResults = channelResults.filter((cr) => cr.relevant);
+  console.log(`[cross-channel] Results: ${fulfilled} fulfilled, ${rejected} rejected, ${relevantResults.length} relevant`);
 
   // Collect sources from relevant channels only, capped per channel
   const topSources: CrossChannelSource[] = [];
@@ -331,6 +344,7 @@ export async function POST(req: NextRequest) {
   // ── LLM SYNTHESIS ──
   let synthesizedAnswer = "";
   const openai = getOpenAI();
+  console.log(`[cross-channel] Synthesis: openai=${!!openai}, relevant=${relevantResults.length}, groups=${channelGroups.length}, sources=${finalSources.length}`);
 
   if (openai && relevantResults.length > 0) {
     try {
