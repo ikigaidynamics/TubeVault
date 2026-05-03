@@ -20,10 +20,6 @@ import { createClient } from "@/lib/supabase";
 import { type Collection } from "@/lib/api";
 import { TIER_LIMITS, type SubscriptionTier } from "@/lib/tiers";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://mindvault.ikigai-dynamics.com/api";
-
 function daysUntil(dateStr: string): number {
   const diff = new Date(dateStr).getTime() - Date.now();
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
@@ -81,7 +77,7 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/collections`)
+    fetch("/api/collections")
       .then((r) => r.json())
       .then((data: Collection[]) => setCollections(data))
       .catch(() => {});

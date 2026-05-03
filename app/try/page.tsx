@@ -16,10 +16,6 @@ interface Message {
   sources?: Source[];
 }
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://mindvault.ikigai-dynamics.com/api";
-
 const TRIAL_LIMIT = 3;
 
 function getScreenInfo(): string {
@@ -40,15 +36,12 @@ export default function TryPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Fetch collections
+  // Fetch collections (via cached API route)
   useEffect(() => {
-    fetch(`${API_BASE_URL}/collections`)
+    fetch("/api/collections")
       .then((r) => r.json())
       .then((data: Collection[]) => {
-        const HIDDEN = ["industrie_und_handelskammer_cottbus", "btu_cottbus_senftenberg", "doctor_sethi"];
-        const sorted = data
-          .filter((c: Collection) => !HIDDEN.includes(c.name))
-          .sort((a: Collection, b: Collection) => a.display_name.localeCompare(b.display_name));
+        const sorted = [...data].sort((a: Collection, b: Collection) => a.display_name.localeCompare(b.display_name));
         setCollections(sorted);
       })
       .catch(() => {});

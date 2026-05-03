@@ -30,7 +30,6 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://mindvault.ikigai-dynamics.com/api";
 
-const HIDDEN = ["industrie_und_handelskammer_cottbus", "btu_cottbus_senftenberg", "doctor_sethi"];
 
 const LANGUAGES = [
   { code: "de", label: "Deutsch" },
@@ -140,9 +139,9 @@ function TranscriptsContent() {
   }, [router]);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/collections`)
+    fetch("/api/collections")
       .then((r) => r.json())
-      .then((data: Collection[]) => setCollections(data.filter((c) => !HIDDEN.includes(c.name))))
+      .then((data: Collection[]) => setCollections(data))
       .catch(() => {});
   }, []);
 

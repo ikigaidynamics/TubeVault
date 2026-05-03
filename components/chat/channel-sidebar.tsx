@@ -4,11 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { LogOut, Menu, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight, ArrowRight, Zap, FileText } from "lucide-react";
-import type { Collection } from "@/lib/api";
+import { LogOut, Menu, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight, ArrowRight, Zap, FileText, Plus, MessageSquare, Trash2 } from "lucide-react";
+import type { Collection, ConversationSummary } from "@/lib/api";
 import type { SubscriptionTier } from "@/lib/tiers";
 import { TIER_LIMITS } from "@/lib/tiers";
 import { track } from "@/lib/analytics/tracker";
+import { relativeTime } from "@/lib/relative-time";
 
 interface ChannelSidebarProps {
   collections: Collection[];
@@ -26,6 +27,11 @@ interface ChannelSidebarProps {
   searchAllActive?: boolean;
   questionsRemaining?: number | null;
   questionLimit?: number | null;
+  conversations?: ConversationSummary[];
+  activeConversationId?: string | null;
+  onSelectConversation?: (id: string) => void;
+  onNewChat?: () => void;
+  onDeleteConversation?: (id: string) => void;
 }
 
 function ChannelAvatar({ col }: { col: Collection }) {
@@ -77,6 +83,11 @@ export function ChannelSidebar({
   searchAllActive,
   questionsRemaining,
   questionLimit,
+  conversations,
+  activeConversationId,
+  onSelectConversation,
+  onNewChat,
+  onDeleteConversation,
 }: ChannelSidebarProps) {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -116,6 +127,87 @@ export function ChannelSidebar({
           />
         </Link>
       </div>
+
+      {/* New Chat + Recent Chats */}
+      {conversations && conversations.length > 0 && (
+        <>
+          <div className="px-3 pt-3 pb-1">
+            <button
+              onClick={() => {
+                onNewChat?.();
+                setMobileOpen(false);
+              }}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/20 py-2 text-[11px] font-medium text-primary transition-all duration-200 hover:bg-primary/10 hover:border-primary/30"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              New Chat
+            </button>
+          </div>
+
+          <div className="px-2 pb-2">
+            <div className="flex items-center gap-2 px-2 pb-1.5">
+              <MessageSquare className="h-3 w-3 text-gray-text/30" />
+              <span className="text-[10px] font-medium uppercase tracking-wider text-gray-text/35">
+                Recent Chats
+              </span>
+            </div>
+            <div className="max-h-[200px] overflow-y-auto scrollbar-hide">
+              {conversations.slice(0, 8).map((conv) => {
+                const isActive = activeConversationId === conv.id;
+                const channelCol = conv.channel_name
+                  ? collections.find((c) => c.name === conv.channel_name)
+                  : null;
+                return (
+                  <div
+                    key={conv.id}
+                    className={`group mb-0.5 flex items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-all duration-200 cursor-pointer ${
+                      isActive
+                        ? "border-l-[3px] border-l-primary bg-primary/[0.08] pl-1.5"
+                        : "border-l-[3px] border-l-transparent hover:bg-white/[0.04]"
+                    }`}
+                    onClick={() => {
+                      onSelectConversation?.(conv.id);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    {conv.is_cross_channel ? (
+                      <Globe className="h-4 w-4 shrink-0 text-primary/40" />
+                    ) : channelCol ? (
+                      <div className="shrink-0">
+                        <ChannelAvatar col={channelCol} />
+                      </div>
+                    ) : (
+                      <MessageSquare className="h-4 w-4 shrink-0 text-gray-text/30" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className={`truncate text-[11px] leading-tight ${isActive ? "font-medium text-cream" : "text-gray-text/70"}`}>
+                        {conv.title}
+                      </p>
+                      <p className="text-[9px] text-gray-text/30">
+                        {conv.is_cross_channel ? "Cross-Channel" : channelCol?.display_name || conv.channel_name}
+                        {" \u00B7 "}
+                        {relativeTime(conv.updated_at)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteConversation?.(conv.id);
+                      }}
+                      className="shrink-0 rounded p-0.5 text-gray-text/0 transition-colors group-hover:text-gray-text/30 hover:!text-red-400/70"
+                      title="Delete conversation"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mx-4 border-b border-white/[0.05]" />
+        </>
+      )}
 
       {/* Header + lock info */}
       <div className="flex items-center justify-between px-4 py-3">

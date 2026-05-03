@@ -6,9 +6,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, AlertCircle, Globe, ChevronRight, ChevronDown } from "lucide-react";
+import { Search, AlertCircle, Globe, ChevronRight, ChevronDown, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase";
-import { queryCollection, type Collection, type HistoryMessage, type Source, type ChannelSourceGroup, type CrossChannelResponse } from "@/lib/api";
+import { queryCollection, type Collection, type HistoryMessage, type CrossChannelResponse, type Message, type ConversationSummary } from "@/lib/api";
+import { listConversations, createConversation, loadConversation, appendMessages, deleteConversation } from "@/lib/conversations";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { WelcomeScreen } from "@/components/chat/welcome-screen";
 import { ChatMessage } from "@/components/chat/chat-message";
@@ -21,15 +22,6 @@ import { TruncatedText } from "@/components/chat/truncated-text";
 import { cleanDescription } from "@/lib/clean-description";
 import { TIER_LIMITS, type SubscriptionTier } from "@/lib/tiers";
 import { CATEGORIES, getCollectionNamesByCategory } from "@/lib/categories";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  sources?: Source[];
-  crossChannelGroups?: ChannelSourceGroup[];
-  channelsQueried?: number;
-  queryTimeMs?: number;
-}
 
 function getDefaults(collections: Collection[], n: number): string[] {
   return [...collections]
@@ -159,6 +151,15 @@ export default function DashboardPage() {
   const [crossChannelProgress, setCrossChannelProgress] = useState<CrossChannelProgress | null>(null);
   const [channelSelectorOpen, setChannelSelectorOpen] = useState(false);
 
+  const [conversationList, setConversationList] = useState<ConversationSummary[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const activeConvIdRef = useRef<string | null>(null);
+
+  function setActiveConv(id: string | null) {
+    activeConvIdRef.current = id;
+    setActiveConversationId(id);
+  }
+
   const [pickedChannels, setPickedChannels] = useState<string[]>([]);
   const [lockedUntil, setLockedUntil] = useState<string | null>(null);
   const [canChange, setCanChange] = useState(true);
@@ -264,6 +265,11 @@ export default function DashboardPage() {
     }
   }, [channelDataLoaded, collectionsLoading, collections.length, hasUnlimitedChannels, pickedChannels.length]);
 
+  // Load conversation list on mount
+  useEffect(() => {
+    listConversations().then(setConversationList).catch(() => {});
+  }, []);
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
@@ -285,6 +291,60 @@ export default function DashboardPage() {
       if (data.canChange !== undefined) setCanChange(data.canChange);
     } catch { /* keep current */ }
     setPickerOpen(false);
+  }
+
+  async function saveExchange(question: string, assistantMsg: Message) {
+    let convId = activeConvIdRef.current;
+    if (!convId) {
+      try {
+        convId = await createConversation({
+          channel_name: searchAllActive ? null : selectedChannel,
+          is_cross_channel: searchAllActive,
+          cross_channel_selection: searchAllActive ? Array.from(crossChannelSelected) : undefined,
+        });
+        setActiveConv(convId);
+      } catch {
+        return;
+      }
+    }
+    appendMessages(convId, [{ role: "user", content: question }, assistantMsg]);
+    listConversations().then(setConversationList).catch(() => {});
+  }
+
+  function handleNewChat() {
+    setActiveConv(null);
+    setMessages([]);
+    setError(null);
+  }
+
+  async function handleSelectConversation(id: string) {
+    try {
+      const conv = await loadConversation(id);
+      if (conv.is_cross_channel) {
+        setSearchAllActive(true);
+        setSelectedChannel(null);
+        if (conv.cross_channel_selection.length > 0) {
+          setCrossChannelSelected(new Set(conv.cross_channel_selection));
+        }
+      } else {
+        setSearchAllActive(false);
+        setSelectedChannel(conv.channel_name);
+      }
+      setMessages(conv.messages);
+      setActiveConv(id);
+      setError(null);
+    } catch {
+      // ignore
+    }
+  }
+
+  function handleDeleteConversation(id: string) {
+    deleteConversation(id);
+    setConversationList((prev) => prev.filter((c) => c.id !== id));
+    if (activeConvIdRef.current === id) {
+      setActiveConv(null);
+      setMessages([]);
+    }
   }
 
   async function handleSend() {
@@ -331,22 +391,23 @@ export default function DashboardPage() {
           (progress) => setCrossChannelProgress(progress)
         );
         track("search", { channelId: "_cross", query: question, resultCount: data.allSources?.length ?? 0 });
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: data.answer,
-            sources: data.allSources,
-            crossChannelGroups: data.channelGroups,
-            channelsQueried: data.channelsQueried,
-            queryTimeMs: data.queryTimeMs,
-          },
-        ]);
+        const assistantMsg: Message = {
+          role: "assistant",
+          content: data.answer,
+          sources: data.allSources,
+          crossChannelGroups: data.channelGroups,
+          channelsQueried: data.channelsQueried,
+          queryTimeMs: data.queryTimeMs,
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
+        saveExchange(question, assistantMsg);
       } else {
         const channelName = selectedChannel!;
         const data = await queryCollection(channelName, question, getHistory());
         track("search", { channelId: channelName, query: question, resultCount: data.sources?.length ?? 0 });
-        setMessages((prev) => [...prev, { role: "assistant", content: data.answer, sources: data.sources }]);
+        const assistantMsg: Message = { role: "assistant", content: data.answer, sources: data.sources };
+        setMessages((prev) => [...prev, assistantMsg]);
+        saveExchange(question, assistantMsg);
       }
     } catch {
       setError("Failed to get a response. Please try again.");
@@ -372,12 +433,48 @@ export default function DashboardPage() {
 
   function handleSelectChannel(name: string) {
     setSearchAllActive(false);
-    if (name !== selectedChannel) { setSelectedChannel(name); setMessages([]); setError(null); }
+    if (name !== selectedChannel) {
+      setSelectedChannel(name);
+      setMessages([]);
+      setError(null);
+      setActiveConv(null);
+
+      // Auto-load most recent conversation for this channel
+      const existing = conversationList.find(
+        (c) => c.channel_name === name && !c.is_cross_channel
+      );
+      if (existing) {
+        loadConversation(existing.id)
+          .then((conv) => {
+            setMessages(conv.messages);
+            setActiveConv(conv.id);
+          })
+          .catch(() => {});
+      }
+    }
   }
 
   function handleSearchAll() {
-    setSearchAllActive(true); setSelectedChannel(null); setMessages([]); setError(null);
+    setSearchAllActive(true);
+    setSelectedChannel(null);
+    setMessages([]);
+    setError(null);
+    setActiveConv(null);
     setCrossChannelSelected(new Set(collections.map((c) => c.name)));
+
+    // Auto-load most recent cross-channel conversation
+    const existing = conversationList.find((c) => c.is_cross_channel);
+    if (existing) {
+      loadConversation(existing.id)
+        .then((conv) => {
+          setMessages(conv.messages);
+          setActiveConv(conv.id);
+          if (conv.cross_channel_selection.length > 0) {
+            setCrossChannelSelected(new Set(conv.cross_channel_selection));
+          }
+        })
+        .catch(() => {});
+    }
   }
 
   function handleWelcomeSubmit(channel: string, question: string) {
@@ -514,6 +611,11 @@ export default function DashboardPage() {
         searchAllActive={searchAllActive}
         questionsRemaining={questionsRemaining}
         questionLimit={questionLimit}
+        conversations={conversationList}
+        activeConversationId={activeConversationId}
+        onSelectConversation={handleSelectConversation}
+        onNewChat={handleNewChat}
+        onDeleteConversation={handleDeleteConversation}
       />
 
       {/* Main area */}
@@ -537,7 +639,18 @@ export default function DashboardPage() {
             </span>
           )}
           {hasActiveChat && (
-            <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_rgba(101,174,76,0.4)]" />
+            <div className="ml-auto flex items-center gap-2">
+              {messages.length > 0 && (
+                <button
+                  onClick={handleNewChat}
+                  className="flex items-center gap-1 rounded-lg border border-primary/20 px-2 py-1 text-[10px] font-medium text-primary transition-all hover:bg-primary/10"
+                >
+                  <Plus className="h-3 w-3" />
+                  New Chat
+                </button>
+              )}
+              <div className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_rgba(101,174,76,0.4)]" />
+            </div>
           )}
         </header>
 
@@ -660,7 +773,9 @@ export default function DashboardPage() {
                             streamCrossChannel(s, Array.from(crossChannelSelected), getHistory(), (progress) => setCrossChannelProgress(progress))
                               .then((data) => {
                                 track("search", { channelId: "_cross", query: s, resultCount: data.allSources?.length ?? 0 });
-                                setMessages((prev) => [...prev, { role: "assistant", content: data.answer, sources: data.allSources, crossChannelGroups: data.channelGroups, channelsQueried: data.channelsQueried, queryTimeMs: data.queryTimeMs }]);
+                                const aMsg: Message = { role: "assistant", content: data.answer, sources: data.allSources, crossChannelGroups: data.channelGroups, channelsQueried: data.channelsQueried, queryTimeMs: data.queryTimeMs };
+                                setMessages((prev) => [...prev, aMsg]);
+                                saveExchange(s, aMsg);
                               })
                               .catch(() => {
                                 setError("Failed to get a response. Please try again.");
@@ -671,7 +786,9 @@ export default function DashboardPage() {
                           } else {
                             queryCollection(selectedChannel!, s, getHistory())
                               .then((data) => {
-                                setMessages((prev) => [...prev, { role: "assistant", content: data.answer, sources: data.sources }]);
+                                const aMsg: Message = { role: "assistant", content: data.answer, sources: data.sources };
+                                setMessages((prev) => [...prev, aMsg]);
+                                saveExchange(s, aMsg);
                               })
                               .catch(() => {
                                 setError("Failed to get a response. Please try again.");

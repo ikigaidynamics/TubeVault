@@ -19,10 +19,6 @@ import { queryCollection, type Source, type Collection } from "@/lib/api";
 import { track } from "@/lib/analytics/tracker";
 import { trackEvent as trackAttribution } from "@/lib/attribution";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://mindvault.ikigai-dynamics.com/api";
-
 const TRIAL_LIMIT = 3;
 const TYPING_SPEED = 55;
 const HUBERMAN_LOGO = "https://mindvault.ikigai-dynamics.com/static/andrew_huberman_avatar.jpg";
@@ -503,15 +499,13 @@ export function HeroLiveDemo({
   const [hasAutoSearched, setHasAutoSearched] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Fetch collections
+  // Fetch collections (via cached API route)
   useEffect(() => {
-    fetch(`${API_BASE_URL}/collections`)
+    fetch("/api/collections")
       .then((r) => r.json())
       .then((data: Collection[]) => {
-        const HIDDEN = ["industrie_und_handelskammer_cottbus", "btu_cottbus_senftenberg", "doctor_sethi"];
         setCollections(
-          data.filter((c: Collection) => !HIDDEN.includes(c.name))
-            .sort((a: Collection, b: Collection) => a.display_name.localeCompare(b.display_name))
+          [...data].sort((a: Collection, b: Collection) => a.display_name.localeCompare(b.display_name))
         );
       })
       .catch(() => {});

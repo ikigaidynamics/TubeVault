@@ -53,6 +53,29 @@ export interface CrossChannelResponse {
   queryTimeMs: number;
 }
 
+export interface Message {
+  role: "user" | "assistant";
+  content: string;
+  sources?: Source[];
+  crossChannelGroups?: ChannelSourceGroup[];
+  channelsQueried?: number;
+  queryTimeMs?: number;
+}
+
+export interface ConversationSummary {
+  id: string;
+  title: string;
+  channel_name: string | null;
+  is_cross_channel: boolean;
+  message_count: number;
+  updated_at: string;
+}
+
+export interface ConversationFull extends ConversationSummary {
+  cross_channel_selection: string[];
+  messages: Message[];
+}
+
 export async function fetchCollections(): Promise<Collection[]> {
   const res = await fetch(`${API_BASE_URL}/collections`, {
     next: { revalidate: 300 },

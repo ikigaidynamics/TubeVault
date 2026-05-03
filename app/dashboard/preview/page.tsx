@@ -9,10 +9,6 @@ import { ChatMessage } from "@/components/chat/chat-message";
 import type { Collection, Source } from "@/lib/api";
 import type { SubscriptionTier } from "@/lib/tiers";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://mindvault.ikigai-dynamics.com/api";
-
 // Mock messages to preview chat UI
 const MOCK_MESSAGES: { role: "user" | "assistant"; content: string; sources?: Source[] }[] = [
   {
@@ -61,10 +57,10 @@ export default function DashboardPreview() {
   const tierConfig = TIER_OPTIONS[activeTier];
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/collections`)
+    fetch("/api/collections")
       .then((r) => r.json())
       .then((data: Collection[]) => {
-        setCollections(data.sort((a, b) => a.display_name.localeCompare(b.display_name)));
+        setCollections([...data].sort((a, b) => a.display_name.localeCompare(b.display_name)));
       })
       .catch(() => {});
   }, []);
