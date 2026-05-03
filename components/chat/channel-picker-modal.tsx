@@ -10,6 +10,7 @@ interface ChannelPickerModalProps {
   collections: Collection[];
   maxChannels: number;
   defaults: string[];
+  lockedChannels?: string[];
   onConfirm: (channels: string[]) => void;
   onClose?: () => void;
   canClose?: boolean;
@@ -20,6 +21,7 @@ export function ChannelPickerModal({
   collections,
   maxChannels,
   defaults,
+  lockedChannels = [],
   onConfirm,
   onClose,
   canClose = false,
@@ -40,7 +42,10 @@ export function ChannelPickerModal({
       c.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const lockedSet = new Set(lockedChannels);
+
   function toggle(name: string) {
+    if (lockedSet.has(name)) return; // Can't toggle locked channels
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(name)) {
@@ -66,10 +71,12 @@ export function ChannelPickerModal({
         <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-cream">
-              Choose your channels
+              {lockedChannels.length > 0 ? "Add more channels" : "Choose your channels"}
             </h2>
             <p className="mt-0.5 text-sm text-gray-text/60">
-              Select up to {maxChannels} channels. Locked for 30 days after confirming.
+              {lockedChannels.length > 0
+                ? `${lockedChannels.length} channel${lockedChannels.length !== 1 ? "s" : ""} locked. Pick ${maxChannels - lockedChannels.length} more.`
+                : `Select up to ${maxChannels} channels. Locked for 30 days after confirming.`}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -106,6 +113,7 @@ export function ChannelPickerModal({
           <div className="grid gap-2 sm:grid-cols-2">
             {filtered.map((col) => {
               const isSelected = selected.has(col.name);
+              const isLocked = lockedSet.has(col.name);
               const isFull = selected.size >= maxChannels && !isSelected;
               const logoUrl = col.logo
                 ? col.logo.startsWith("/")
@@ -124,13 +132,15 @@ export function ChannelPickerModal({
                 <button
                   key={col.name}
                   onClick={() => toggle(col.name)}
-                  disabled={isFull}
+                  disabled={isFull || isLocked}
                   className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-left transition-all ${
-                    isSelected
-                      ? "border-primary/40 bg-primary/[0.06]"
-                      : isFull
-                        ? "border-white/[0.04] bg-white/[0.01] opacity-40 cursor-not-allowed"
-                        : "border-white/[0.06] bg-white/[0.02] hover:border-primary/20 hover:bg-white/[0.04]"
+                    isLocked
+                      ? "border-primary/20 bg-primary/[0.03] cursor-default opacity-70"
+                      : isSelected
+                        ? "border-primary/40 bg-primary/[0.06]"
+                        : isFull
+                          ? "border-white/[0.04] bg-white/[0.01] opacity-40 cursor-not-allowed"
+                          : "border-white/[0.06] bg-white/[0.02] hover:border-primary/20 hover:bg-white/[0.04]"
                   }`}
                 >
                   {/* Checkbox */}

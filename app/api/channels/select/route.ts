@@ -85,7 +85,7 @@ export async function POST(request: Request) {
   // Get current subscription
   const { data: sub } = await supabase
     .from("subscriptions")
-    .select("tier, channels_locked_until")
+    .select("tier, channels_locked_until, selected_channels")
     .eq("user_id", user.id)
     .eq("status", "active")
     .single();
@@ -103,17 +103,23 @@ export async function POST(request: Request) {
     });
   }
 
-  // Check lock
+  // Check lock — but allow adding channels to fill empty slots
   const lockedUntil = sub?.channels_locked_until;
+  const currentChannels: string[] = sub?.selected_channels || [];
   if (lockedUntil && new Date(lockedUntil) > new Date()) {
-    return NextResponse.json(
-      {
-        error: "Channels are locked",
-        lockedUntil,
-        canChange: false,
-      },
-      { status: 403 }
-    );
+    // Allow if user is only ADDING to their existing selection (not removing/swapping)
+    const existingAllPresent = currentChannels.every((ch: string) => channels.includes(ch));
+    if (!existingAllPresent) {
+      return NextResponse.json(
+        {
+          error: "Channels are locked",
+          lockedUntil,
+          canChange: false,
+        },
+        { status: 403 }
+      );
+    }
+    // User is adding channels while keeping existing locked ones — allowed
   }
 
   // Validate count

@@ -697,6 +697,7 @@ function DashboardPage() {
         collections={collections}
         maxChannels={maxChannels === Infinity ? collections.length : maxChannels}
         defaults={pickedChannels.length > 0 ? pickedChannels : getDefaults(collections, maxChannels === Infinity ? collections.length : maxChannels)}
+        lockedChannels={!canChange && pickedChannels.length > 0 && pickedChannels.length < maxChannels ? pickedChannels : []}
         onConfirm={handleConfirmChannels}
         onClose={() => setPickerOpen(false)}
         canClose={pickedChannels.length > 0}
