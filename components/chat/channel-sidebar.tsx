@@ -529,7 +529,8 @@ export function ChannelSidebar({
     <>
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed left-3 top-3 z-50 rounded-lg border border-white/[0.08] bg-[#0F1011] p-2 text-gray-text transition-colors hover:text-cream md:hidden"
+        className="fixed left-3 z-50 rounded-lg border border-white/[0.08] bg-[#0F1011] p-2 text-gray-text transition-colors hover:text-cream md:hidden"
+        style={{ top: "max(0.625rem, env(safe-area-inset-top, 0.625rem))" }}
       >
         <Menu className="h-5 w-5" />
       </button>

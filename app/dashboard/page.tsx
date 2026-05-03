@@ -630,8 +630,8 @@ export default function DashboardPage() {
 
       {/* Main area */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Top bar — mobile logo + breadcrumb */}
-        <header className="flex items-center gap-1.5 border-b border-white/[0.04] bg-[#0F1011]/95 px-3 py-2.5 pl-14 backdrop-blur-sm md:px-6 md:pl-6">
+        {/* Top bar — mobile logo + breadcrumb (sticky so it stays visible during scroll) */}
+        <header className="sticky top-0 z-30 flex items-center gap-1.5 border-b border-white/[0.04] bg-[#0F1011]/95 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] pl-14 backdrop-blur-sm md:px-6 md:pl-6 md:pt-2.5">
           {/* Mobile: TubeVault.io logo */}
           <Link href="/" className="md:hidden">
             <Image

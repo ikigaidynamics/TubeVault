@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Alice } from "next/font/google";
 import { CookieBanner } from "@/components/consent/cookie-banner";
 import "./globals.css";
@@ -14,6 +14,12 @@ const alice = Alice({
   display: "swap",
   variable: "--font-alice",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "TubeVault — AI-Powered YouTube Search",
