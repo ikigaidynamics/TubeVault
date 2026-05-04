@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Send, AlertCircle, ArrowRight, ChevronDown } from "lucide-react";
-import { queryCollection, type Collection, type HistoryMessage, type Source } from "@/lib/api";
+import { queryCollection, resolveLogoUrl, type Collection, type HistoryMessage, type Source } from "@/lib/api";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { TypingIndicator } from "@/components/chat/typing-indicator";
 import { Navbar } from "@/components/shared/navbar";
@@ -174,11 +174,7 @@ export default function TryPage() {
                 {selectedCollection ? (
                   <>
                     {(() => {
-                      const logoUrl = selectedCollection.logo
-                        ? selectedCollection.logo.startsWith("/")
-                          ? `https://mindvault.ikigai-dynamics.com${selectedCollection.logo}`
-                          : selectedCollection.logo
-                        : null;
+                      const logoUrl = resolveLogoUrl(selectedCollection.logo);
                       return logoUrl ? (
                         <Image
                           src={logoUrl}
@@ -206,11 +202,7 @@ export default function TryPage() {
                   />
                   <div className="absolute left-0 top-full z-20 mt-1 max-h-80 w-72 overflow-y-auto rounded-xl border border-white/[0.08] bg-[#1C1D1F] shadow-xl">
                     {collections.map((col) => {
-                      const logoUrl = col.logo
-                        ? col.logo.startsWith("/")
-                          ? `https://mindvault.ikigai-dynamics.com${col.logo}`
-                          : col.logo
-                        : null;
+                      const logoUrl = resolveLogoUrl(col.logo);
                       return (
                         <button
                           key={col.name}

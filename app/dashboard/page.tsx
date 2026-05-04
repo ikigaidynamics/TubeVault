@@ -8,7 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Search, AlertCircle, Globe, ChevronRight, ChevronDown, Plus, Menu } from "lucide-react";
 import { createClient } from "@/lib/supabase";
-import { queryCollection, type Collection, type HistoryMessage, type CrossChannelResponse, type Message, type ConversationSummary } from "@/lib/api";
+import { queryCollection, resolveLogoUrl, type Collection, type HistoryMessage, type CrossChannelResponse, type Message, type ConversationSummary } from "@/lib/api";
 import { listConversations, createConversation, loadConversation, appendMessages, deleteConversation, renameConversation } from "@/lib/conversations";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { WelcomeScreen } from "@/components/chat/welcome-screen";
@@ -616,13 +616,7 @@ function DashboardPage() {
       <div className={`mt-2 grid grid-cols-2 sm:grid-cols-3 gap-1.5 overflow-y-auto scrollbar-hide ${compact ? "lg:grid-cols-4 max-h-[200px]" : "max-h-[260px]"}`}>
         {collections.map((col) => {
           const selected = crossChannelSelected.has(col.name);
-          const colLogo = col.logo
-            ? col.logo.startsWith("/channels/")
-              ? col.logo
-              : col.logo.startsWith("/")
-                ? `https://mindvault.ikigai-dynamics.com${col.logo}`
-                : col.logo
-            : null;
+          const colLogo = resolveLogoUrl(col.logo);
           return (
             <button
               key={col.name}
@@ -844,16 +838,7 @@ function DashboardPage() {
                       <Globe className="h-6 w-6 text-primary" />
                     </div>
                   ) : (() => {
-                    let logoUrl: string | null = null;
-                    if (selectedCollection?.logo) {
-                      if (selectedCollection.logo.startsWith("/")) {
-                        logoUrl = `https://mindvault.ikigai-dynamics.com${selectedCollection.logo}`;
-                      } else if (selectedCollection.logo.includes("yt3.googleusercontent.com") && selectedCollection.logo.endsWith("=s0")) {
-                        logoUrl = selectedCollection.logo.slice(0, -2) + "s240";
-                      } else {
-                        logoUrl = selectedCollection.logo;
-                      }
-                    }
+                    const logoUrl = resolveLogoUrl(selectedCollection?.logo);
                     return logoUrl ? (
                       <Image src={logoUrl} alt={selectedCollection?.display_name || ""} width={48} height={48} className="mx-auto h-12 w-12 rounded-xl object-cover md:mx-0" unoptimized />
                     ) : (

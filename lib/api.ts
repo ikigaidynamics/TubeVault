@@ -31,6 +31,22 @@ export interface Collection {
   visible_on_homepage: boolean;
 }
 
+/**
+ * Resolve a collection logo URL to a usable image src.
+ * Paths starting with /channels/ are local TubeVault assets.
+ * Other / paths are on the mindvault backend.
+ * YouTube avatar URLs with =s0 are capped to 240px.
+ */
+export function resolveLogoUrl(logo: string | null | undefined): string | null {
+  if (!logo) return null;
+  if (logo.startsWith("/channels/")) return logo;
+  if (logo.startsWith("/")) return `https://mindvault.ikigai-dynamics.com${logo}`;
+  if (logo.includes("yt3.googleusercontent.com") && logo.endsWith("=s0")) {
+    return logo.slice(0, -2) + "s240";
+  }
+  return logo;
+}
+
 export interface CrossChannelSource extends Source {
   collection_name: string;
   collection_display_name: string;

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Check, Loader2, X } from "lucide-react";
-import type { Collection } from "@/lib/api";
+import { resolveLogoUrl, type Collection } from "@/lib/api";
 
 interface ChannelPickerModalProps {
   open: boolean;
@@ -115,15 +115,7 @@ export function ChannelPickerModal({
               const isSelected = selected.has(col.name);
               const isLocked = lockedSet.has(col.name);
               const isFull = selected.size >= maxChannels && !isSelected;
-              const logoUrl = col.logo
-                ? col.logo.startsWith("/channels/")
-                  ? col.logo
-                  : col.logo.startsWith("/")
-                    ? `https://mindvault.ikigai-dynamics.com${col.logo}`
-                    : col.logo.includes("yt3.googleusercontent.com") && col.logo.endsWith("=s0")
-                    ? col.logo.slice(0, -2) + "s240"
-                    : col.logo
-                : null;
+              const logoUrl = resolveLogoUrl(col.logo);
               const initials = col.display_name
                 .split(" ")
                 .map((w) => w[0])

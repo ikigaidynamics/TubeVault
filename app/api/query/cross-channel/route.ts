@@ -5,9 +5,10 @@ import OpenAI from "openai";
 import { TIER_LIMITS, type SubscriptionTier } from "@/lib/tiers";
 import { getCollectionsByCategory } from "@/lib/categories";
 import { getCachedCollections } from "@/lib/collections-cache";
-import type {
-  Collection,
-  CrossChannelSource,
+import {
+  resolveLogoUrl,
+  type Collection,
+  type CrossChannelSource,
   ChannelSourceGroup,
 } from "@/lib/api";
 
@@ -116,10 +117,7 @@ function buildSynthesisContext(
 }
 
 function logoUrl(col: Collection): string | null {
-  if (!col.logo) return null;
-  return col.logo.startsWith("/")
-    ? `https://mindvault.ikigai-dynamics.com${col.logo}`
-    : col.logo;
+  return resolveLogoUrl(col.logo);
 }
 
 /**

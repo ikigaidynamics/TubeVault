@@ -15,7 +15,7 @@ import {
   Link2,
   Quote,
 } from "lucide-react";
-import { queryCollection, type Source, type Collection } from "@/lib/api";
+import { queryCollection, resolveLogoUrl, type Source, type Collection } from "@/lib/api";
 import { track } from "@/lib/analytics/tracker";
 import { trackEvent as trackAttribution } from "@/lib/attribution";
 
@@ -441,10 +441,7 @@ function getThumbnailUrl(videoId: string): string {
 }
 
 function getLogoUrl(col: Collection | undefined): string | null {
-  if (!col?.logo) return null;
-  return col.logo.startsWith("/")
-    ? `https://mindvault.ikigai-dynamics.com${col.logo}`
-    : col.logo;
+  return resolveLogoUrl(col?.logo);
 }
 
 interface ChatEntry {

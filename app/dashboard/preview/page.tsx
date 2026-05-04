@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Search, ArrowRight, ChevronRight } from "lucide-react";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { ChatMessage } from "@/components/chat/chat-message";
-import type { Collection, Source } from "@/lib/api";
+import { resolveLogoUrl, type Collection, type Source } from "@/lib/api";
 import type { SubscriptionTier } from "@/lib/tiers";
 import { getCollectionCategory } from "@/lib/categories";
 import { getDemoQuestions } from "@/lib/demo-questions";
@@ -180,11 +180,7 @@ export default function DashboardPreview() {
                     { slug: "bryan_johnson", name: "Bryan Johnson", question: "What is the Blueprint protocol?" },
                   ].map((creator) => {
                     const col = collections.find((c) => c.name === creator.slug);
-                    const logoUrl = col?.logo
-                      ? col.logo.startsWith("/")
-                        ? `https://mindvault.ikigai-dynamics.com${col.logo}`
-                        : col.logo
-                      : null;
+                    const logoUrl = resolveLogoUrl(col?.logo);
                     return (
                       <button
                         key={creator.slug}
@@ -233,11 +229,7 @@ export default function DashboardPreview() {
               <div className="flex w-full max-w-[860px] flex-col items-center gap-8 md:flex-row md:items-start md:gap-0">
                 <div className="flex flex-[0_0_61.8%] flex-col gap-4 text-center md:pr-12 md:text-left">
                   {(() => {
-                    const logoUrl = selectedCollection?.logo
-                      ? selectedCollection.logo.startsWith("/")
-                        ? `https://mindvault.ikigai-dynamics.com${selectedCollection.logo}`
-                        : selectedCollection.logo
-                      : null;
+                    const logoUrl = resolveLogoUrl(selectedCollection?.logo);
                     return logoUrl ? (
                       <Image src={logoUrl} alt={selectedCollection?.display_name || ""} width={48} height={48} className="mx-auto h-12 w-12 rounded-xl object-cover md:mx-0" unoptimized />
                     ) : (

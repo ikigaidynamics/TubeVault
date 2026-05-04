@@ -17,7 +17,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase";
-import { type Collection } from "@/lib/api";
+import { resolveLogoUrl, type Collection } from "@/lib/api";
 import { TIER_LIMITS, type SubscriptionTier } from "@/lib/tiers";
 
 function daysUntil(dateStr: string): number {
@@ -380,11 +380,7 @@ export default function SettingsPage() {
               ) : pickedCollections.length > 0 ? (
                 <div className="mt-6 space-y-2">
                   {pickedCollections.map((col) => {
-                    const logoUrl = col.logo
-                      ? col.logo.startsWith("/")
-                        ? `https://mindvault.ikigai-dynamics.com${col.logo}`
-                        : col.logo
-                      : null;
+                    const logoUrl = resolveLogoUrl(col.logo);
                     const initials = col.display_name
                       .split(" ")
                       .map((w) => w[0])

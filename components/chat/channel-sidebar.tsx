@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { LogOut, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight, ArrowRight, Zap, FileText, Plus, MessageSquare, Trash2, Pencil } from "lucide-react";
-import type { Collection, ConversationSummary } from "@/lib/api";
+import { resolveLogoUrl, type Collection, type ConversationSummary } from "@/lib/api";
 import type { SubscriptionTier } from "@/lib/tiers";
 import { TIER_LIMITS } from "@/lib/tiers";
 import { track } from "@/lib/analytics/tracker";
@@ -38,22 +38,8 @@ interface ChannelSidebarProps {
   onMobileOpenChange?: (open: boolean) => void;
 }
 
-function normalizeAvatarUrl(url: string): string {
-  // YouTube avatar URLs with =s0 return original (huge) image — cap at 240px
-  if (url.includes("yt3.googleusercontent.com") && url.endsWith("=s0")) {
-    return url.slice(0, -2) + "s240";
-  }
-  return url;
-}
-
 function ChannelAvatar({ col }: { col: Collection }) {
-  const avatarUrl = col.logo
-    ? col.logo.startsWith("/channels/")
-      ? col.logo
-      : col.logo.startsWith("/")
-        ? `https://mindvault.ikigai-dynamics.com${col.logo}`
-        : normalizeAvatarUrl(col.logo)
-    : null;
+  const avatarUrl = resolveLogoUrl(col.logo);
   const initials = col.display_name
     .split(" ")
     .map((w) => w[0])

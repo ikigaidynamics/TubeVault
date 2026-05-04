@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Search, ArrowRight, Lock, ChevronLeft, ChevronRight } from "lucide-react";
-import type { Collection } from "@/lib/api";
+import { resolveLogoUrl, type Collection } from "@/lib/api";
 import { CATEGORIES, getCollectionCategory } from "@/lib/categories";
 
 const TYPEWRITER_QUESTIONS = [
@@ -43,18 +43,7 @@ interface WelcomeScreenProps {
 }
 
 function getLogoUrl(col: Collection | undefined): string | null {
-  if (!col?.logo) return null;
-  if (col.logo.startsWith("/channels/")) {
-    return col.logo; // Local TubeVault asset
-  }
-  if (col.logo.startsWith("/")) {
-    return `https://mindvault.ikigai-dynamics.com${col.logo}`;
-  }
-  // YouTube avatar URLs with =s0 return original (huge) image — cap at 240px
-  if (col.logo.includes("yt3.googleusercontent.com") && col.logo.endsWith("=s0")) {
-    return col.logo.slice(0, -2) + "s240";
-  }
-  return col.logo;
+  return resolveLogoUrl(col?.logo);
 }
 
 function getCategory(col: Collection | undefined): string {
