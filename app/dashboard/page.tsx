@@ -622,9 +622,11 @@ function DashboardPage() {
         {collections.map((col) => {
           const selected = crossChannelSelected.has(col.name);
           const colLogo = col.logo
-            ? col.logo.startsWith("/")
-              ? `https://mindvault.ikigai-dynamics.com${col.logo}`
-              : col.logo
+            ? col.logo.startsWith("/channels/")
+              ? col.logo
+              : col.logo.startsWith("/")
+                ? `https://mindvault.ikigai-dynamics.com${col.logo}`
+                : col.logo
             : null;
           return (
             <button

@@ -44,6 +44,9 @@ interface WelcomeScreenProps {
 
 function getLogoUrl(col: Collection | undefined): string | null {
   if (!col?.logo) return null;
+  if (col.logo.startsWith("/channels/")) {
+    return col.logo; // Local TubeVault asset
+  }
   if (col.logo.startsWith("/")) {
     return `https://mindvault.ikigai-dynamics.com${col.logo}`;
   }

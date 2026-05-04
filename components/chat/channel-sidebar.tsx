@@ -47,9 +47,11 @@ function normalizeAvatarUrl(url: string): string {
 
 function ChannelAvatar({ col }: { col: Collection }) {
   const avatarUrl = col.logo
-    ? col.logo.startsWith("/")
-      ? `https://mindvault.ikigai-dynamics.com${col.logo}`
-      : normalizeAvatarUrl(col.logo)
+    ? col.logo.startsWith("/channels/")
+      ? col.logo
+      : col.logo.startsWith("/")
+        ? `https://mindvault.ikigai-dynamics.com${col.logo}`
+        : normalizeAvatarUrl(col.logo)
     : null;
   const initials = col.display_name
     .split(" ")
@@ -311,6 +313,14 @@ export function ChannelSidebar({
             >
               <RefreshCw className="h-3 w-3" />
               Change channels
+            </button>
+          ) : pickedChannels.length < limits.maxChannels ? (
+            <button
+              onClick={onChangeChannels}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/20 py-1.5 text-[11px] font-medium text-primary transition-all duration-200 hover:bg-primary/10 hover:border-primary/30"
+            >
+              <Plus className="h-3 w-3" />
+              Add {limits.maxChannels - pickedChannels.length} more channel{limits.maxChannels - pickedChannels.length !== 1 ? "s" : ""}
             </button>
           ) : (
             <div className="flex items-center justify-center gap-1.5 rounded-lg bg-white/[0.03] py-1.5 text-[10px] text-gray-text/40">

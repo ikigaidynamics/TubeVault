@@ -116,9 +116,11 @@ export function ChannelPickerModal({
               const isLocked = lockedSet.has(col.name);
               const isFull = selected.size >= maxChannels && !isSelected;
               const logoUrl = col.logo
-                ? col.logo.startsWith("/")
-                  ? `https://mindvault.ikigai-dynamics.com${col.logo}`
-                  : col.logo.includes("yt3.googleusercontent.com") && col.logo.endsWith("=s0")
+                ? col.logo.startsWith("/channels/")
+                  ? col.logo
+                  : col.logo.startsWith("/")
+                    ? `https://mindvault.ikigai-dynamics.com${col.logo}`
+                    : col.logo.includes("yt3.googleusercontent.com") && col.logo.endsWith("=s0")
                     ? col.logo.slice(0, -2) + "s240"
                     : col.logo
                 : null;
