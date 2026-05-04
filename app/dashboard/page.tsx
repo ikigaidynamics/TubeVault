@@ -588,10 +588,8 @@ function DashboardPage() {
     <>
       {/* Category preset pills */}
       <div className="flex flex-wrap gap-2">
-        {CATEGORIES.map((cat) => {
-          const slugs = cat === "All"
-            ? collections.map((c) => c.name)
-            : getCollectionNamesByCategory(cat).filter((s) => collections.some((c) => c.name === s));
+        {CATEGORIES.filter((cat) => cat !== "All").map((cat) => {
+          const slugs = getCollectionNamesByCategory(cat).filter((s) => collections.some((c) => c.name === s));
           const allSelected = slugs.length > 0 && slugs.every((s) => crossChannelSelected.has(s));
           return (
             <button
@@ -599,11 +597,7 @@ function DashboardPage() {
               onClick={() => {
                 setCrossChannelSelected((prev) => {
                   const next = new Set(prev);
-                  if (cat === "All") {
-                    if (allSelected) { next.clear(); } else { collections.forEach((c) => next.add(c.name)); }
-                  } else {
-                    if (allSelected) { slugs.forEach((s) => next.delete(s)); } else { slugs.forEach((s) => next.add(s)); }
-                  }
+                  if (allSelected) { slugs.forEach((s) => next.delete(s)); } else { slugs.forEach((s) => next.add(s)); }
                   return next;
                 });
               }}
@@ -808,7 +802,7 @@ function DashboardPage() {
             >
               <Globe className="h-3.5 w-3.5 text-primary/50" />
               <span className="text-[12px] font-medium text-cream/70">
-                {crossChannelSelected.size} of {collections.length} channels
+                {crossChannelSelected.size} channel{crossChannelSelected.size !== 1 ? "s" : ""} selected
               </span>
               <span className="text-[11px] text-gray-text/40">
                 Edit selection
@@ -873,7 +867,7 @@ function DashboardPage() {
                   </p>
                   <h2 className="text-[1.6rem] font-normal leading-tight text-cream/90">
                     {searchAllActive ? (
-                      <>Search across <span className="text-cream">{crossChannelSelected.size} of {collections.length} channels</span></>
+                      <>Search across <span className="text-cream">{crossChannelSelected.size} channel{crossChannelSelected.size !== 1 ? "s" : ""}</span></>
                     ) : (
                       <>Explore <span className="text-cream">{selectedCollection?.display_name}</span></>
                     )}

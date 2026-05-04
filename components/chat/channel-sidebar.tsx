@@ -10,6 +10,7 @@ import type { SubscriptionTier } from "@/lib/tiers";
 import { TIER_LIMITS } from "@/lib/tiers";
 import { track } from "@/lib/analytics/tracker";
 import { relativeTime } from "@/lib/relative-time";
+import { getChannelTagline } from "@/lib/demo-questions";
 
 interface ChannelSidebarProps {
   collections: Collection[];
@@ -364,9 +365,7 @@ export function ChannelSidebar({
                     {col.display_name}
                   </p>
                   <p className="text-[10px] text-gray-text/40">
-                    {col.video_count
-                      ? `${col.video_count.toLocaleString()} videos`
-                      : `${col.point_count.toLocaleString()} chunks`}
+                    {getChannelTagline(col.name)}
                   </p>
                 </div>
                 {active && (
@@ -402,7 +401,7 @@ export function ChannelSidebar({
         >
           <Globe className="h-3.5 w-3.5 text-primary/60" />
           <span className="text-[11px] font-medium">
-            {canCrossSearch ? "Search all channels" : "Search all channels"}
+            {canCrossSearch ? "Search across multiple channels" : "Search across multiple channels"}
           </span>
           {!canCrossSearch && (
             <span className="ml-auto shrink-0 rounded-full border border-primary/20 px-1.5 py-px text-[8px] font-medium text-primary/60">

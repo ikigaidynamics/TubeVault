@@ -175,3 +175,38 @@ export const CROSS_CHANNEL_QUESTIONS: QuestionSet = [
   "Compare views on ancient civilizations",
   "Most recommended supplements across channels?",
 ];
+
+/** Short 1-3 word taglines for sidebar display */
+const CHANNEL_TAGLINES: Record<string, string> = {
+  andrew_huberman: "Neuroscience & Health",
+  anthony_chaffee_md: "Carnivore & Nutrition",
+  dr_brad_stanfield: "Longevity Medicine",
+  dr_william_li: "Nutrition & Disease",
+  foundmyfitness: "Science & Longevity",
+  bryan_johnson: "Biohacking & Longevity",
+  nick_norwitz_md_phd: "Metabolic Health",
+  nathan_sages: "Men's Health",
+  healthy_immune_doc: "Immune Health",
+  jeremy_london_md: "Cardiovascular Health",
+  the_primal_podcast: "Metabolic Health",
+  the_diary_of_a_ceo: "Business & Interviews",
+  doctor_sethi: "Gut Health",
+  unchartedx: "Ancient Engineering",
+  bright_insight: "Lost Civilizations",
+  the_randall_carlson: "Geology & Cosmology",
+  geocosmic_rex: "Catastrophism",
+  history_with_kayleigh: "Archaeology",
+  funny_olde_world: "Ancient Mysteries",
+  wes_huff: "Christian Apologetics",
+  katie_clarke: "Spirituality",
+  metanoia: "Hidden Knowledge",
+  lex_fridman: "Science & Philosophy",
+};
+
+/**
+ * Get a short tagline for a channel (1-3 words).
+ * Falls back to "Creator" if not found.
+ */
+export function getChannelTagline(channelSlug: string): string {
+  return CHANNEL_TAGLINES[channelSlug] || "Creator";
+}
