@@ -557,7 +557,7 @@ function DashboardPage() {
     setMessages([]);
     setError(null);
     setActiveConv(null);
-    setCrossChannelSelected(new Set(collections.map((c) => c.name)));
+    setCrossChannelSelected(new Set());
 
     // Auto-load most recent cross-channel conversation
     const existing = conversationList.find((c) => c.is_cross_channel);
