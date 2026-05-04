@@ -10,6 +10,7 @@ export const CATEGORIES = [
 export type Category = (typeof CATEGORIES)[number];
 
 const CATEGORY_MAP: Record<string, Category> = {
+  // ── Health & Longevity ──
   andrew_huberman: "Health & Longevity",
   anthony_chaffee_md: "Health & Longevity",
   dr_brad_stanfield: "Health & Longevity",
@@ -21,8 +22,23 @@ const CATEGORY_MAP: Record<string, Category> = {
   healthy_immune_doc: "Health & Longevity",
   jeremy_london_md: "Health & Longevity",
   the_primal_podcast: "Health & Longevity",
-  the_diary_of_a_ceo: "Other",
   doctor_sethi: "Health & Longevity",
+  dr_eric_berg_dc: "Health & Longevity",
+  dr_mindy_pelz: "Health & Longevity",
+  squat_university: "Health & Longevity",
+  wim_hof: "Health & Longevity",
+  peter_attia_md: "Health & Longevity",
+  doctor_mike_diamonds: "Health & Longevity",
+  dr_rangan_chatterjee: "Health & Longevity",
+  mark_hyman_md: "Health & Longevity",
+  jeremy_ethier: "Health & Longevity",
+  dr_eric_westman_adapt_your_life: "Health & Longevity",
+  kendberrymd: "Health & Longevity",
+  doctor_mike: "Health & Longevity",
+  thomas_delauer: "Health & Longevity",
+  dr_tracey_marks: "Health & Longevity",
+
+  // ── History & Ancient Knowledge ──
   unchartedx: "History & Ancient Knowledge",
   bright_insight: "History & Ancient Knowledge",
   the_randall_carlson: "History & Ancient Knowledge",
@@ -30,8 +46,23 @@ const CATEGORY_MAP: Record<string, Category> = {
   history_with_kayleigh: "History & Ancient Knowledge",
   funny_olde_world: "History & Ancient Knowledge",
   wes_huff: "History & Ancient Knowledge",
+  predictive_history: "History & Ancient Knowledge",
+
+  // ── Other ──
+  the_diary_of_a_ceo: "Other",
+  tony_robbins: "Other",
+  jordan_b_peterson: "Other",
+  lewis_howes: "Other",
+  jay_shetty_podcast: "Other",
+  mel_robbins: "Other",
+  powerfuljre: "Other",
+  graham_stephan: "Other",
   katie_clarke: "Other",
   metanoia: "Other",
+  thewizardliz: "Other",
+  lex_fridman: "Other",
+  startalk: "Other",
+  kurzgesagt_in_a_nutshell: "Other",
 };
 
 /** Get the category for a collection by slug or description fallback. */

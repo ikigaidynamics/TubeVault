@@ -17,6 +17,16 @@ const LOGO_OVERRIDES: Record<string, string> = {
   lex_fridman: "/channels/lex_fridman_avatar.jpg",
 };
 
+// Fix display names from the API (missing dots, formatting)
+const NAME_OVERRIDES: Record<string, string> = {
+  dr_brad_stanfield: "Dr. Brad Stanfield",
+  dr_rangan_chatterjee: "Dr. Rangan Chatterjee",
+  jordan_b_peterson: "Jordan B. Peterson",
+  anthony_chaffee_md: "Anthony Chaffee, MD",
+  nick_norwitz_md_phd: "Nick Norwitz, MD PhD",
+  peter_attia_md: "Peter Attia, MD",
+};
+
 // In-memory cache with 5-minute TTL
 let cachedData: Collection[] | null = null;
 let cacheTimestamp = 0;
@@ -47,9 +57,16 @@ function writeDiskCache(data: Collection[]) {
 let refreshInProgress = false;
 
 function applyOverrides(collections: Collection[]): Collection[] {
-  return collections.map((c) =>
-    LOGO_OVERRIDES[c.name] ? { ...c, logo: LOGO_OVERRIDES[c.name] } : c
-  );
+  return collections.map((c) => {
+    const logo = LOGO_OVERRIDES[c.name];
+    const displayName = NAME_OVERRIDES[c.name];
+    if (!logo && !displayName) return c;
+    return {
+      ...c,
+      ...(logo && { logo }),
+      ...(displayName && { display_name: displayName }),
+    };
+  });
 }
 
 function backgroundRefresh() {

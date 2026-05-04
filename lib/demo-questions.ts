@@ -62,6 +62,76 @@ const CHANNEL_QUESTIONS: Record<string, QuestionSet> = {
     "What does she say about seed oils?",
     "Best dietary approach for energy and health?",
   ],
+  dr_eric_berg_dc: [
+    "Best keto tips for beginners?",
+    "How does intermittent fasting work?",
+    "His take on vitamin deficiencies?",
+  ],
+  dr_mindy_pelz: [
+    "How does fasting benefit women specifically?",
+    "Best fasting protocols by cycle phase?",
+    "Her approach to hormonal health?",
+  ],
+  squat_university: [
+    "How to fix squat form and depth?",
+    "Best exercises for knee pain prevention?",
+    "How to improve hip mobility?",
+  ],
+  wim_hof: [
+    "How does the Wim Hof breathing method work?",
+    "Benefits of cold exposure for health?",
+    "How to build cold tolerance safely?",
+  ],
+  peter_attia_md: [
+    "Key pillars of his longevity framework?",
+    "His take on Zone 2 cardio training?",
+    "Most important health metrics to track?",
+  ],
+  doctor_mike_diamonds: [
+    "Best fat loss strategies that actually work?",
+    "His approach to body recomposition?",
+    "Biggest fitness myths debunked?",
+  ],
+  dr_rangan_chatterjee: [
+    "His four-pillar approach to health?",
+    "How does stress affect the body?",
+    "Simple habits for better health?",
+  ],
+  mark_hyman_md: [
+    "What is functional medicine?",
+    "His take on sugar and chronic disease?",
+    "Best foods for reducing inflammation?",
+  ],
+  jeremy_ethier: [
+    "Most effective exercises for muscle growth?",
+    "How to fix common posture problems?",
+    "Science-based training splits?",
+  ],
+  dr_eric_westman_adapt_your_life: [
+    "His clinical approach to the keto diet?",
+    "How does low-carb help with diabetes?",
+    "Best advice for starting keto?",
+  ],
+  kendberrymd: [
+    "His take on the carnivore diet?",
+    "Common medical myths debunked?",
+    "How to talk to your doctor about nutrition?",
+  ],
+  doctor_mike: [
+    "Most common health misconceptions?",
+    "His take on trending health topics?",
+    "Best general health advice?",
+  ],
+  thomas_delauer: [
+    "Best intermittent fasting strategies?",
+    "How to optimize nutrition for busy people?",
+    "His take on keto vs other diets?",
+  ],
+  dr_tracey_marks: [
+    "How to recognize signs of anxiety or depression?",
+    "Best strategies for improving mental health?",
+    "Her advice on sleep and emotional wellbeing?",
+  ],
 
   // ── History & Ancient Knowledge ──
   unchartedx: [
@@ -99,12 +169,52 @@ const CHANNEL_QUESTIONS: Record<string, QuestionSet> = {
     "How does he respond to common objections to Christianity?",
     "Most interesting interfaith debate moments?",
   ],
+  predictive_history: [
+    "How does psycho-history explain patterns?",
+    "Most surprising historical prediction?",
+    "Connections between past and future events?",
+  ],
 
   // ── Interviews & Business ──
   the_diary_of_a_ceo: [
     "Most impactful life advice from a guest?",
     "What do top entrepreneurs say about failure?",
     "Best episode insights on mental health?",
+  ],
+  tony_robbins: [
+    "His top strategies for peak performance?",
+    "Best advice on building financial freedom?",
+    "How to break through limiting beliefs?",
+  ],
+  jordan_b_peterson: [
+    "His key advice for young people?",
+    "What does he say about personal responsibility?",
+    "Most thought-provoking psychological insight?",
+  ],
+  lewis_howes: [
+    "Best success habits from top performers?",
+    "Most impactful guest interview moment?",
+    "His advice on building greatness?",
+  ],
+  jay_shetty_podcast: [
+    "Best advice for dealing with stress?",
+    "How to find purpose and meaning?",
+    "Most powerful mindset shifts discussed?",
+  ],
+  mel_robbins: [
+    "How does the 5-second rule work?",
+    "Best strategies for building confidence?",
+    "Her advice on overcoming self-doubt?",
+  ],
+  powerfuljre: [
+    "Most controversial guest conversation?",
+    "Best health and fitness discussions?",
+    "Most mind-blowing topics covered?",
+  ],
+  graham_stephan: [
+    "Best strategies for building wealth?",
+    "His take on real estate investing?",
+    "How to save money effectively?",
   ],
 
   // ── Spirituality ──
@@ -118,12 +228,27 @@ const CHANNEL_QUESTIONS: Record<string, QuestionSet> = {
     "Most fascinating mystery covered?",
     "Connections between ancient wisdom and modern life?",
   ],
+  thewizardliz: [
+    "How to create the reality you want?",
+    "Best advice on self-empowerment?",
+    "Her take on confidence and self-worth?",
+  ],
 
   // ── Science & Technology ──
   lex_fridman: [
     "Most thought-provoking ideas from recent guests?",
     "What do AI researchers predict about the future?",
     "Best life philosophy discussed on the podcast?",
+  ],
+  startalk: [
+    "Most fascinating space discoveries discussed?",
+    "How does Neil deGrasse Tyson explain black holes?",
+    "Best astronomy facts shared on the show?",
+  ],
+  kurzgesagt_in_a_nutshell: [
+    "Most mind-blowing science topic explained?",
+    "How does the channel explain complex topics simply?",
+    "Best episode on the future of humanity?",
   ],
 };
 
@@ -178,6 +303,7 @@ export const CROSS_CHANNEL_QUESTIONS: QuestionSet = [
 
 /** Short 1-3 word taglines for sidebar display */
 const CHANNEL_TAGLINES: Record<string, string> = {
+  // ── Health & Longevity ──
   andrew_huberman: "Neuroscience & Health",
   anthony_chaffee_md: "Carnivore & Nutrition",
   dr_brad_stanfield: "Longevity Medicine",
@@ -189,8 +315,23 @@ const CHANNEL_TAGLINES: Record<string, string> = {
   healthy_immune_doc: "Immune Health",
   jeremy_london_md: "Cardiovascular Health",
   the_primal_podcast: "Metabolic Health",
-  the_diary_of_a_ceo: "Business & Interviews",
   doctor_sethi: "Gut Health",
+  dr_eric_berg_dc: "Health Expert (Keto)",
+  dr_mindy_pelz: "Health Expert",
+  squat_university: "Strength & Fitness",
+  wim_hof: "The \"Iceman\"",
+  peter_attia_md: "Longevity Expert",
+  doctor_mike_diamonds: "Health & Fitness",
+  dr_rangan_chatterjee: "Medical Doctor",
+  mark_hyman_md: "Functional Medicine",
+  jeremy_ethier: "Training & Nutrition",
+  dr_eric_westman_adapt_your_life: "Keto Diet",
+  kendberrymd: "Family Physician",
+  doctor_mike: "Health Expert",
+  thomas_delauer: "Fitness for Busy People",
+  dr_tracey_marks: "Mental Health Expert",
+
+  // ── History & Ancient Knowledge ──
   unchartedx: "Ancient Engineering",
   bright_insight: "Lost Civilizations",
   the_randall_carlson: "Geology & Cosmology",
@@ -198,9 +339,27 @@ const CHANNEL_TAGLINES: Record<string, string> = {
   history_with_kayleigh: "Archaeology",
   funny_olde_world: "Ancient Mysteries",
   wes_huff: "Christian Apologetics",
+  predictive_history: "Psycho-History",
+
+  // ── Interviews & Business ──
+  the_diary_of_a_ceo: "Business & Interviews",
+  tony_robbins: "Author & Coach",
+  jordan_b_peterson: "Psychology",
+  lewis_howes: "Athlete & Author",
+  jay_shetty_podcast: "Mental Health",
+  mel_robbins: "Mindset",
+  powerfuljre: "Podcast",
+  graham_stephan: "Real Estate Investor",
+
+  // ── Spirituality ──
   katie_clarke: "Spirituality",
   metanoia: "Hidden Knowledge",
+  thewizardliz: "Create your Reality",
+
+  // ── Science & Technology ──
   lex_fridman: "Science & Philosophy",
+  startalk: "Astronomy",
+  kurzgesagt_in_a_nutshell: "Science",
 };
 
 /**
