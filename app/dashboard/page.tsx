@@ -21,7 +21,8 @@ import { ChannelPickerModal } from "@/components/chat/channel-picker-modal";
 import { TruncatedText } from "@/components/chat/truncated-text";
 import { cleanDescription } from "@/lib/clean-description";
 import { TIER_LIMITS, type SubscriptionTier } from "@/lib/tiers";
-import { CATEGORIES, getCollectionNamesByCategory } from "@/lib/categories";
+import { CATEGORIES, getCollectionCategory, getCollectionNamesByCategory } from "@/lib/categories";
+import { getDemoQuestions, CROSS_CHANNEL_QUESTIONS } from "@/lib/demo-questions";
 
 function getDefaults(collections: Collection[], n: number): string[] {
   return [...collections]
@@ -905,8 +906,10 @@ function DashboardPage() {
                     Try asking
                   </p>
                   {(searchAllActive
-                    ? ["What do experts say about intermittent fasting?", "Compare views on ancient civilizations", "Most recommended supplements?"]
-                    : [`Main topics ${selectedCollection?.display_name} covers?`, "Most surprising insight from recent videos?", "Key health recommendations?"]
+                    ? CROSS_CHANNEL_QUESTIONS
+                    : selectedCollection
+                      ? getDemoQuestions(selectedCollection.name, getCollectionCategory(selectedCollection))
+                      : getDemoQuestions("", "Other")
                   ).map((s) => (
                     <button
                       key={s}

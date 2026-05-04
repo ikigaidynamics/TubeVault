@@ -21,7 +21,7 @@ const CATEGORY_MAP: Record<string, Category> = {
   healthy_immune_doc: "Health & Longevity",
   jeremy_london_md: "Health & Longevity",
   the_primal_podcast: "Health & Longevity",
-  the_diary_of_a_ceo: "Health & Longevity",
+  the_diary_of_a_ceo: "Other",
   doctor_sethi: "Health & Longevity",
   unchartedx: "History & Ancient Knowledge",
   bright_insight: "History & Ancient Knowledge",

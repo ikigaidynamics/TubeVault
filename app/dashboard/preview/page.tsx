@@ -8,6 +8,8 @@ import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { ChatMessage } from "@/components/chat/chat-message";
 import type { Collection, Source } from "@/lib/api";
 import type { SubscriptionTier } from "@/lib/tiers";
+import { getCollectionCategory } from "@/lib/categories";
+import { getDemoQuestions } from "@/lib/demo-questions";
 
 // Mock messages to preview chat UI
 const MOCK_MESSAGES: { role: "user" | "assistant"; content: string; sources?: Source[] }[] = [
@@ -254,7 +256,10 @@ export default function DashboardPreview() {
                 </div>
                 <div className="flex w-full flex-[0_0_38.2%] flex-col gap-2.5 md:w-auto">
                   <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-gray-text/35">Try asking</p>
-                  {[`Main topics ${selectedCollection?.display_name} covers?`, "Most surprising insight from recent videos?", "Key health recommendations?"].map((s) => (
+                  {(selectedCollection
+                    ? getDemoQuestions(selectedCollection.name, getCollectionCategory(selectedCollection))
+                    : getDemoQuestions("", "Other")
+                  ).map((s) => (
                     <button
                       key={s}
                       onClick={() => setShowMessages(true)}
