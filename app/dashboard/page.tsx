@@ -852,7 +852,9 @@ function DashboardPage() {
                   </p>
                   <h2 className="text-[1.6rem] font-normal leading-tight text-cream/90">
                     {searchAllActive ? (
-                      <>Search across <span className="text-cream">{crossChannelSelected.size} channel{crossChannelSelected.size !== 1 ? "s" : ""}</span></>
+                      crossChannelSelected.size > 0
+                        ? <>Search across <span className="text-cream">{crossChannelSelected.size} channel{crossChannelSelected.size !== 1 ? "s" : ""}</span></>
+                        : <>Search across <span className="text-cream">your personalized collection</span></>
                     ) : (
                       <>Explore <span className="text-cream">{selectedCollection?.display_name}</span></>
                     )}
@@ -892,7 +894,9 @@ function DashboardPage() {
                   ).map((s) => (
                     <button
                       key={s}
+                      disabled={searchAllActive && crossChannelSelected.size === 0}
                       onClick={() => {
+                        if (searchAllActive && crossChannelSelected.size === 0) return;
                         setInput(s);
                         setTimeout(() => {
                           setInput("");
@@ -930,7 +934,11 @@ function DashboardPage() {
                           }
                         }, 0);
                       }}
-                      className="w-full rounded-xl border border-[#2E2F31] bg-[#141416] px-3.5 py-2.5 text-left text-[12px] leading-relaxed text-gray-text/60 transition-all duration-200 hover:translate-x-1 hover:border-primary/20 hover:text-cream/80 hover:shadow-[0_4px_20px_rgba(101,174,76,0.06)]"
+                      className={`w-full rounded-xl border border-[#2E2F31] bg-[#141416] px-3.5 py-2.5 text-left text-[12px] leading-relaxed text-gray-text/60 transition-all duration-200 ${
+                        searchAllActive && crossChannelSelected.size === 0
+                          ? "opacity-30 cursor-not-allowed"
+                          : "hover:translate-x-1 hover:border-primary/20 hover:text-cream/80 hover:shadow-[0_4px_20px_rgba(101,174,76,0.06)]"
+                      }`}
                     >
                       {s}
                     </button>
