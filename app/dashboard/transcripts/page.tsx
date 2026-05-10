@@ -22,7 +22,6 @@ import {
 import { createClient } from "@/lib/supabase";
 import { type Collection } from "@/lib/api";
 import { type SubscriptionTier } from "@/lib/tiers";
-import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { UpgradeModal } from "@/components/chat/upgrade-modal";
 import { TranscriptUpgradeWall } from "@/components/chat/transcript-upgrade-wall";
 
@@ -93,7 +92,7 @@ function TranscriptsContent() {
   const [tierLoaded, setTierLoaded] = useState(false);
   const [creatorChannels, setCreatorChannels] = useState<string[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [selectedChannel, setSelectedChannel] = useState<string | null>(searchParams.get("channel"));
+  const [selectedChannel] = useState<string | null>(searchParams.get("channel"));
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(searchParams.get("video"));
   const [transcript, setTranscript] = useState<TranscriptData | null>(null);
@@ -104,9 +103,7 @@ function TranscriptsContent() {
   const [editingChunk, setEditingChunk] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
   const [saving, setSaving] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
   const [upgradeModal, setUpgradeModal] = useState({ open: false });
-  const [pickedChannels, setPickedChannels] = useState<string[]>([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState<string>("All");
   const [mobileShowTranscript, setMobileShowTranscript] = useState(false);
   const [translating, setTranslating] = useState(false);
@@ -117,11 +114,17 @@ function TranscriptsContent() {
 
   const hasAccess = tier === "pro" || tier === "premium" || tier === "creator";
 
+  // Redirect to dashboard if no channel specified
+  useEffect(() => {
+    if (!searchParams.get("channel")) {
+      router.replace("/dashboard");
+    }
+  }, [searchParams, router]);
+
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.push("/login"); return; }
-      setUserEmail(user.email || "");
       supabase
         .from("subscriptions")
         .select("tier, creator_channels")
@@ -145,12 +148,6 @@ function TranscriptsContent() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    fetch("/api/channels/select")
-      .then((r) => r.json())
-      .then((data) => { if (data.selectedChannels) setPickedChannels(data.selectedChannels); })
-      .catch(() => {});
-  }, []);
 
   // Fetch videos — abort on channel change
   useEffect(() => {
@@ -198,11 +195,6 @@ function TranscriptsContent() {
       .finally(() => setLoading(false));
     return () => controller.abort();
   }, [selectedVideo, selectedChannel]);
-
-  function handleSelectChannel(name: string) {
-    setSelectedChannel(name);
-    router.replace(`/dashboard/transcripts?channel=${name}`, { scroll: false });
-  }
 
   function handleSelectVideo(id: string) {
     setSelectedVideo(id);
@@ -314,59 +306,48 @@ function TranscriptsContent() {
   const selectedCollection = collections.find((c) => c.name === selectedChannel);
 
   return (
-    <div className="flex h-screen bg-[#0A0A0B]">
+    <div className="flex h-screen flex-col bg-[#0A0A0B]">
       <UpgradeModal open={upgradeModal.open} onClose={() => setUpgradeModal({ open: false })} />
 
-      <ChannelSidebar
-        collections={collections}
-        selectedChannel={selectedChannel}
-        onSelectChannel={handleSelectChannel}
-        userEmail={userEmail}
-        onLogout={async () => { const s = createClient(); await s.auth.signOut(); router.push("/"); }}
-        tier={tier}
-        pickedChannels={pickedChannels}
-        lockedUntil={null}
-        canChange={false}
-        onSearchAll={() => router.push("/dashboard")}
-        searchAllActive={false}
-        questionsRemaining={null}
-        questionLimit={null}
-      />
-
-      <div className="flex flex-1 flex-col">
-        {/* Breadcrumb */}
-        <header className="flex items-center gap-1.5 border-b border-white/[0.04] bg-[#0F1011]/95 px-6 py-2.5 pl-14 backdrop-blur-sm md:pl-6">
-          <Link href="/dashboard" className="text-[12px] text-gray-text/50 transition-colors hover:text-cream">TubeVault</Link>
-          <ChevronRight className="h-3 w-3 text-gray-text/20" />
-          <Link href="/dashboard/transcripts" className="text-[12px] text-gray-text/50 transition-colors hover:text-cream">Transcripts</Link>
+      {/* Header with back button */}
+      <header className="flex items-center gap-2 border-b border-white/[0.04] bg-[#0F1011]/95 px-3 py-2.5 backdrop-blur-sm md:px-6">
+        <Link
+          href="/dashboard"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] text-gray-text transition-colors hover:text-cream"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className="text-[12px] text-gray-text/50">Transcripts</span>
           {selectedCollection && (
             <>
-              <ChevronRight className="h-3 w-3 text-gray-text/20" />
-              <span className="text-[12px] font-medium text-cream">{selectedCollection.display_name}</span>
+              <ChevronRight className="h-3 w-3 shrink-0 text-gray-text/20" />
+              <span className="truncate text-[12px] font-medium text-cream">{selectedCollection.display_name}</span>
             </>
           )}
           {transcript && (
             <>
-              <ChevronRight className="h-3 w-3 text-gray-text/20" />
+              <ChevronRight className="h-3 w-3 shrink-0 text-gray-text/20" />
               <span className="max-w-[200px] truncate text-[12px] text-cream/70">{transcript.video_title}</span>
             </>
           )}
-        </header>
+        </div>
+      </header>
 
-        {/* Main content */}
-        <div className="flex flex-1 overflow-hidden">
-          {!tierLoaded ? (
-            <div className="flex flex-1 items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-primary/50" />
+      {/* Main content */}
+      <div className="flex flex-1 overflow-hidden">
+        {!tierLoaded ? (
+          <div className="flex flex-1 items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-primary/50" />
+          </div>
+        ) : !selectedChannel ? (
+          <div className="flex flex-1 items-center justify-center px-6">
+            <div className="text-center">
+              <FileText className="mx-auto h-10 w-10 text-gray-text/20" />
+              <p className="mt-4 text-sm text-gray-text/50">Redirecting to dashboard...</p>
             </div>
-          ) : !selectedChannel ? (
-            <div className="flex flex-1 items-center justify-center px-6">
-              <div className="text-center">
-                <FileText className="mx-auto h-10 w-10 text-gray-text/20" />
-                <p className="mt-4 text-sm text-gray-text/50">Select a channel from the sidebar to browse transcripts</p>
-              </div>
-            </div>
-          ) : (
+          </div>
+        ) : (
             <>
               {/* Video list panel */}
               <div className={`w-full border-r border-white/[0.04] md:w-[40%] md:max-w-[380px] ${mobileShowTranscript ? "hidden md:flex" : "flex"} flex-col`}>
@@ -746,7 +727,6 @@ function TranscriptsContent() {
             </>
           )}
         </div>
-      </div>
     </div>
   );
 }

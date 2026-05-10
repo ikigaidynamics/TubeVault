@@ -6,7 +6,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, AlertCircle, Globe, ChevronRight, ChevronDown, Plus, Menu } from "lucide-react";
+import { Search, AlertCircle, Globe, ChevronRight, ChevronDown, Plus, Menu, Crown } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { queryCollection, resolveLogoUrl, type Collection, type HistoryMessage, type CrossChannelResponse, type Message, type ConversationSummary } from "@/lib/api";
 import { listConversations, createConversation, loadConversation, appendMessages, deleteConversation, renameConversation } from "@/lib/conversations";
@@ -182,6 +182,7 @@ function DashboardPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [channelDataLoaded, setChannelDataLoaded] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [tierToggleOpen, setTierToggleOpen] = useState(false);
 
   const hasUnlimitedChannels = TIER_LIMITS[tier].maxChannels === Infinity;
   const maxChannels = TIER_LIMITS[tier].maxChannels;
@@ -374,9 +375,18 @@ function DashboardPage() {
         body: JSON.stringify({ channels }),
       });
       const data = await res.json();
-      if (data.selectedChannels) setPickedChannels(data.selectedChannels);
-      if (data.lockedUntil) setLockedUntil(data.lockedUntil);
-      if (data.canChange !== undefined) setCanChange(data.canChange);
+      if (res.ok && data.selectedChannels) {
+        setPickedChannels(data.selectedChannels);
+        if (data.lockedUntil) setLockedUntil(data.lockedUntil);
+        if (data.canChange !== undefined) setCanChange(data.canChange);
+      } else {
+        // API rejected — re-fetch current state to stay in sync
+        const refreshRes = await fetch("/api/channels/select");
+        const refreshData = await refreshRes.json();
+        if (refreshData.selectedChannels) setPickedChannels(refreshData.selectedChannels);
+        if (refreshData.lockedUntil) setLockedUntil(refreshData.lockedUntil);
+        if (refreshData.canChange !== undefined) setCanChange(refreshData.canChange);
+      }
     } catch { /* keep current */ }
     setPickerOpen(false);
   }
@@ -667,19 +677,31 @@ function DashboardPage() {
 
       {/* Admin tier toggle */}
       {isAdmin && (
-        <div className="fixed right-2 top-2 z-[200] flex items-center gap-1 rounded-xl border border-primary/30 bg-[#1C1D1F] p-1 shadow-lg md:right-4 md:top-4">
-          <span className="px-2 text-[10px] font-medium text-gray-text/50">TIER:</span>
-          {(["free", "starter", "pro", "premium"] as SubscriptionTier[]).map((t) => (
+        <div className="fixed right-2 top-2 z-[200] md:right-4 md:top-4">
+          <div className="flex items-center gap-1 rounded-xl border border-primary/30 bg-[#1C1D1F] p-1 shadow-lg">
+            {/* Mobile collapse toggle */}
             <button
-              key={t}
-              onClick={() => handleAdminTierChange(t)}
-              className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
-                t === tier ? "bg-primary text-white" : "text-gray-text hover:text-cream"
-              }`}
+              onClick={() => setTierToggleOpen(!tierToggleOpen)}
+              className="flex items-center justify-center rounded-lg px-1.5 py-1 md:hidden"
             >
-              {t.charAt(0).toUpperCase() + t.slice(1)}
+              <Crown className="h-4 w-4 text-primary" />
             </button>
-          ))}
+            {/* Tier buttons — always visible on desktop, toggle on mobile */}
+            <div className={`${tierToggleOpen ? "flex" : "hidden"} md:flex items-center gap-1`}>
+              <span className="px-2 text-[10px] font-medium text-gray-text/50">TIER:</span>
+              {(["free", "starter", "pro", "premium"] as SubscriptionTier[]).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => { handleAdminTierChange(t); setTierToggleOpen(false); }}
+                  className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
+                    t === tier ? "bg-primary text-white" : "text-gray-text hover:text-cream"
+                  }`}
+                >
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -727,15 +749,16 @@ function DashboardPage() {
           className="shrink-0 border-b border-white/[0.04] bg-[#0F1011]"
           style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
         >
-          <div className="flex items-center gap-2 px-3 py-2 md:px-6 md:py-2.5">
-            {/* Mobile: hamburger + icon + text logo — all flex-centered */}
+          <div className="relative flex items-center gap-2 px-3 py-2 md:px-6 md:py-2.5">
+            {/* Mobile: hamburger (left) */}
             <button
               onClick={() => setSidebarOpen(true)}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] text-gray-text transition-colors hover:text-cream md:hidden"
             >
               <Menu className="h-5 w-5" />
             </button>
-            <Link href="/" className="flex items-center gap-1.5 md:hidden">
+            {/* Mobile: centered logo */}
+            <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 md:hidden">
               <Image
                 src="/TubeVault_Image_noBG.png"
                 alt=""

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { LogOut, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight, ArrowRight, Zap, FileText, Plus, MessageSquare, Trash2, Pencil } from "lucide-react";
+import { LogOut, X, Globe, Crown, Settings, RefreshCw, Lock, ChevronRight, ChevronDown, ArrowRight, Zap, FileText, Plus, MessageSquare, Trash2, Pencil } from "lucide-react";
 import { resolveLogoUrl, type Collection, type ConversationSummary } from "@/lib/api";
 import type { SubscriptionTier } from "@/lib/tiers";
 import { TIER_LIMITS } from "@/lib/tiers";
@@ -97,6 +97,7 @@ export function ChannelSidebar({
   const mobileOpen = mobileOpenProp ?? mobileOpenInternal;
   const setMobileOpen = onMobileOpenChange ?? setMobileOpenInternal;
   const [avatarError, setAvatarError] = useState(false);
+  const [chatsExpanded, setChatsExpanded] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const editInputRef = useRef<HTMLInputElement>(null);
@@ -160,13 +161,17 @@ export function ChannelSidebar({
           </div>
 
           <div className="px-2 pb-2">
-            <div className="flex items-center gap-2 px-2 pb-1.5">
+            <button
+              onClick={() => setChatsExpanded(!chatsExpanded)}
+              className="flex w-full items-center gap-2 px-2 pb-1.5 transition-colors hover:opacity-80"
+            >
               <MessageSquare className="h-3 w-3 text-gray-text/30" />
               <span className="text-[10px] font-medium uppercase tracking-wider text-gray-text/35">
                 Recent Chats
               </span>
-            </div>
-            <div className="max-h-[200px] overflow-y-auto scrollbar-hide">
+              <ChevronDown className={`ml-auto h-3 w-3 text-gray-text/30 transition-transform duration-200 ${chatsExpanded ? "" : "-rotate-90"}`} />
+            </button>
+            <div className={`overflow-y-auto scrollbar-hide transition-[max-height] duration-300 ease-in-out ${chatsExpanded ? "max-h-[200px]" : "max-h-0 overflow-hidden"}`}>
               {conversations.slice(0, 8).map((conv) => {
                 const isActive = activeConversationId === conv.id;
                 const channelCol = conv.channel_name
@@ -401,12 +406,12 @@ export function ChannelSidebar({
       <div className="px-3 pb-1">
         {limits.hasTranscripts ? (
           <Link
-            href="/dashboard/transcripts"
+            href={selectedChannel ? `/dashboard/transcripts?channel=${selectedChannel}` : "/dashboard/transcripts"}
             onClick={() => setMobileOpen(false)}
             className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-gray-text/60 transition-all duration-200 hover:bg-white/[0.04] hover:text-cream"
           >
             <FileText className="h-3.5 w-3.5 text-primary/60" />
-            <span className="text-[11px] font-medium">Browse transcripts</span>
+            <span className="text-[11px] font-medium">{selectedChannel ? "View transcripts" : "Browse transcripts"}</span>
           </Link>
         ) : (
           <button

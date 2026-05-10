@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Check, Loader2, X } from "lucide-react";
 import { resolveLogoUrl, type Collection } from "@/lib/api";
@@ -29,6 +29,14 @@ export function ChannelPickerModal({
   const [selected, setSelected] = useState<Set<string>>(new Set(defaults));
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+
+  // Resync selected state when modal opens (useState initializer only runs once)
+  useEffect(() => {
+    if (open) {
+      setSelected(new Set(defaults));
+      setSearch("");
+    }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!open) return null;
 
