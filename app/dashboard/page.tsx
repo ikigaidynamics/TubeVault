@@ -213,6 +213,13 @@ function DashboardPage() {
       setUserAvatar(user.user_metadata?.avatar_url || null);
     });
 
+    // Keep session alive: listen for auth state changes and handle token refresh
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        router.push("/login");
+      }
+    });
+
     fetch("/api/questions/check")
       .then((r) => r.json())
       .then((data) => {
@@ -223,6 +230,17 @@ function DashboardPage() {
         }
       })
       .catch(() => {});
+
+    return () => { subscription.unsubscribe(); };
+  }, []);
+
+  // Periodically refresh session to prevent token expiry during long dashboard sessions
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const supabase = createClient();
+      supabase.auth.getSession();
+    }, 4 * 60 * 1000); // every 4 minutes
+    return () => clearInterval(interval);
   }, []);
 
   // After Stripe checkout redirect: sync subscription from Stripe → Supabase, then refresh tier
