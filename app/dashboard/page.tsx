@@ -693,32 +693,22 @@ function DashboardPage() {
         </div>
       )}
 
-      {/* Admin tier toggle */}
+      {/* Admin tier toggle — desktop only (mobile version is inline in header) */}
       {isAdmin && (
-        <div className="fixed right-2 top-14 z-[200] md:right-4 md:top-4">
+        <div className="fixed right-4 top-4 z-[200] hidden md:block">
           <div className="flex items-center gap-1 rounded-xl border border-primary/30 bg-[#1C1D1F] p-1 shadow-lg">
-            {/* Mobile collapse toggle */}
-            <button
-              onClick={() => setTierToggleOpen(!tierToggleOpen)}
-              className="flex items-center justify-center rounded-lg px-1.5 py-1 md:hidden"
-            >
-              <Crown className="h-4 w-4 text-primary" />
-            </button>
-            {/* Tier buttons — always visible on desktop, toggle on mobile */}
-            <div className={`${tierToggleOpen ? "flex" : "hidden"} md:flex items-center gap-1`}>
-              <span className="px-2 text-[10px] font-medium text-gray-text/50">TIER:</span>
-              {(["free", "starter", "pro", "premium"] as SubscriptionTier[]).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => { handleAdminTierChange(t); setTierToggleOpen(false); }}
-                  className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
-                    t === tier ? "bg-primary text-white" : "text-gray-text hover:text-cream"
-                  }`}
-                >
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
-                </button>
-              ))}
-            </div>
+            <span className="px-2 text-[10px] font-medium text-gray-text/50">TIER:</span>
+            {(["free", "starter", "pro", "premium"] as SubscriptionTier[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => handleAdminTierChange(t)}
+                className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
+                  t === tier ? "bg-primary text-white" : "text-gray-text hover:text-cream"
+                }`}
+              >
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
       )}
@@ -775,6 +765,35 @@ function DashboardPage() {
             >
               <Menu className="h-5 w-5" />
             </button>
+            {/* Mobile: admin tier toggle (next to hamburger) */}
+            {isAdmin && (
+              <div className="relative md:hidden">
+                <button
+                  onClick={() => setTierToggleOpen(!tierToggleOpen)}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/30 text-primary transition-colors"
+                >
+                  <Crown className="h-4 w-4" />
+                </button>
+                {tierToggleOpen && (
+                  <>
+                    <div className="fixed inset-0 z-[199]" onClick={() => setTierToggleOpen(false)} />
+                    <div className="absolute left-0 top-full z-[200] mt-1 flex items-center gap-1 rounded-xl border border-primary/30 bg-[#1C1D1F] p-1 shadow-lg">
+                      {(["free", "starter", "pro", "premium"] as SubscriptionTier[]).map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => { handleAdminTierChange(t); setTierToggleOpen(false); }}
+                          className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
+                            t === tier ? "bg-primary text-white" : "text-gray-text hover:text-cream"
+                          }`}
+                        >
+                          {t.charAt(0).toUpperCase() + t.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
             {/* Mobile: centered logo */}
             <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 md:hidden">
               <Image
