@@ -695,7 +695,7 @@ function DashboardPage() {
 
       {/* Admin tier toggle */}
       {isAdmin && (
-        <div className="fixed right-2 top-2 z-[200] md:right-4 md:top-4">
+        <div className="fixed right-2 top-14 z-[200] md:right-4 md:top-4">
           <div className="flex items-center gap-1 rounded-xl border border-primary/30 bg-[#1C1D1F] p-1 shadow-lg">
             {/* Mobile collapse toggle */}
             <button
