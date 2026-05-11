@@ -250,6 +250,26 @@ const CHANNEL_QUESTIONS: Record<string, QuestionSet> = {
     "How does the channel explain complex topics simply?",
     "Best episode on the future of humanity?",
   ],
+  mark_tilbury: [
+    "Best advice for building wealth from nothing?",
+    "Most common money mistakes to avoid?",
+    "How to create multiple income streams?",
+  ],
+  starter_story: [
+    "Most inspiring bootstrap startup story?",
+    "Best side hustle ideas that actually work?",
+    "How did successful founders get their first customers?",
+  ],
+  danny_jones: [
+    "Most mind-blowing guest conversation?",
+    "Best episode on conspiracy theories?",
+    "Most fascinating story shared on the podcast?",
+  ],
+  doctor_sethi: [
+    "Best advice for improving gut health?",
+    "How does diet affect the gut microbiome?",
+    "Most effective natural remedies discussed?",
+  ],
 };
 
 // Category-level fallbacks
@@ -350,6 +370,9 @@ const CHANNEL_TAGLINES: Record<string, string> = {
   mel_robbins: "Mindset",
   powerfuljre: "Podcast",
   graham_stephan: "Real Estate Investor",
+  mark_tilbury: "Finance & Wealth",
+  starter_story: "Startup Stories",
+  danny_jones: "Podcast & Interviews",
 
   // ── Spirituality ──
   katie_clarke: "Spirituality",
