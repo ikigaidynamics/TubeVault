@@ -13,9 +13,10 @@ interface TypingIndicatorProps {
       timeout?: boolean;
     }[];
   } | null;
+  channelLogos?: Record<string, string | null>;
 }
 
-export function TypingIndicator({ label, progress }: TypingIndicatorProps) {
+export function TypingIndicator({ label, progress, channelLogos }: TypingIndicatorProps) {
   const statusText = progress
     ? progress.phase === "synthesizing"
       ? "Synthesizing answers..."
@@ -56,21 +57,38 @@ export function TypingIndicator({ label, progress }: TypingIndicatorProps) {
               </div>
               {/* Completed channels */}
               <div className="flex flex-wrap gap-1">
-                {progress.channels.map((ch) => (
-                  <span
-                    key={ch.name}
-                    className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-medium ${
-                      ch.timeout
-                        ? "bg-yellow-500/10 text-yellow-400/50"
-                        : ch.relevant
-                          ? "bg-primary/10 text-primary/60"
-                          : "bg-white/[0.04] text-gray-text/25"
-                    }`}
-                  >
-                    {ch.relevant ? "\u2713" : ch.timeout ? "\u23F1" : "\u2014"}{" "}
-                    {ch.display_name}
-                  </span>
-                ))}
+                {progress.channels.map((ch) => {
+                  const logoUrl = channelLogos?.[ch.name];
+                  return (
+                    <span
+                      key={ch.name}
+                      className={`inline-flex items-center gap-1 rounded-full pl-0.5 pr-1.5 py-0.5 text-[9px] font-medium animate-[fadeUp_0.3s_ease-out] ${
+                        ch.timeout
+                          ? "bg-yellow-500/10 text-yellow-400/50"
+                          : ch.relevant
+                            ? "bg-primary/10 text-primary/60"
+                            : "bg-white/[0.04] text-gray-text/25"
+                      }`}
+                    >
+                      {logoUrl ? (
+                        <Image
+                          src={logoUrl}
+                          alt=""
+                          width={14}
+                          height={14}
+                          className="h-3.5 w-3.5 rounded-full object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/[0.08] text-[7px]">
+                          {ch.display_name[0]}
+                        </span>
+                      )}
+                      {ch.relevant ? "\u2713" : ch.timeout ? "\u23F1" : "\u2014"}{" "}
+                      {ch.display_name}
+                    </span>
+                  );
+                })}
               </div>
             </>
           )}

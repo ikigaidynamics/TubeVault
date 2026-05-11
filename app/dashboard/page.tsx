@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -187,6 +187,15 @@ function DashboardPage() {
   const hasUnlimitedChannels = TIER_LIMITS[tier].maxChannels === Infinity;
   const maxChannels = TIER_LIMITS[tier].maxChannels;
 
+  // Build channel name → resolved logo URL map for typing indicator
+  const channelLogos = useMemo(() => {
+    const map: Record<string, string | null> = {};
+    for (const c of collections) {
+      map[c.name] = resolveLogoUrl(c.logo);
+    }
+    return map;
+  }, [collections]);
+
   // Admin tier toggle check
   useEffect(() => {
     fetch("/api/admin/tier").then((r) => {
@@ -358,12 +367,20 @@ function DashboardPage() {
     listConversations().then(setConversationList).catch(() => {});
   }, []);
 
+  // Scroll to bottom when user sends a message (so question + loading dots are visible)
   useEffect(() => {
     if (messages.length === 0) return;
     const lastMsg = messages[messages.length - 1];
+    if (lastMsg.role === "user") {
+      requestAnimationFrame(() => {
+        const container = scrollContainerRef.current;
+        if (container) container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+      });
+      return;
+    }
     if (lastMsg.role !== "assistant") return;
 
-    // Wait for DOM to render the new message
+    // Wait for DOM to render the new assistant message
     requestAnimationFrame(() => {
       const container = scrollContainerRef.current;
       if (!container) return;
@@ -1020,6 +1037,7 @@ function DashboardPage() {
                     ? `Searching across ${crossChannelSelected.size} channel${crossChannelSelected.size !== 1 ? "s" : ""}...`
                     : undefined}
                   progress={crossChannelProgress}
+                  channelLogos={channelLogos}
                 />
               )}
               {showLimitWall && (
