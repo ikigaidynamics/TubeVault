@@ -774,7 +774,7 @@ function DashboardPage() {
           className="shrink-0 border-b border-white/[0.04] bg-[#0F1011]"
           style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
         >
-          <div className="relative flex items-center gap-2 px-3 py-2 md:px-6 md:py-2.5">
+          <div className="relative flex items-center gap-2 px-3 pt-4 pb-2 md:px-6 md:pt-2.5 md:pb-2.5">
             {/* Mobile: hamburger (left) */}
             <button
               onClick={() => setSidebarOpen(true)}
