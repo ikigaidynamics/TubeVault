@@ -19,7 +19,6 @@ const API_BASE_URL =
 const HIDDEN = [
   "industrie_und_handelskammer_cottbus",
   "btu_cottbus_senftenberg",
-  "doctor_sethi",
   "personal_communications",
   "3blue1brown",
 ];

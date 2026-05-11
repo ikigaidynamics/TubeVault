@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 
 interface TypingIndicatorProps {
@@ -17,6 +20,8 @@ interface TypingIndicatorProps {
 }
 
 export function TypingIndicator({ label, progress, channelLogos }: TypingIndicatorProps) {
+  const [logoErrors, setLogoErrors] = useState<Set<string>>(new Set());
+
   const statusText = progress
     ? progress.phase === "synthesizing"
       ? "Synthesizing answers..."
@@ -59,6 +64,7 @@ export function TypingIndicator({ label, progress, channelLogos }: TypingIndicat
               <div className="flex flex-wrap gap-1">
                 {progress.channels.map((ch) => {
                   const logoUrl = channelLogos?.[ch.name];
+                  const showLogo = logoUrl && !logoErrors.has(ch.name);
                   return (
                     <span
                       key={ch.name}
@@ -70,14 +76,18 @@ export function TypingIndicator({ label, progress, channelLogos }: TypingIndicat
                             : "bg-white/[0.04] text-gray-text/25"
                       }`}
                     >
-                      {logoUrl ? (
-                        <Image
+                      {showLogo ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
                           src={logoUrl}
                           alt=""
                           width={14}
                           height={14}
                           className="h-3.5 w-3.5 rounded-full object-cover"
-                          unoptimized
+                          loading="eager"
+                          onError={() =>
+                            setLogoErrors((prev) => new Set(prev).add(ch.name))
+                          }
                         />
                       ) : (
                         <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/[0.08] text-[7px]">

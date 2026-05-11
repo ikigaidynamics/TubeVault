@@ -196,6 +196,16 @@ function DashboardPage() {
     return map;
   }, [collections]);
 
+  // Preload channel logos into browser cache so they appear instantly in the typing indicator
+  useEffect(() => {
+    for (const url of Object.values(channelLogos)) {
+      if (url) {
+        const img = new window.Image();
+        img.src = url;
+      }
+    }
+  }, [channelLogos]);
+
   // Admin tier toggle check
   useEffect(() => {
     fetch("/api/admin/tier").then((r) => {
