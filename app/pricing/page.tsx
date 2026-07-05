@@ -14,7 +14,6 @@ import {
   ArrowRight,
   ShieldCheck,
   Flame,
-  Clock,
   Gift,
 } from "lucide-react";
 import { Navbar } from "@/components/shared/navbar";
