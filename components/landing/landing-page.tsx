@@ -8,6 +8,7 @@ import {
   XCircle,
   CheckCircle,
   Bot,
+  Flame,
 } from "lucide-react";
 import { HeroLiveDemo } from "@/components/landing/hero-live-demo";
 import { AnimateOnScroll } from "@/components/landing/animate-on-scroll";
@@ -15,6 +16,9 @@ import { Navbar } from "@/components/shared/navbar";
 import { AttributionTracker } from "@/components/landing/attribution-tracker";
 import { CookieSettingsButton } from "@/components/consent/cookie-settings-button";
 import type { LandingVariant } from "@/lib/landing-variants";
+
+const SALE_END_DATE = new Date("2026-07-31T23:59:59");
+const SALE_ACTIVE = Date.now() < SALE_END_DATE.getTime();
 
 const STEPS = [
   {
@@ -75,6 +79,26 @@ export function LandingPage({ variant }: Props) {
         <div className="pointer-events-none absolute left-1/2 top-[20%] hidden h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-primary/[0.04] blur-[140px] sm:block" />
 
         <div className="relative mx-auto w-full max-w-7xl px-6">
+          {/* Sale banner */}
+          {SALE_ACTIVE && (
+            <AnimateOnScroll delay={50}>
+              <div className="mb-6 flex justify-center">
+                <Link
+                  href="/pricing"
+                  className="flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/[0.06] px-4 py-2 transition-colors hover:bg-red-500/[0.1]"
+                >
+                  <Flame className="h-3.5 w-3.5 text-red-400" />
+                  <span className="text-xs font-bold text-cream sm:text-sm">Summer Sale — 50% OFF</span>
+                  <span className="hidden text-gray-text/40 sm:inline">·</span>
+                  <span className="hidden text-xs text-gray-text/70 sm:inline">
+                    Code <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono font-bold text-primary">TUBE50</span>
+                  </span>
+                  <ArrowRight className="h-3 w-3 text-red-400/60" />
+                </Link>
+              </div>
+            </AnimateOnScroll>
+          )}
+
           {/* Pre-headline */}
           <AnimateOnScroll delay={100}>
             <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.25em] text-[#65ae4c]">

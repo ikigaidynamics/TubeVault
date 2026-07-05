@@ -442,7 +442,7 @@ export default function PricingPage() {
 
       {/* Sale banner */}
       {SALE_ACTIVE && (
-        <div className="border-b border-primary/20 bg-gradient-to-r from-primary/[0.08] via-transparent to-primary/[0.08] px-4 pt-20 pb-0 sm:px-6">
+        <div className="px-4 pt-20 pb-0 sm:px-6">
           <div className="mx-auto flex max-w-xl flex-col items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/[0.06] px-4 py-4 text-center sm:flex-row sm:justify-between sm:gap-4 sm:rounded-full sm:px-6 sm:py-2.5">
             <div className="flex items-center gap-2">
               <Flame className="h-4 w-4 shrink-0 text-red-400" />
@@ -451,7 +451,7 @@ export default function PricingPage() {
               </span>
               <span className="hidden text-gray-text/40 sm:inline">·</span>
               <span className="text-xs text-gray-text/70 sm:text-sm">
-                Use code <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono font-bold text-primary">TUBE50</span>
+                Code <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono font-bold text-primary">TUBE50</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
