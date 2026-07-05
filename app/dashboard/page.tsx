@@ -15,6 +15,7 @@ import { WelcomeScreen } from "@/components/chat/welcome-screen";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { TypingIndicator } from "@/components/chat/typing-indicator";
 import { UpgradeModal } from "@/components/chat/upgrade-modal";
+import { RequestChannelModal } from "@/components/chat/request-channel-modal";
 import { InlineUpgradeWall } from "@/components/chat/inline-upgrade-wall";
 import { track } from "@/lib/analytics/tracker";
 import { ChannelPickerModal } from "@/components/chat/channel-picker-modal";
@@ -180,6 +181,7 @@ function DashboardPage() {
   const [lockedUntil, setLockedUntil] = useState<string | null>(null);
   const [canChange, setCanChange] = useState(true);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [requestChannelOpen, setRequestChannelOpen] = useState(false);
   const [channelDataLoaded, setChannelDataLoaded] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [tierToggleOpen, setTierToggleOpen] = useState(false);
@@ -773,8 +775,14 @@ function DashboardPage() {
         onNewChat={handleNewChat}
         onDeleteConversation={handleDeleteConversation}
         onRenameConversation={handleRenameConversation}
+        onRequestChannel={() => setRequestChannelOpen(true)}
         mobileOpen={sidebarOpen}
         onMobileOpenChange={setSidebarOpen}
+      />
+
+      <RequestChannelModal
+        open={requestChannelOpen}
+        onClose={() => setRequestChannelOpen(false)}
       />
 
       {/* Main area */}

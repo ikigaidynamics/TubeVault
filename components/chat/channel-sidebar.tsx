@@ -34,6 +34,7 @@ interface ChannelSidebarProps {
   onNewChat?: () => void;
   onDeleteConversation?: (id: string) => void;
   onRenameConversation?: (id: string, title: string) => void;
+  onRequestChannel?: () => void;
   mobileOpen?: boolean;
   onMobileOpenChange?: (open: boolean) => void;
 }
@@ -89,6 +90,7 @@ export function ChannelSidebar({
   onNewChat,
   onDeleteConversation,
   onRenameConversation,
+  onRequestChannel,
   mobileOpen: mobileOpenProp,
   onMobileOpenChange,
 }: ChannelSidebarProps) {
@@ -428,6 +430,20 @@ export function ChannelSidebar({
             </span>
           </button>
         )}
+      </div>
+
+      {/* Request a channel */}
+      <div className="px-3 pb-1">
+        <button
+          onClick={() => {
+            onRequestChannel?.();
+            setMobileOpen(false);
+          }}
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-gray-text/60 transition-all duration-200 hover:bg-white/[0.04] hover:text-cream"
+        >
+          <Plus className="h-3.5 w-3.5 text-primary/60" />
+          <span className="text-[11px] font-medium">Request a channel</span>
+        </button>
       </div>
 
       {/* Question counter */}
