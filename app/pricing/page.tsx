@@ -374,24 +374,18 @@ function SaleCountdown() {
   const pad = (n: number) => String(n).padStart(2, "0");
 
   return (
-    <div className="flex items-center gap-3 text-sm font-mono">
+    <div className="flex items-center gap-1.5 font-mono text-sm sm:gap-2">
       {[
-        { val: timeLeft.days, label: "Days" },
-        { val: timeLeft.hours, label: "Hrs" },
-        { val: timeLeft.minutes, label: "Min" },
-        { val: timeLeft.seconds, label: "Sec" },
+        { val: timeLeft.days, label: "d" },
+        { val: timeLeft.hours, label: "h" },
+        { val: timeLeft.minutes, label: "m" },
+        { val: timeLeft.seconds, label: "s" },
       ].map(({ val, label }, i) => (
-        <div key={label} className="flex items-center gap-3">
-          <div className="flex flex-col items-center">
-            <span className="rounded-lg bg-white/10 px-2.5 py-1.5 text-lg font-bold text-cream tabular-nums">
-              {pad(val)}
-            </span>
-            <span className="mt-1 text-[10px] uppercase tracking-wider text-gray-text/50">
-              {label}
-            </span>
-          </div>
-          {i < 3 && <span className="text-lg font-bold text-primary/40">:</span>}
-        </div>
+        <span key={label} className="flex items-center">
+          <span className="tabular-nums font-bold text-cream">{pad(val)}</span>
+          <span className="text-gray-text/50">{label}</span>
+          {i < 3 && <span className="mx-0.5 text-gray-text/30 sm:mx-1">:</span>}
+        </span>
       ))}
     </div>
   );
@@ -448,18 +442,24 @@ export default function PricingPage() {
 
       {/* Sale banner */}
       {SALE_ACTIVE && (
-        <section className="border-b border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 px-6 pt-20 pb-6">
-          <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-red-500/15 px-4 py-1.5 text-sm font-bold text-red-400">
-              <Flame className="h-4 w-4" />
-              Summer Sale — 50% OFF all plans
+        <div className="border-b border-primary/20 bg-gradient-to-r from-primary/[0.08] via-transparent to-primary/[0.08] px-4 pt-20 pb-0 sm:px-6">
+          <div className="mx-auto flex max-w-xl flex-col items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/[0.06] px-4 py-4 text-center sm:flex-row sm:justify-between sm:gap-4 sm:rounded-full sm:px-6 sm:py-2.5">
+            <div className="flex items-center gap-2">
+              <Flame className="h-4 w-4 shrink-0 text-red-400" />
+              <span className="text-sm font-bold text-cream">
+                50% OFF <span className="hidden sm:inline">all plans</span>
+              </span>
+              <span className="hidden text-gray-text/40 sm:inline">·</span>
+              <span className="text-xs text-gray-text/70 sm:text-sm">
+                Use code <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono font-bold text-primary">TUBE50</span>
+              </span>
             </div>
-            <p className="text-sm text-gray-text">
-              Offer ends July 31, 2026
-            </p>
-            <SaleCountdown />
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-text/50">Ends in</span>
+              <SaleCountdown />
+            </div>
           </div>
-        </section>
+        </div>
       )}
 
       <section className={`px-6 ${SALE_ACTIVE ? "pt-8" : "pt-20"} pb-4 text-center`}>
@@ -469,7 +469,7 @@ export default function PricingPage() {
           </h1>
           <p className="mt-4 text-base text-gray-text">
             {SALE_ACTIVE
-              ? "Half price on all plans. Lock in your rate before the sale ends."
+              ? "Half price on all plans. Use code TUBE50 at checkout."
               : "Choose the plan that fits your curiosity. Upgrade or downgrade anytime."}
           </p>
 
