@@ -41,15 +41,20 @@ function triggerLabel(key: string): { label: string; tip: string } {
 // Component
 // ---------------------------------------------------------------------------
 
-export async function ConversionFunnel() {
-  const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
-
-  const { data: events } = await supabase
+export async function ConversionFunnel({ days }: { days: number | null } = { days: 365 }) {
+  let query = supabase
     .from("analytics_events")
     .select("event_type, session_id, user_id, metadata, created_at")
     .in("event_type", ["signup", "search", "upgrade_click", "subscription_start", "channel_request"])
-    .gte("created_at", since)
-    .limit(10000);
+    .order("created_at", { ascending: false })
+    .limit(50000);
+
+  if (days !== null) {
+    const since = new Date(Date.now() - days * 86_400_000).toISOString();
+    query = query.gte("created_at", since);
+  }
+
+  const { data: events } = await query;
 
   const rows = events ?? [];
 
@@ -142,12 +147,26 @@ export async function ConversionFunnel() {
   }
   const requestRanking = Array.from(byUrl.entries()).sort((a, b) => b[1] - a[1]);
 
+  // Detailed request list (most recent first)
+  const requestDetails = requests
+    .map((r) => {
+      const meta = r.metadata as Record<string, unknown>;
+      return {
+        url: (meta?.requested_channel_url as string) ?? "unknown",
+        email: (meta?.user_email as string) ?? "—",
+        date: new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      };
+    })
+    .reverse();
+
   return (
     <div className="space-y-8" id="funnel">
       <div>
-        <h2 className="text-lg font-semibold text-cream">Conversion Funnel (30d)</h2>
+        <h2 className="text-lg font-semibold text-cream">
+          Conversion Funnel ({days === null ? "All Time" : days === 365 ? "Yearly" : `${days}d`})
+        </h2>
         <p className="mt-1 text-xs text-gray-text/60">
-          Aggregate funnel for all users in the last 30 days.
+          Aggregate funnel for {days === null ? "all time" : `the last ${days} days`}.
         </p>
       </div>
 
@@ -202,8 +221,11 @@ export async function ConversionFunnel() {
 
       {requestRanking.length > 0 && (
         <div>
-          <h3 className="mb-3 text-sm font-medium text-cream">Requested Channels (not yet indexed)</h3>
-          <div className="overflow-x-auto">
+          <h3 className="mb-1 text-sm font-medium text-cream">Requested Channels ({requests.length} total)</h3>
+          <p className="mb-3 text-[11px] text-gray-text/50">Channels users have asked to be added.</p>
+
+          {/* Summary by URL */}
+          <div className="mb-6 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06] text-left text-xs text-gray-text/50">
@@ -218,6 +240,31 @@ export async function ConversionFunnel() {
                       <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{url}</a>
                     </td>
                     <td className="py-2 pr-4 font-semibold text-cream">{count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Individual requests */}
+          <h4 className="mb-2 text-xs font-medium text-gray-text/60">Recent requests</h4>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-left text-xs text-gray-text/50">
+                  <th className="pb-2 pr-4">Channel URL</th>
+                  <th className="pb-2 pr-4">User</th>
+                  <th className="pb-2 pr-4">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requestDetails.map((r, i) => (
+                  <tr key={i} className="border-b border-white/[0.03]">
+                    <td className="py-2 pr-4">
+                      <a href={r.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{r.url}</a>
+                    </td>
+                    <td className="py-2 pr-4 text-gray-text">{r.email}</td>
+                    <td className="py-2 pr-4 text-gray-text/60">{r.date}</td>
                   </tr>
                 ))}
               </tbody>

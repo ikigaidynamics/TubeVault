@@ -40,7 +40,8 @@ export default async function AdminAnalyticsPage({
     redirect("/");
   }
 
-  const days = searchParams.days === "30" ? 30 : 7;
+  const daysParam = searchParams.days;
+  const days = daysParam === "all" ? null : daysParam === "365" ? 365 : 365;
   const now = new Date().toISOString();
 
   return (
@@ -70,28 +71,28 @@ export default async function AdminAnalyticsPage({
           <div className="flex items-center gap-3">
             <div className="flex gap-1.5">
               <a
-                href="/admin/analytics?days=7"
+                href="/admin/analytics?days=365"
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                  days === 7
+                  days === 365
                     ? "bg-primary text-white"
                     : "bg-white/[0.04] text-gray-text hover:text-cream"
                 }`}
               >
-                7d
+                Yearly
               </a>
               <a
-                href="/admin/analytics?days=30"
+                href="/admin/analytics?days=all"
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                  days === 30
+                  days === null
                     ? "bg-primary text-white"
                     : "bg-white/[0.04] text-gray-text hover:text-cream"
                 }`}
               >
-                30d
+                All Time
               </a>
             </div>
             <a
-              href={`/admin/analytics?days=${days}`}
+              href={`/admin/analytics?days=${days ?? "all"}`}
               className="rounded-lg bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-gray-text transition-colors hover:text-cream"
             >
               Refresh
@@ -166,7 +167,7 @@ export default async function AdminAnalyticsPage({
 
         <div id="funnel">
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {(ConversionFunnel as any)()}
+          {(ConversionFunnel as any)({ days })}
         </div>
       </main>
     </div>
