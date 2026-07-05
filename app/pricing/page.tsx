@@ -293,7 +293,7 @@ function PricingCard({
               (${tier.yearlyPrice}/year)
             </p>
             <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-              Save ${tier.originalMonthlyPrice * 12 - tier.yearlyPrice}/year
+              Save ${tier.monthlyPrice * 12 - tier.yearlyPrice}/year
             </span>
           </div>
         </>
