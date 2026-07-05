@@ -62,6 +62,7 @@ export async function POST(request: Request) {
       mode: "subscription",
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
+      allow_promotion_codes: true,
       ...(isProTrial && {
         subscription_data: {
           trial_period_days: 30,
