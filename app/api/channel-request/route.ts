@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { Resend } from "resend";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -65,17 +64,23 @@ export async function POST(request: Request) {
 
     if (resendKey) {
       try {
-        const resend = new Resend(resendKey);
-        await resend.emails.send({
-          from: "TubeVault <notifications@ikigai-dynamics.com>",
-          to: adminEmail,
-          subject: `Channel Request: ${channelUrl.trim()}`,
-          html: `
-            <h2>New Channel Request</h2>
-            <p><strong>URL:</strong> <a href="${channelUrl.trim()}">${channelUrl.trim()}</a></p>
-            <p><strong>User:</strong> ${user.email}</p>
-            <p><strong>Time:</strong> ${new Date().toISOString()}</p>
-          `,
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${resendKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "TubeVault <notifications@ikigai-dynamics.com>",
+            to: adminEmail,
+            subject: `Channel Request: ${channelUrl.trim()}`,
+            html: `
+              <h2>New Channel Request</h2>
+              <p><strong>URL:</strong> <a href="${channelUrl.trim()}">${channelUrl.trim()}</a></p>
+              <p><strong>User:</strong> ${user.email}</p>
+              <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+            `,
+          }),
         });
       } catch (emailErr) {
         console.warn("Failed to send channel request email:", emailErr);
