@@ -6,7 +6,7 @@ import { getOrCreateStripeCustomer } from "@/lib/subscription";
 
 export async function POST(request: Request) {
   try {
-    const { priceKey } = (await request.json()) as { priceKey: PriceKey };
+    const { priceKey, trial } = (await request.json()) as { priceKey: PriceKey; trial?: boolean };
 
     const priceId = PRICE_IDS[priceKey];
     if (!priceId) {
@@ -54,15 +54,24 @@ export async function POST(request: Request) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
 
+    // Support 30-day free trial for Pro plan
+    const isProTrial = trial && priceKey.startsWith("pro_");
+
     const session = await getStripeServer().checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${appUrl}/dashboard?checkout=success`,
+      ...(isProTrial && {
+        subscription_data: {
+          trial_period_days: 30,
+        },
+      }),
+      success_url: `${appUrl}/dashboard?checkout=success${isProTrial ? "&trial=pro" : ""}`,
       cancel_url: `${appUrl}/pricing?checkout=cancelled`,
       metadata: {
         supabase_user_id: user.id,
+        ...(isProTrial && { trial: "pro_30d" }),
       },
     });
 

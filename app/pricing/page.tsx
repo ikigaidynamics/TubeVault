@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -13,15 +13,24 @@ import {
   Mail,
   ArrowRight,
   ShieldCheck,
+  Flame,
+  Clock,
+  Gift,
 } from "lucide-react";
 import { Navbar } from "@/components/shared/navbar";
 import type { PriceKey } from "@/lib/stripe";
+
+/* ── Sale configuration ── */
+const SALE_END_DATE = new Date("2026-07-31T23:59:59");
+const SALE_ACTIVE = Date.now() < SALE_END_DATE.getTime();
 
 interface Tier {
   name: string;
   slug: "free" | "starter" | "pro" | "premium";
   monthlyPrice: number;
   yearlyPrice: number;
+  originalMonthlyPrice: number;
+  originalYearlyPrice: number;
   description: string;
   features: string[];
   cta: string;
@@ -36,6 +45,8 @@ const tiers: Tier[] = [
     slug: "free",
     monthlyPrice: 0,
     yearlyPrice: 0,
+    originalMonthlyPrice: 0,
+    originalYearlyPrice: 0,
     description: "Get started with AI-powered search",
     features: [
       "3 channels accessible (locked 30 days)",
@@ -52,8 +63,10 @@ const tiers: Tier[] = [
   {
     name: "Starter",
     slug: "starter",
-    monthlyPrice: 9,
-    yearlyPrice: 69,
+    monthlyPrice: SALE_ACTIVE ? 5 : 9,
+    yearlyPrice: SALE_ACTIVE ? 35 : 69,
+    originalMonthlyPrice: 9,
+    originalYearlyPrice: 69,
     description: "For curious minds who want more",
     features: [
       "10 channels accessible (locked 14 days)",
@@ -65,14 +78,16 @@ const tiers: Tier[] = [
     ],
     cta: "Get Starter",
     highlighted: false,
-    badge: null,
+    badge: SALE_ACTIVE ? "50% OFF" : null,
     microcopy: null,
   },
   {
     name: "Pro",
     slug: "pro",
-    monthlyPrice: 19,
-    yearlyPrice: 149,
+    monthlyPrice: SALE_ACTIVE ? 10 : 19,
+    yearlyPrice: SALE_ACTIVE ? 75 : 149,
+    originalMonthlyPrice: 19,
+    originalYearlyPrice: 149,
     description: "Full access for power users",
     features: [
       "All 30+ channels accessible",
@@ -84,16 +99,18 @@ const tiers: Tier[] = [
       "Priority email support",
       "Request channels (priority)",
     ],
-    cta: "Unlock Pro",
+    cta: SALE_ACTIVE ? "Unlock Pro — 50% OFF" : "Unlock Pro",
     highlighted: true,
-    badge: "Most Popular \u2014 Recommended",
+    badge: SALE_ACTIVE ? "Most Popular — 50% OFF" : "Most Popular \u2014 Recommended",
     microcopy: "for unlimited expert answers",
   },
   {
     name: "Premium",
     slug: "premium",
-    monthlyPrice: 39,
-    yearlyPrice: 299,
+    monthlyPrice: SALE_ACTIVE ? 20 : 39,
+    yearlyPrice: SALE_ACTIVE ? 150 : 299,
+    originalMonthlyPrice: 39,
+    originalYearlyPrice: 299,
     description: "Everything, plus exclusive features",
     features: [
       "Everything in Pro, plus:",
@@ -105,7 +122,7 @@ const tiers: Tier[] = [
     ],
     cta: "Get Premium",
     highlighted: false,
-    badge: null,
+    badge: SALE_ACTIVE ? "50% OFF" : null,
     microcopy: "for cross-channel insights",
   },
 ];
@@ -145,7 +162,14 @@ const faqs = [
   {
     question: "Do you offer discounts?",
     answer:
-      "Annual plans save you ~35% compared to monthly. For students or non-profits, contact us.",
+      SALE_ACTIVE
+        ? "We're running a Summer Sale with 50% off all plans! Annual plans save even more. For students or non-profits, contact us."
+        : "Annual plans save you ~35% compared to monthly. For students or non-profits, contact us.",
+  },
+  {
+    question: "How does the free Pro trial work?",
+    answer:
+      "Sign up for the 30-day free Pro trial to get unlimited access to all channels, transcripts, and translation. Your card won't be charged until the trial ends. Cancel anytime before that — no charge.",
   },
 ];
 
@@ -252,9 +276,11 @@ function PricingCard({
       ) : yearly ? (
         <>
           <div className="mt-5 flex items-baseline gap-1">
-            <span className="mr-1 text-lg text-gray-text/40 line-through">
-              ${tier.monthlyPrice}
-            </span>
+            {SALE_ACTIVE && tier.originalYearlyPrice !== tier.yearlyPrice && (
+              <span className="mr-1 text-lg text-red-400/60 line-through">
+                ${(tier.originalYearlyPrice / 12).toFixed(2).replace(/\.00$/, "")}
+              </span>
+            )}
             <span className="text-4xl font-bold text-cream">
               ${(tier.yearlyPrice / 12).toFixed(2).replace(/\.00$/, "")}
             </span>
@@ -262,21 +288,32 @@ function PricingCard({
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             <p className="text-xs text-gray-text/50">
+              {SALE_ACTIVE && tier.originalYearlyPrice !== tier.yearlyPrice && (
+                <span className="mr-1 text-red-400/50 line-through">${tier.originalYearlyPrice}/yr</span>
+              )}
               (${tier.yearlyPrice}/year)
             </p>
             <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-              Save ${tier.monthlyPrice * 12 - tier.yearlyPrice}/year
+              Save ${tier.originalMonthlyPrice * 12 - tier.yearlyPrice}/year
             </span>
           </div>
         </>
       ) : (
         <>
           <div className="mt-5 flex items-baseline gap-1">
+            {SALE_ACTIVE && tier.originalMonthlyPrice !== tier.monthlyPrice && (
+              <span className="mr-1 text-lg text-red-400/60 line-through">
+                ${tier.originalMonthlyPrice}
+              </span>
+            )}
             <span className="text-4xl font-bold text-cream">${tier.monthlyPrice}</span>
             <span className="text-sm text-gray-text">/mo</span>
           </div>
           <p className="mt-1 text-xs text-gray-text/40">
-            or ${tier.yearlyPrice}/year (save ${tier.monthlyPrice * 12 - tier.yearlyPrice})
+            {SALE_ACTIVE && tier.originalYearlyPrice !== tier.yearlyPrice && (
+              <span className="mr-1 text-red-400/50 line-through">${tier.originalYearlyPrice}/yr</span>
+            )}
+            or ${tier.yearlyPrice}/year (save ${tier.originalMonthlyPrice * 12 - tier.yearlyPrice})
           </p>
         </>
       )}
@@ -316,6 +353,93 @@ function PricingCard({
   );
 }
 
+function SaleCountdown() {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    function update() {
+      const diff = SALE_END_DATE.getTime() - Date.now();
+      if (diff <= 0) return setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      setTimeLeft({
+        days: Math.floor(diff / 86400000),
+        hours: Math.floor((diff % 86400000) / 3600000),
+        minutes: Math.floor((diff % 3600000) / 60000),
+        seconds: Math.floor((diff % 60000) / 1000),
+      });
+    }
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  return (
+    <div className="flex items-center gap-3 text-sm font-mono">
+      {[
+        { val: timeLeft.days, label: "Days" },
+        { val: timeLeft.hours, label: "Hrs" },
+        { val: timeLeft.minutes, label: "Min" },
+        { val: timeLeft.seconds, label: "Sec" },
+      ].map(({ val, label }, i) => (
+        <div key={label} className="flex items-center gap-3">
+          <div className="flex flex-col items-center">
+            <span className="rounded-lg bg-white/10 px-2.5 py-1.5 text-lg font-bold text-cream tabular-nums">
+              {pad(val)}
+            </span>
+            <span className="mt-1 text-[10px] uppercase tracking-wider text-gray-text/50">
+              {label}
+            </span>
+          </div>
+          {i < 3 && <span className="text-lg font-bold text-primary/40">:</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProTrialButton() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  async function handleClick() {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceKey: "pro_monthly", trial: true }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (res.status === 401) {
+        router.push("/signup?redirect=/pricing&plan=pro_trial");
+      }
+    } catch {
+      router.push("/pricing");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={loading}
+      className="inline-flex items-center gap-2 rounded-xl border-2 border-primary bg-primary/10 px-6 py-3 text-sm font-semibold text-primary transition-all hover:bg-primary/20 disabled:opacity-70"
+    >
+      {loading ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <Gift className="h-4 w-4" />
+      )}
+      {loading ? "Redirecting..." : "Try Pro free for 30 days"}
+    </button>
+  );
+}
+
 export default function PricingPage() {
   const [yearly, setYearly] = useState(true);
 
@@ -323,14 +447,31 @@ export default function PricingPage() {
     <div className="min-h-screen bg-dark-bg">
       <Navbar />
 
-      <section className="px-6 pt-20 pb-4 text-center">
+      {/* Sale banner */}
+      {SALE_ACTIVE && (
+        <section className="border-b border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 px-6 pt-20 pb-6">
+          <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-red-500/15 px-4 py-1.5 text-sm font-bold text-red-400">
+              <Flame className="h-4 w-4" />
+              Summer Sale — 50% OFF all plans
+            </div>
+            <p className="text-sm text-gray-text">
+              Offer ends July 31, 2026
+            </p>
+            <SaleCountdown />
+          </div>
+        </section>
+      )}
+
+      <section className={`px-6 ${SALE_ACTIVE ? "pt-8" : "pt-20"} pb-4 text-center`}>
         <div className="mx-auto max-w-2xl">
           <h1 className="text-4xl font-bold tracking-tight text-cream md:text-5xl">
-            Simple, transparent pricing
+            {SALE_ACTIVE ? "Summer Sale — 50% OFF" : "Simple, transparent pricing"}
           </h1>
           <p className="mt-4 text-base text-gray-text">
-            Choose the plan that fits your curiosity. Upgrade or downgrade
-            anytime.
+            {SALE_ACTIVE
+              ? "Half price on all plans. Lock in your rate before the sale ends."
+              : "Choose the plan that fits your curiosity. Upgrade or downgrade anytime."}
           </p>
 
           <div className="mt-8 inline-flex items-center gap-3 rounded-full border border-white/[0.08] bg-white/[0.03] p-1">
@@ -372,6 +513,28 @@ export default function PricingPage() {
           {tiers.map((tier) => (
             <PricingCard key={tier.slug} tier={tier} yearly={yearly} />
           ))}
+        </div>
+      </section>
+
+      {/* Free Pro trial CTA */}
+      <section className="px-6 pb-8">
+        <div className="mx-auto max-w-2xl">
+          <div className="flex flex-col items-center gap-4 rounded-2xl border border-primary/30 bg-gradient-to-b from-primary/[0.06] to-transparent px-6 py-8 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15">
+              <Gift className="h-6 w-6 text-primary" />
+            </div>
+            <h3 className="text-lg font-bold text-cream">
+              Try Pro free for 30 days
+            </h3>
+            <p className="max-w-md text-sm text-gray-text">
+              Get full access to all channels, unlimited questions, transcripts &amp; translation.
+              No charge for the first 30 days — cancel anytime.
+            </p>
+            <ProTrialButton />
+            <p className="text-xs text-gray-text/40">
+              Credit card required. You won&apos;t be charged until after your trial ends.
+            </p>
+          </div>
         </div>
       </section>
 

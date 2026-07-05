@@ -819,7 +819,7 @@ export function HeroLiveDemo({
                   Sign up free <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
                 <Link href="/pricing" className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover">
-                  Go Pro &mdash; $19/mo <ArrowRight className="h-3.5 w-3.5" />
+                  Go Pro &mdash; $10/mo <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
               <p className="mt-2 text-[10px] text-gray-text/40">No credit card needed for free plan</p>

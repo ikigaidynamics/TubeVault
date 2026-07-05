@@ -58,11 +58,11 @@ export function InlineUpgradeWall({ context, onDismiss }: InlineUpgradeWallProps
             >
               Sign up free
             </Link>
-            <UpgradeButton priceKey="pro_monthly" label="Go Pro — $19/mo" size="md" />
+            <UpgradeButton priceKey="pro_monthly" label="Go Pro — $10/mo" size="md" />
           </>
         ) : (
           <>
-            <UpgradeButton priceKey="pro_monthly" label="Unlock Pro — $19/mo" size="md" />
+            <UpgradeButton priceKey="pro_monthly" label="Unlock Pro — $10/mo" size="md" />
             <Link
               href="/pricing"
               className="text-center text-sm text-primary transition-colors hover:text-primary-hover"
