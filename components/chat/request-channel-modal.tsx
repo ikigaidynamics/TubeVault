@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { X, Plus, Loader2, CheckCircle } from "lucide-react";
-import { track } from "@/lib/analytics/tracker";
 
 interface RequestChannelModalProps {
   open: boolean;
@@ -27,14 +26,19 @@ export function RequestChannelModal({ open, onClose }: RequestChannelModalProps)
     if (!trimmed || submitting) return;
 
     setSubmitting(true);
-    track("channel_request", {
-      metadata: { requested_channel_url: trimmed },
-    });
-
-    // Small delay so the track event fires
-    await new Promise((r) => setTimeout(r, 300));
-    setSubmitting(false);
-    setSubmitted(true);
+    try {
+      await fetch("/api/channel-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: trimmed }),
+      });
+      setSubmitted(true);
+    } catch {
+      // Still show success — request may have been stored
+      setSubmitted(true);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
